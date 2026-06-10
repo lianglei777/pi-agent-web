@@ -1,4 +1,6 @@
-import { Boxes, FolderOpen, Plus, RefreshCw, Sparkles } from "lucide-react";
+"use client";
+
+import { Cpu, FolderOpen, Plus, RefreshCw, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -9,12 +11,16 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-export function SessionSidebar() {
+export function SessionSidebar({
+  onOpenModels,
+}: {
+  onOpenModels: () => void;
+}) {
   return (
     <div className="flex h-full w-[260px] flex-col max-[640px]:w-[min(280px,85vw)]">
       <div className="flex items-center gap-1.5 px-2.5 pt-3 pb-2.5">
         <div className="min-w-0 flex-1 overflow-hidden font-ui-mono text-[13px] font-semibold whitespace-nowrap text-primary">
-          Pi Agent Web
+          Po Agent Web
         </div>
         <Button
           className="w-[65px]"
@@ -25,6 +31,7 @@ export function SessionSidebar() {
           <Plus />
           New
         </Button>
+
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
@@ -38,6 +45,7 @@ export function SessionSidebar() {
           </TooltipTrigger>
           <TooltipContent>Refresh sessions</TooltipContent>
         </Tooltip>
+
       </div>
 
       <Button
@@ -59,19 +67,24 @@ export function SessionSidebar() {
         </div>
       </ScrollArea>
 
+      <Separator />
+
       <div className="flex gap-1.5 p-2">
         <Button
           className="flex-1"
           size="sm"
           type="button"
           variant="ghost"
+          onClick={onOpenModels}
         >
-          <Boxes />
+          <Cpu />
           Models
         </Button>
+
+        <Separator  orientation="vertical" />
+
         <Button
           className="flex-1"
-          disabled
           size="sm"
           type="button"
           variant="ghost"
@@ -80,6 +93,7 @@ export function SessionSidebar() {
           Skills
         </Button>
       </div>
+
     </div>
   );
 }

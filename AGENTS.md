@@ -69,7 +69,14 @@ bypass it with relative paths, re-exports, lint disables, or duplicated types.
   browser APIs, and keep the client boundary narrow.
 - Never import `src/server` modules into UI code.
 - Reuse primitives in `src/components/ui` before creating new primitives.
-- Keep feature-specific components, hooks, constants, and types together.
+- Keep reusable, business-neutral UI primitives in `src/components/ui`.
+- Keep feature-specific components, hooks, constants, and types together under
+  `src/features/<feature>`.
+- Keep application composition and responsive panel layout under
+  `src/layouts`; layouts may compose features but must not own feature logic.
+- Features must not import layouts or other features. Coordinate interactions
+  between features in a layout through props and callbacks.
+- UI primitives must not import features or layouts.
 - Do not duplicate API contracts in multiple components; create a shared
   client-side contract when integration work requires one.
 - Split files by responsibility when a component or hook owns multiple

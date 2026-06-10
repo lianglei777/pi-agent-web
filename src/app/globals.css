@@ -134,3 +134,16 @@ textarea {
   color: inherit;
   font: inherit;
 }
+
+/* ModelsConfig save button animations */
+@keyframes saved-pop {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.08); }
+  60%  { transform: scale(0.96); }
+  100% { transform: scale(1); }
+}
+
+@keyframes saved-check-draw {
+  from { stroke-dashoffset: 18; }
+  to   { stroke-dashoffset: 0; }
+}

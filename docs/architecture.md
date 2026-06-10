@@ -116,16 +116,33 @@ Route Handler 应保持很薄，通常只做：
 ## 前端边界
 
 ```text
-src/app          页面和布局
-src/components   UI primitive 和 feature component
+src/app          Next.js 页面、布局和 Route Handler
+src/components/ui 无业务语义的通用 UI primitive
+src/features     按业务能力组织的组件、hook、类型和常量
+src/layouts      应用级页面骨架和 feature 组合
 src/lib          浏览器与共享 UI 工具
 ```
 
 - 页面和布局默认使用 Server Component。
 - 只有需要交互或浏览器 API 的最小边界使用 `"use client"`。
 - 前端不得 import `src/server`。浏览器通过 `/api` 合同与后端交互。
-- 通用 UI 放在 `src/components/ui`；业务组件放在对应 feature 目录。
+- 通用 UI primitive 放在 `src/components/ui`，不得依赖 feature 或 layout。
+- 业务组件放在 `src/features/<feature>`。feature 不得依赖 layout，也不直接
+  依赖其他 feature。
+- 应用骨架放在 `src/layouts`，只负责组合 feature 和管理布局级状态。
+- 跨 feature 交互通过 layout 中的 props、callback 和共享状态协调。
 - 一个 hook 或组件承担多个独立工作流时，按职责拆分，而不是按任意行数拆分。
+
+当前前端结构：
+
+```text
+src/components/ui
+src/features/chat
+src/features/files
+src/features/models-config
+src/features/sessions
+src/layouts/agent-workspace
+```
 
 ## 横切规则
 

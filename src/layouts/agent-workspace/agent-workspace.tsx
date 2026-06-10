@@ -9,12 +9,16 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { AppTopBar, type TopPanel } from "./app-top-bar";
-import { ChatCenter } from "./chat/chat-center";
-import { FilePanel } from "./file-panel";
-import { SessionSidebar } from "./session-sidebar";
+import { ChatCenter } from "@/features/chat/chat-center";
+import { FilePanel } from "@/features/files/file-panel";
+import { ModelsConfigDialog } from "@/features/models-config/models-config-dialog";
+import { SessionSidebar } from "@/features/sessions/session-sidebar";
+import {
+  WorkspaceTopBar,
+  type TopPanel,
+} from "./workspace-top-bar";
 
-export function AppShell({
+export function AgentWorkspace({
   hasActiveSession = false,
 }: {
   hasActiveSession?: boolean;
@@ -23,6 +27,7 @@ export function AppShell({
   const [filePanelOpen, setFilePanelOpen] = useState(false);
   const [topPanel, setTopPanel] = useState<TopPanel>(null);
   const [dark, setDark] = useState(false);
+  const [modelsOpen, setModelsOpen] = useState(false);
   const [sessionStarted, setSessionStarted] = useState(hasActiveSession);
   const sessionIsActive = hasActiveSession || sessionStarted;
 
@@ -58,7 +63,7 @@ export function AppShell({
         className="flex h-dvh w-screen overflow-hidden bg-canvas"
         data-file-panel-open={filePanelOpen}
         data-sidebar-open={sidebarOpen}
-        data-testid="app-shell"
+        data-testid="agent-workspace"
       >
         <Button
           aria-label="Close sidebar"
@@ -79,7 +84,7 @@ export function AppShell({
               : "-translate-x-full min-[641px]:w-0 min-[641px]:translate-x-0 min-[641px]:border-r-0"
           }`}
         >
-          <SessionSidebar />
+          <SessionSidebar onOpenModels={() => setModelsOpen(true)} />
         </aside>
 
         <section
@@ -87,7 +92,7 @@ export function AppShell({
             filePanelOpen ? "hidden min-[641px]:flex" : "flex"
           }`}
         >
-          <AppTopBar
+          <WorkspaceTopBar
             dark={dark}
             onToggleSidebar={() => setSidebarOpen((open) => !open)}
             onToggleTheme={toggleTheme}
@@ -132,6 +137,10 @@ export function AppShell({
             {filePanelOpen ? "Hide file panel" : "Show file panel"}
           </TooltipContent>
         </Tooltip>
+
+        {modelsOpen ? (
+          <ModelsConfigDialog onClose={() => setModelsOpen(false)} />
+        ) : null}
       </div>
     </TooltipProvider>
   );

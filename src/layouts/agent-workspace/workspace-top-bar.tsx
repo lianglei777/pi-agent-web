@@ -14,7 +14,7 @@ import {
 
 export type TopPanel = "branches" | "system" | null;
 
-type AppTopBarProps = {
+type WorkspaceTopBarProps = {
   dark: boolean;
   sessionIsActive: boolean;
   sidebarOpen: boolean;
@@ -24,7 +24,7 @@ type AppTopBarProps = {
   onToggleTopPanel: (panel: Exclude<TopPanel, null>) => void;
 };
 
-export function AppTopBar({
+export function WorkspaceTopBar({
   dark,
   sessionIsActive,
   sidebarOpen,
@@ -32,7 +32,7 @@ export function AppTopBar({
   onToggleSidebar,
   onToggleTheme,
   onToggleTopPanel,
-}: AppTopBarProps) {
+}: WorkspaceTopBarProps) {
   return (
     <>
       <header className="flex h-9 flex-none items-stretch border-b border-line bg-panel pr-12">

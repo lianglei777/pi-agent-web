@@ -2,6 +2,26 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 
+function featureBoundary(feature) {
+  return {
+    files: [`src/features/${feature}/**/*.{ts,tsx}`],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              regex: `^@/features/(?!${feature}(?:/|$))`,
+              message:
+                "Features must not import other features; compose them in a layout.",
+            },
+          ],
+        },
+      ],
+    },
+  };
+}
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -135,6 +155,8 @@ const eslintConfig = defineConfig([
   {
     files: [
       "src/components/**/*.{ts,tsx}",
+      "src/features/**/*.{ts,tsx}",
+      "src/layouts/**/*.{ts,tsx}",
       "src/lib/**/*.{ts,tsx}",
       "src/app/**/*.{ts,tsx}",
     ],
@@ -154,6 +176,44 @@ const eslintConfig = defineConfig([
       ],
     },
   },
+  {
+    files: ["src/components/ui/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              regex: "^@/(features|layouts)(/|$)",
+              message:
+                "UI primitives must not depend on features or application layouts.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["src/features/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              regex: "^@/layouts(/|$)",
+              message:
+                "Features must remain independent of application layouts.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  featureBoundary("chat"),
+  featureBoundary("files"),
+  featureBoundary("models-config"),
+  featureBoundary("sessions"),
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
