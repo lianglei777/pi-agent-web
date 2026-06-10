@@ -1,13 +1,18 @@
 import {
-  MoonIcon,
-  PanelLeftIcon,
-  SunIcon,
-} from "@/components/icons";
+  Moon,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Sun,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export type TopPanel = "branches" | "system" | null;
-
-const neutralButton =
-  "cursor-pointer bg-transparent text-muted hover:bg-hover hover:text-primary";
 
 type AppTopBarProps = {
   dark: boolean;
@@ -31,29 +36,26 @@ export function AppTopBar({
   return (
     <>
       <header className="flex h-9 flex-none items-stretch border-b border-line bg-panel pr-12">
-        <button
-          aria-label={sidebarOpen ? "Hide sidebar" : "Show sidebar"}
-          aria-pressed={sidebarOpen}
-          className={`${neutralButton} grid size-9 flex-none place-items-center border-r border-line`}
+        <TopBarIconButton
+          label={sidebarOpen ? "Hide sidebar" : "Show sidebar"}
           onClick={onToggleSidebar}
-          title={sidebarOpen ? "Hide sidebar" : "Show sidebar"}
-          type="button"
+          pressed={sidebarOpen}
         >
-          <PanelLeftIcon showExpandIndicator={!sidebarOpen} />
-        </button>
-        <button
-          aria-label={dark ? "Use light theme" : "Use dark theme"}
-          aria-pressed={dark}
-          className={`${neutralButton} grid size-9 flex-none place-items-center border-r border-line`}
+          {sidebarOpen ? <PanelLeftClose /> : <PanelLeftOpen />}
+        </TopBarIconButton>
+        <TopBarIconButton
+          label={dark ? "Use light theme" : "Use dark theme"}
           onClick={onToggleTheme}
-          title={dark ? "Use light theme" : "Use dark theme"}
-          type="button"
+          pressed={dark}
         >
-          {dark ? <SunIcon /> : <MoonIcon />}
-        </button>
+          {dark ? <Sun /> : <Moon />}
+        </TopBarIconButton>
         {sessionIsActive ? (
           <>
-            <div className="mx-1 h-[18px] w-px self-center bg-line" />
+            <Separator
+              className="mx-1 h-[18px] self-center"
+              orientation="vertical"
+            />
             <TopPanelButton
               active={topPanel === "branches"}
               label="Branches"
@@ -95,7 +97,7 @@ function TopPanelButton({
   onClick: () => void;
 }) {
   return (
-    <button
+    <Button
       aria-expanded={active}
       className={`relative h-9 cursor-pointer border-t-2 px-2.5 text-[11px] ${
         active
@@ -103,10 +105,42 @@ function TopPanelButton({
           : "border-transparent bg-transparent text-muted hover:bg-hover hover:text-primary"
       }`}
       onClick={onClick}
+      size="sm"
       type="button"
+      variant="ghost"
     >
       {label}
-    </button>
+    </Button>
   );
 }
 
+function TopBarIconButton({
+  children,
+  label,
+  onClick,
+  pressed,
+}: {
+  children: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  pressed: boolean;
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          aria-label={label}
+          aria-pressed={pressed}
+          className="rounded-none border-r border-line"
+          onClick={onClick}
+          size="icon"
+          type="button"
+          variant="ghost"
+        >
+          {children}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom">{label}</TooltipContent>
+    </Tooltip>
+  );
+}

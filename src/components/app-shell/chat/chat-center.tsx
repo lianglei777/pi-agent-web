@@ -1,6 +1,8 @@
 "use client";
 
 import { type DragEvent, useState } from "react";
+import { ImagePlus } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { ChatComposer } from "./chat-composer";
 import { MessageTimeline } from "./message-timeline";
 import { useChatController } from "./use-chat-controller";
@@ -47,7 +49,7 @@ export function ChatCenter({
 
   return (
     <main
-      className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[radial-gradient(circle_at_50%_0%,color-mix(in_srgb,var(--accent)_5%,transparent),transparent_28rem),var(--bg)]"
+      className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[radial-gradient(circle_at_50%_0%,color-mix(in_srgb,var(--text)_2.5%,transparent),transparent_30rem),var(--bg)]"
       onDragEnter={(event) => {
         event.preventDefault();
         setDragActive(true);
@@ -64,8 +66,13 @@ export function ChatCenter({
       onDrop={handleDrop}
     >
       {dragActive ? (
-        <div className="pointer-events-none absolute inset-3 z-40 grid place-items-center rounded-[14px] border-2 border-dashed border-accent bg-[color-mix(in_srgb,var(--bg)_88%,transparent)] font-semibold text-accent">
-          Drop images to attach
+        <div className="pointer-events-none absolute inset-3 z-40 grid place-items-center rounded-xl border-2 border-dashed border-accent bg-[color-mix(in_srgb,var(--bg)_88%,transparent)]">
+          <Card className="border-0 bg-transparent text-accent shadow-none">
+            <CardContent className="flex flex-col items-center gap-2 p-6 font-semibold">
+              <ImagePlus className="size-7" />
+              Drop images to attach
+            </CardContent>
+          </Card>
         </div>
       ) : null}
       <MessageTimeline

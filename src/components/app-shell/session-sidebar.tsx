@@ -1,7 +1,13 @@
-import { LayersIcon, RefreshIcon } from "@/components/icons";
-
-const neutralButton =
-  "cursor-pointer bg-transparent text-muted hover:bg-hover hover:text-primary";
+import { Boxes, FolderOpen, Plus, RefreshCw, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export function SessionSidebar() {
   return (
@@ -10,58 +16,70 @@ export function SessionSidebar() {
         <div className="min-w-0 flex-1 overflow-hidden font-ui-mono text-[13px] font-semibold whitespace-nowrap text-primary">
           Pi Agent Web
         </div>
-        <button
-          className="flex h-8 w-[65px] cursor-pointer items-center justify-center gap-1 rounded-md bg-accent text-xs font-semibold text-white disabled:cursor-not-allowed disabled:border disabled:border-line disabled:bg-hover disabled:text-dim"
+        <Button
+          className="w-[65px]"
           disabled
+          size="sm"
           type="button"
         >
-          <span
-            aria-hidden="true"
-            className="text-[19px] leading-none font-normal"
-          >
-            +
-          </span>
+          <Plus />
           New
-        </button>
-        <button
-          aria-label="Refresh sessions"
-          className={`${neutralButton} grid size-8 place-items-center rounded-[5px] border border-line bg-hover`}
-          title="Refresh sessions"
-          type="button"
-        >
-          <RefreshIcon size={15} />
-        </button>
+        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              aria-label="Refresh sessions"
+              size="icon-sm"
+              type="button"
+              variant="outline"
+            >
+              <RefreshCw />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Refresh sessions</TooltipContent>
+        </Tooltip>
       </div>
 
-      <button
-        className="mx-2.5 mb-2 flex h-8 cursor-pointer items-center rounded-md border border-line bg-transparent px-2.5 text-left font-ui-mono text-[11px] text-muted hover:bg-hover hover:text-primary"
+      <Button
+        className="mx-2.5 mb-2 justify-start font-ui-mono text-[11px]"
+        size="sm"
         type="button"
+        variant="outline"
       >
+        <FolderOpen />
         <span>Select project...</span>
-      </button>
+      </Button>
 
-      <div className="min-h-20 flex-[1_1_50%] overflow-y-auto border-t border-line px-3 py-3.5">
-        <span className="text-[11px] text-dim">Loading...</span>
-      </div>
+      <Separator />
+      <ScrollArea className="min-h-20 flex-[1_1_50%]">
+        <div className="space-y-2 px-3 py-3.5" aria-label="Loading sessions">
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-8 w-[88%]" />
+          <Skeleton className="h-8 w-[72%]" />
+        </div>
+      </ScrollArea>
 
       <div className="flex gap-1.5 p-2">
-        <button
-          className={`${neutralButton} flex h-8 flex-1 items-center justify-center gap-1 rounded-md text-xs`}
+        <Button
+          className="flex-1"
+          size="sm"
           type="button"
+          variant="ghost"
         >
-          <LayersIcon size={14} />
+          <Boxes />
           Models
-        </button>
-        <button
-          className={`${neutralButton} flex h-8 flex-1 items-center justify-center gap-1 rounded-md text-xs disabled:cursor-not-allowed disabled:opacity-35`}
+        </Button>
+        <Button
+          className="flex-1"
           disabled
+          size="sm"
           type="button"
+          variant="ghost"
         >
-          <LayersIcon size={14} />
+          <Sparkles />
           Skills
-        </button>
+        </Button>
       </div>
     </div>
   );
 }
-

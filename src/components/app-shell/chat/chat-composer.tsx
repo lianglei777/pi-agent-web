@@ -5,6 +5,14 @@ import type {
   RefObject,
   SetStateAction,
 } from "react";
+import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { ComposerToolbar } from "./composer-toolbar";
 import type { AttachedImage, SubmitMode } from "./chat-types";
 
@@ -59,12 +67,12 @@ export function ChatComposer({
 }: ChatComposerProps) {
   return (
     <div className="pointer-events-none absolute right-0 bottom-0 left-0 z-20 bg-[linear-gradient(transparent,var(--bg)_38%)] px-6 pt-11 pb-[18px] max-[640px]:px-2.5 max-[640px]:pt-9 max-[640px]:pb-2.5">
-      <div className="pointer-events-auto mx-auto w-full max-w-[780px] overflow-hidden rounded-[14px] border border-[color-mix(in_srgb,var(--border)_82%,var(--text-muted))] bg-canvas shadow-[0_16px_45px_color-mix(in_srgb,var(--text)_10%,transparent),inset_0_1px_0_color-mix(in_srgb,white_40%,transparent)] transition-[border-color,box-shadow] duration-150 focus-within:border-[color-mix(in_srgb,var(--accent)_55%,var(--border))] focus-within:shadow-[0_16px_45px_color-mix(in_srgb,var(--text)_10%,transparent),0_0_0_3px_color-mix(in_srgb,var(--accent)_10%,transparent)]">
+      <div className="pointer-events-auto mx-auto w-full max-w-[780px] overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--shadow-soft)] transition-[border-color,box-shadow] duration-150 focus-within:border-[color-mix(in_srgb,var(--border)_45%,var(--text))] focus-within:shadow-[var(--shadow-soft),0_0_0_3px_color-mix(in_srgb,var(--text)_7%,transparent)]">
         <AttachmentPreviews images={images} removeImage={removeImage} />
 
-        <textarea
+        <Textarea
           aria-label="Message"
-          className="block min-h-[58px] max-h-[180px] w-full resize-none overflow-y-auto border-0 bg-transparent px-[15px] pt-3.5 pb-2 text-sm leading-6 text-primary outline-none placeholder:text-dim"
+          className="block min-h-[58px] max-h-[180px] resize-none overflow-y-auto rounded-none border-0 px-[15px] pt-3.5 pb-2 leading-6 text-primary shadow-none placeholder:text-dim focus-visible:border-transparent focus-visible:ring-0"
           onChange={(event) => {
             setDraft(event.target.value);
             resizeTextarea();
@@ -127,14 +135,21 @@ function AttachmentPreviews({
             className="size-full object-cover"
             src={image.previewUrl}
           />
-          <button
-            aria-label={`Remove ${image.file.name}`}
-            className="absolute top-[3px] right-[3px] grid size-[19px] cursor-pointer place-items-center rounded-full border-0 bg-black/70 text-xs leading-none text-white"
-            onClick={() => removeImage(image.id)}
-            type="button"
-          >
-            x
-          </button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                aria-label={`Remove ${image.file.name}`}
+                className="absolute top-[3px] right-[3px] size-[19px] rounded-full bg-black/70 p-0 text-white hover:bg-black/85 hover:text-white"
+                onClick={() => removeImage(image.id)}
+                size="icon-sm"
+                type="button"
+                variant="ghost"
+              >
+                <X className="size-3" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Remove attachment</TooltipContent>
+          </Tooltip>
         </div>
       ))}
     </div>

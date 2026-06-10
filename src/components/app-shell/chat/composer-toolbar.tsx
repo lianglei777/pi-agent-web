@@ -1,10 +1,26 @@
 import type { ChangeEvent } from "react";
+import {
+  Paperclip,
+  Send,
+  Square,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { MODEL_OPTIONS } from "./chat-constants";
 import type { ChatComposerProps } from "./chat-composer";
-import { ChatIcon } from "./chat-icons";
-
-const toolbarControl =
-  "h-[29px] cursor-pointer rounded-md border-0 bg-transparent text-[11px] text-muted hover:bg-hover hover:text-primary";
 
 type ComposerToolbarProps = Pick<
   ChatComposerProps,
@@ -53,60 +69,74 @@ export function ComposerToolbar({
         ref={fileInputRef}
         type="file"
       />
-      <button
-        aria-label="Attach images"
-        className={`${toolbarControl} inline-flex items-center gap-[5px] px-2`}
+      <ToolbarIconButton
+        label="Attach images"
         onClick={() => fileInputRef.current?.click()}
-        title="Attach images"
-        type="button"
       >
-        <ChatIcon name="attach" />
-      </button>
-      <select
-        aria-label="Model"
-        className={`${toolbarControl} max-w-[150px] px-[7px] outline-none max-[640px]:max-w-[105px]`}
+        <Paperclip />
+      </ToolbarIconButton>
+      <Select
         disabled={running}
-        onChange={(event) => setModel(event.target.value)}
+        onValueChange={setModel}
         value={model}
       >
-        {MODEL_OPTIONS.map((option) => (
-          <option key={option}>{option}</option>
-        ))}
-      </select>
-      <select
-        aria-label="Thinking level"
-        className={`${toolbarControl} max-w-[150px] px-[7px] outline-none max-[640px]:hidden`}
+        <SelectTrigger
+          aria-label="Model"
+          className="h-[29px] max-w-[150px] border-0 shadow-none max-[640px]:max-w-[105px]"
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {MODEL_OPTIONS.map((option) => (
+            <SelectItem key={option} value={option}>
+              {option}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select
         disabled={running}
-        onChange={(event) => setThinking(event.target.value)}
+        onValueChange={setThinking}
         value={thinking}
       >
-        <option value="auto">Thinking: Auto</option>
-        <option value="off">Thinking: Off</option>
-        <option value="low">Thinking: Low</option>
-        <option value="medium">Thinking: Medium</option>
-        <option value="high">Thinking: High</option>
-      </select>
-      <select
-        aria-label="Tool preset"
-        className={`${toolbarControl} max-w-[150px] px-[7px] outline-none max-[640px]:hidden`}
+        <SelectTrigger
+          aria-label="Thinking level"
+          className="h-[29px] max-w-[150px] border-0 shadow-none max-[640px]:hidden"
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="auto">Thinking: Auto</SelectItem>
+          <SelectItem value="off">Thinking: Off</SelectItem>
+          <SelectItem value="low">Thinking: Low</SelectItem>
+          <SelectItem value="medium">Thinking: Medium</SelectItem>
+          <SelectItem value="high">Thinking: High</SelectItem>
+        </SelectContent>
+      </Select>
+      <Select
         disabled={running}
-        onChange={(event) => setToolPreset(event.target.value)}
+        onValueChange={setToolPreset}
         value={toolPreset}
       >
-        <option value="none">No tools</option>
-        <option value="default">Default tools</option>
-        <option value="full">All tools</option>
-      </select>
-      <button
-        aria-label={soundEnabled ? "Disable sound" : "Enable sound"}
-        aria-pressed={soundEnabled}
-        className={`${toolbarControl} inline-flex items-center gap-[5px] px-2`}
+        <SelectTrigger
+          aria-label="Tool preset"
+          className="h-[29px] max-w-[150px] border-0 shadow-none max-[640px]:hidden"
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="none">No tools</SelectItem>
+          <SelectItem value="default">Default tools</SelectItem>
+          <SelectItem value="full">All tools</SelectItem>
+        </SelectContent>
+      </Select>
+      <ToolbarIconButton
+        label={soundEnabled ? "Disable sound" : "Enable sound"}
         onClick={toggleSound}
-        title={soundEnabled ? "Sound on" : "Sound off"}
-        type="button"
+        pressed={soundEnabled}
       >
-        <ChatIcon name="sound" />
-      </button>
+        {soundEnabled ? <Volume2 /> : <VolumeX />}
+      </ToolbarIconButton>
       <div className="flex-1" />
 
       {running ? (
@@ -116,15 +146,16 @@ export function ComposerToolbar({
           submit={submit}
         />
       ) : (
-        <button
+        <Button
           aria-label="Send message"
-          className="grid size-[31px] cursor-pointer place-items-center rounded-lg border-0 bg-accent text-white hover:bg-accent-hover disabled:cursor-default disabled:bg-hover disabled:text-dim"
+          className="size-[31px] rounded-lg"
           disabled={!canSubmit}
           onClick={() => submit()}
+          size="icon-sm"
           type="button"
         >
-          <ChatIcon name="send" />
-        </button>
+          <Send />
+        </Button>
       )}
     </div>
   );
@@ -137,30 +168,67 @@ function RuntimeActions({
 }: Pick<ChatComposerProps, "canSubmit" | "stop" | "submit">) {
   return (
     <div className="flex items-center gap-[5px]">
-      <button
-        className="inline-flex h-[30px] cursor-pointer items-center gap-1 rounded-[7px] border border-line bg-panel px-[9px] text-[11px] text-muted hover:bg-hover hover:text-primary disabled:cursor-default disabled:opacity-45"
+      <Button
+        className="h-[30px] px-[9px] text-[11px]"
         disabled={!canSubmit}
         onClick={() => submit("followUp")}
+        size="sm"
         type="button"
+        variant="outline"
       >
         Follow-up
-      </button>
-      <button
-        className="inline-flex h-[30px] cursor-pointer items-center gap-1 rounded-[7px] border border-line bg-panel px-[9px] text-[11px] text-muted hover:bg-hover hover:text-primary disabled:cursor-default disabled:opacity-45"
+      </Button>
+      <Button
+        className="h-[30px] px-[9px] text-[11px]"
         disabled={!canSubmit}
         onClick={() => submit("steer")}
+        size="sm"
         type="button"
+        variant="outline"
       >
         Steer
-      </button>
-      <button
+      </Button>
+      <Button
         aria-label="Stop agent"
-        className="inline-flex h-[30px] cursor-pointer items-center gap-1 rounded-[7px] border border-[color-mix(in_srgb,#dc2626_35%,var(--border))] bg-panel px-[9px] text-[11px] text-red-600 hover:bg-hover disabled:cursor-default disabled:opacity-45"
+        className="h-[30px] border-red-600/35 px-[9px] text-[11px] text-red-600 hover:text-red-600"
         onClick={stop}
+        size="sm"
         type="button"
+        variant="outline"
       >
-        <ChatIcon name="stop" size={12} /> Stop
-      </button>
+        <Square className="size-3" /> Stop
+      </Button>
     </div>
+  );
+}
+
+function ToolbarIconButton({
+  children,
+  label,
+  onClick,
+  pressed,
+}: {
+  children: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  pressed?: boolean;
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          aria-label={label}
+          aria-pressed={pressed}
+          className="size-[29px]"
+          onClick={onClick}
+          size="icon-sm"
+          type="button"
+          variant="ghost"
+        >
+          {children}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="top">{label}</TooltipContent>
+    </Tooltip>
   );
 }

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 @theme inline {
   --color-canvas: var(--bg);
@@ -11,43 +12,97 @@
   --color-dim: var(--text-dim);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
   --font-ui-mono: var(--font-noto-mono), "JetBrains Mono", "Fira Code",
     Consolas, ui-monospace, "PingFang SC", "Microsoft YaHei", monospace;
 }
 
 :root {
-  --bg: #ffffff;
-  --bg-panel: #f5f5f5;
-  --bg-hover: #eeeeee;
-  --bg-selected: #e8e8e8;
-  --border: #e0e0e0;
-  --text: #1a1a1a;
-  --text-muted: #6b7280;
-  --text-dim: #9ca3af;
-  --accent: #2563eb;
-  --accent-hover: #1d4ed8;
-  --user-bg: #eff6ff;
+  --bg: #f7f7f5;
+  --bg-panel: #ffffff;
+  --bg-hover: #f1f1ef;
+  --bg-selected: #ebebe8;
+  --border: #dededb;
+  --text: #171717;
+  --text-muted: #6f6f6b;
+  --text-dim: #9d9d97;
+  --accent: #171717;
+  --accent-hover: #000000;
+  --background: var(--bg);
+  --foreground: var(--text);
+  --card: #ffffff;
+  --card-foreground: var(--text);
+  --popover: #ffffff;
+  --popover-foreground: var(--text);
+  --primary-foreground: #ffffff;
+  --secondary: #f1f1ef;
+  --secondary-foreground: var(--text);
+  --muted-foreground: var(--text-muted);
+  --accent-foreground: var(--text);
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --input: var(--border);
+  --ring: #73736e;
+  --radius: 0.875rem;
+  --user-bg: #efefec;
   --assistant-bg: #ffffff;
-  --tool-bg: #f9fafb;
-  --bg-subtle: rgba(0, 0, 0, 0.03);
+  --tool-bg: #f4f4f2;
+  --bg-subtle: rgba(23, 23, 23, 0.035);
+  --shadow-soft: 0 1px 2px rgba(23, 23, 23, 0.05),
+    0 10px 30px rgba(23, 23, 23, 0.05);
   color-scheme: light;
 }
 
 html.dark {
-  --bg: #1a1a1a;
-  --bg-panel: #242424;
-  --bg-hover: #2e2e2e;
-  --bg-selected: #383838;
-  --border: #3a3a3a;
-  --text: #e8e8e8;
-  --text-muted: #9ca3af;
-  --text-dim: #6b7280;
-  --accent: #60a5fa;
-  --accent-hover: #93c5fd;
-  --user-bg: #1e293b;
-  --assistant-bg: #1a1a1a;
-  --tool-bg: #1f2937;
+  --bg: #171717;
+  --bg-panel: #202020;
+  --bg-hover: #292929;
+  --bg-selected: #323232;
+  --border: #393939;
+  --text: #f2f2f0;
+  --text-muted: #a6a6a0;
+  --text-dim: #72726d;
+  --accent: #f2f2f0;
+  --accent-hover: #ffffff;
+  --background: var(--bg);
+  --foreground: var(--text);
+  --card: #202020;
+  --card-foreground: var(--text);
+  --popover: #242424;
+  --popover-foreground: var(--text);
+  --primary-foreground: #171717;
+  --secondary: #2a2a2a;
+  --secondary-foreground: var(--text);
+  --muted-foreground: var(--text-muted);
+  --accent-foreground: var(--text);
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --input: var(--border);
+  --ring: #a6a6a0;
+  --user-bg: #2b2b2b;
+  --assistant-bg: #171717;
+  --tool-bg: #202020;
   --bg-subtle: rgba(255, 255, 255, 0.04);
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.2),
+    0 12px 32px rgba(0, 0, 0, 0.18);
   color-scheme: dark;
 }
 
@@ -67,8 +122,10 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "PingFang SC", "Microsoft YaHei", sans-serif;
   font-size: 14px;
+  font-synthesis: none;
 }
 
 button,
