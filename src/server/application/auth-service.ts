@@ -1,11 +1,11 @@
 import type { OAuthServerEvent } from "@/server/domain/auth";
 import type { CredentialProvider } from "@/server/ports/credential-provider";
-import { PendingInputRegistry } from "@/server/infrastructure/runtime/pending-input-registry";
+import type { PendingInputProvider } from "@/server/ports/pending-input";
 
 export class AuthService {
   constructor(
     private readonly credentials: CredentialProvider,
-    private readonly pendingInputs: PendingInputRegistry,
+    private readonly pendingInputs: PendingInputProvider,
   ) {}
 
   listOAuthProviders() {
@@ -77,4 +77,3 @@ export class AuthService {
     }
   }
 }
-

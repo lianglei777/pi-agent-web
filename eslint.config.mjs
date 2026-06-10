@@ -5,6 +5,155 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  {
+    files: ["src/server/domain/**/*.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              regex:
+                "^@/server/(application|ports|infrastructure|transport|composition)(/|$)",
+              message: "Domain code must not depend on outer server layers.",
+            },
+            {
+              regex:
+                "^(next|react|@earendil-works/pi-ai|@earendil-works/pi-coding-agent)(/|$)",
+              message: "Framework and vendor APIs do not belong in domain code.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["src/server/ports/**/*.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              regex:
+                "^@/server/(application|infrastructure|transport|composition)(/|$)",
+              message: "Ports may depend only on domain contracts.",
+            },
+            {
+              regex:
+                "^(next|react|@earendil-works/pi-ai|@earendil-works/pi-coding-agent)(/|$)",
+              message: "Ports must not expose framework or vendor APIs.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["src/server/application/**/*.ts"],
+    ignores: ["src/server/application/**/*.test.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              regex:
+                "^@/server/(infrastructure|transport|composition)(/|$)",
+              message: "Application code may depend only on domain and ports.",
+            },
+            {
+              regex:
+                "^(next|react|@earendil-works/pi-ai|@earendil-works/pi-coding-agent)(/|$)",
+              message: "Framework and vendor APIs belong behind ports.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["src/server/infrastructure/**/*.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              regex: "^@/server/(application|transport|composition)(/|$)",
+              message:
+                "Infrastructure implements ports and must not depend on outer layers.",
+            },
+            {
+              regex: "^(next|react)(/|$)",
+              message: "Infrastructure must remain independent of UI frameworks.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["src/server/transport/**/*.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              regex: "^@/server/(infrastructure|composition)(/|$)",
+              message:
+                "Transport must delegate through application boundaries.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["src/app/api/**/*.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              regex: "^@/server/(application|ports|infrastructure)(/|$)",
+              message:
+                "Route Handlers may use composition, transport, and domain contracts only.",
+            },
+            {
+              regex:
+                "^(@earendil-works/pi-ai|@earendil-works/pi-coding-agent)(/|$)",
+              message: "Route Handlers must not call vendor SDKs directly.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: [
+      "src/components/**/*.{ts,tsx}",
+      "src/lib/**/*.{ts,tsx}",
+      "src/app/**/*.{ts,tsx}",
+    ],
+    ignores: ["src/app/api/**/*.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              regex: "^@/server(/|$)",
+              message:
+                "UI code must use the HTTP API instead of importing server modules.",
+            },
+          ],
+        },
+      ],
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

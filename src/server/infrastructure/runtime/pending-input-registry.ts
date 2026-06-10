@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { AppError } from "@/server/domain/app-error";
+import type { PendingInputProvider } from "@/server/ports/pending-input";
 
 type PendingInput = {
   provider: string;
@@ -7,7 +8,7 @@ type PendingInput = {
   reject: (reason: Error) => void;
 };
 
-export class PendingInputRegistry {
+export class PendingInputRegistry implements PendingInputProvider {
   private readonly pending = new Map<string, PendingInput>();
 
   create(
@@ -66,4 +67,3 @@ export class PendingInputRegistry {
     return this.pending.has(token);
   }
 }
-
