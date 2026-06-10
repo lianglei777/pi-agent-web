@@ -5,6 +5,10 @@ import type { NextConfig } from "next";
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: [
+    "@earendil-works/pi-ai",
+    "@earendil-works/pi-coding-agent",
+  ],
   turbopack: {
     root: projectRoot,
   },
