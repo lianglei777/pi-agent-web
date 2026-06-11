@@ -1,0 +1,163 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { Check, ChevronDown, FolderOpen } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { loadDefaultCwd } from "./api";
+import { shortenCwd } from "./session-utils";
+
+export function CwdPicker({
+  cwd,
+  home,
+  recentCwds,
+  onChange,
+}: {
+  cwd: string | null;
+  home: string;
+  recentCwds: string[];
+  onChange: (cwd: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [custom, setCustom] = useState(false);
+  const [value, setValue] = useState("");
+  const [error, setError] = useState("");
+  const rootRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    function close(event: PointerEvent) {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+        setCustom(false);
+        setValue("");
+      }
+    }
+    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);
+  }, []);
+
+  useEffect(() => {
+    if (custom) inputRef.current?.focus();
+  }, [custom]);
+
+  function select(nextCwd: string) {
+    onChange(nextCwd);
+    setOpen(false);
+    setCustom(false);
+    setValue("");
+    setError("");
+  }
+
+  async function useDefault() {
+    try {
+      select((await loadDefaultCwd()).cwd);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to load directory");
+    }
+  }
+
+  function submitCustom() {
+    const next = value.trim();
+    if (next) select(next);
+    else setCustom(false);
+  }
+
+  return (
+    <div className="relative mx-2.5 mb-2" ref={rootRef}>
+      <Button
+        aria-expanded={open}
+        className="w-full justify-start px-2.5 font-ui-mono text-[11px]"
+        onClick={() => setOpen((current) => !current)}
+        size="sm"
+        title={cwd ?? "Select project"}
+        type="button"
+        variant="outline"
+      >
+        <FolderOpen />
+        <span className="min-w-0 flex-1 truncate text-left">
+          {cwd ? shortenCwd(cwd, home) : "Select project..."}
+        </span>
+        <ChevronDown className="size-3" />
+      </Button>
+
+      {open ? (
+        <div className="absolute top-full right-0 left-0 z-100 mt-1 rounded-lg border border-line bg-popover p-1.5 shadow-lg">
+          {recentCwds.map((recent) => (
+            <Button
+              className="h-8 w-full justify-start px-2 text-[11px]"
+              key={recent}
+              onClick={() => select(recent)}
+              title={recent}
+              type="button"
+              variant={recent === cwd ? "secondary" : "ghost"}
+            >
+              <Check
+                className={recent === cwd ? "text-accent" : "invisible"}
+              />
+              <span className="truncate">{shortenCwd(recent, home)}</span>
+            </Button>
+          ))}
+          {recentCwds.length ? <div className="my-1 border-t border-line" /> : null}
+          {custom ? (
+            <div className="space-y-1.5 p-1">
+              <Input
+                aria-label="Custom project path"
+                className="h-8 font-ui-mono text-[11px]"
+                onChange={(event) => setValue(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") submitCustom();
+                  if (event.key === "Escape") {
+                    setCustom(false);
+                    setValue("");
+                  }
+                }}
+                placeholder="Absolute path"
+                ref={inputRef}
+                value={value}
+              />
+              <div className="flex gap-1">
+                <Button className="flex-1" onClick={submitCustom} size="sm">
+                  Open
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={() => {
+                    setCustom(false);
+                    setValue("");
+                  }}
+                  size="sm"
+                  variant="ghost"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <Button
+                className="h-8 w-full justify-start text-[11px]"
+                onClick={useDefault}
+                type="button"
+                variant="ghost"
+              >
+                Use default directory
+              </Button>
+              <Button
+                className="h-8 w-full justify-start text-[11px]"
+                onClick={() => setCustom(true)}
+                type="button"
+                variant="ghost"
+              >
+                Custom path...
+              </Button>
+            </>
+          )}
+          {error ? (
+            <p className="m-1 text-[10px] text-destructive">{error}</p>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}

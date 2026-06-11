@@ -20,10 +20,10 @@ export async function GET(_request: Request, context: Context) {
 export async function POST(request: Request, context: Context) {
   return handleRoute(async () => {
     const { id } = await context.params;
-    return container.agentService.execute(
+    const result = await container.agentService.execute(
       id,
       parseAgentCommand(await readJson(request)),
     );
+    return result === undefined ? { success: true } : result;
   });
 }
-

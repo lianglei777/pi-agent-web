@@ -1,4 +1,5 @@
 import {
+  GitBranch,
   Moon,
   PanelLeftClose,
   PanelLeftOpen,
@@ -11,6 +12,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import type {
+  ContextUsage,
+  SessionStats,
+  SessionTreeNode,
+} from "@/features/chat/agent-types";
 
 export type TopPanel = "branches" | "system" | null;
 
@@ -22,6 +28,12 @@ type WorkspaceTopBarProps = {
   onToggleSidebar: () => void;
   onToggleTheme: () => void;
   onToggleTopPanel: (panel: Exclude<TopPanel, null>) => void;
+  branchTree: SessionTreeNode[];
+  activeLeafId: string | null;
+  onLeafChange: ((leafId: string) => void) | null;
+  systemPrompt: string | null;
+  stats: SessionStats | null;
+  contextUsage: ContextUsage | null;
 };
 
 export function WorkspaceTopBar({
@@ -32,6 +44,12 @@ export function WorkspaceTopBar({
   onToggleSidebar,
   onToggleTheme,
   onToggleTopPanel,
+  branchTree,
+  activeLeafId,
+  onLeafChange,
+  systemPrompt,
+  stats,
+  contextUsage,
 }: WorkspaceTopBarProps) {
   return (
     <>
@@ -69,22 +87,90 @@ export function WorkspaceTopBar({
           </>
         ) : null}
         <div className="flex-1" />
+        {stats ? (
+          <div className="flex items-center px-2 font-ui-mono text-[10px] text-dim">
+            {stats.input + stats.output} tokens / ${stats.cost.toFixed(4)}
+          </div>
+        ) : null}
+        {contextUsage ? (
+          <div className="flex items-center px-2 font-ui-mono text-[10px] text-dim">
+            context{" "}
+            {contextUsage.percent === null
+              ? "n/a"
+              : `${contextUsage.percent.toFixed(0)}%`}
+          </div>
+        ) : null}
       </header>
 
       {topPanel ? (
         <section
-          className="absolute top-9 left-0 z-500 flex min-h-24 w-full items-center justify-center border-b border-line bg-panel text-xs text-dim shadow-[0_6px_20px_rgba(0,0,0,0.1)]"
+          className="absolute top-9 left-0 z-500 max-h-[45vh] min-h-24 w-full overflow-auto border-b border-line bg-panel p-3 text-xs text-muted shadow-[0_6px_20px_rgba(0,0,0,0.1)]"
           data-testid="top-panel"
         >
-          <span>
-            {topPanel === "branches"
-              ? "No branches in this session"
-              : "No system prompt available"}
-          </span>
+          {topPanel === "branches" ? (
+            branchTree.length ? (
+              <BranchNodes
+                activeLeafId={activeLeafId}
+                nodes={branchTree}
+                onLeafChange={onLeafChange}
+              />
+            ) : (
+              "No branches in this session"
+            )
+          ) : systemPrompt ? (
+            <pre className="m-0 font-ui-mono text-[11px] leading-5 whitespace-pre-wrap">
+              {systemPrompt}
+            </pre>
+          ) : (
+            "No system prompt available"
+          )}
         </section>
       ) : null}
     </>
   );
+}
+
+function BranchNodes({
+  nodes,
+  activeLeafId,
+  onLeafChange,
+  depth = 0,
+}: {
+  nodes: SessionTreeNode[];
+  activeLeafId: string | null;
+  onLeafChange: ((leafId: string) => void) | null;
+  depth?: number;
+}) {
+  return nodes.map((node) => {
+    const label =
+      node.label ??
+      node.entry.message?.role ??
+      node.entry.type;
+    return (
+      <div key={node.entry.id}>
+        <Button
+          className={`h-7 justify-start px-2 text-[11px] ${
+            activeLeafId === node.entry.id ? "bg-selected text-primary" : ""
+          }`}
+          disabled={!onLeafChange}
+          onClick={() => onLeafChange?.(node.entry.id)}
+          style={{ marginLeft: `${depth * 12}px` }}
+          variant="ghost"
+        >
+          <GitBranch className="size-3" />
+          <span className="max-w-[620px] truncate">{label}</span>
+        </Button>
+        {node.children.length ? (
+          <BranchNodes
+            activeLeafId={activeLeafId}
+            depth={depth + 1}
+            nodes={node.children}
+            onLeafChange={onLeafChange}
+          />
+        ) : null}
+      </div>
+    );
+  });
 }
 
 function TopPanelButton({

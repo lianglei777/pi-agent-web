@@ -50,10 +50,11 @@ export function requiredBoolean(
 
 export function parseCreateAgent(value: unknown): CreateAgentRequest {
   const object = asObject(value);
+  const images = parseImages(object.images);
   return {
     cwd: requiredString(object, "cwd"),
-    message: requiredString(object, "message"),
-    images: parseImages(object.images),
+    message: messageOrImages(object, images),
+    images,
     provider: optionalString(object, "provider"),
     modelId: optionalString(object, "modelId"),
     thinkingLevel:
@@ -70,12 +71,14 @@ export function parseAgentCommand(value: unknown): AgentCommand {
   switch (type) {
     case "prompt":
     case "steer":
-    case "follow_up":
+    case "follow_up": {
+      const images = parseImages(object.images);
       return {
         type,
-        message: requiredString(object, "message"),
-        images: parseImages(object.images),
+        message: messageOrImages(object, images),
+        images,
       };
+    }
     case "abort":
     case "get_state":
     case "get_tools":
@@ -163,6 +166,18 @@ function parseImages(value: unknown): ImageInput[] | undefined {
   });
 }
 
+function messageOrImages(
+  object: JsonObject,
+  images: ImageInput[] | undefined,
+): string {
+  const value = object.message;
+  if (typeof value !== "string") invalid("message must be a string");
+  if (!value.trim() && !images?.length) {
+    invalid("message or images must be provided");
+  }
+  return value;
+}
+
 function parseStringArray(
   value: unknown,
   key: string,
@@ -177,4 +192,3 @@ function parseStringArray(
 function invalid(message: string): never {
   throw new AppError("VALIDATION_ERROR", message, 400);
 }
-

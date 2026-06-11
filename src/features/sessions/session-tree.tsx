@@ -1,0 +1,286 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import {
+  ChevronDown,
+  GitFork,
+  Pencil,
+  Trash2,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { deleteSession, renameSession } from "./api";
+import {
+  formatRelativeTime,
+  getSessionTitle,
+} from "./session-utils";
+import type { SessionInfo, SessionTreeNode } from "./types";
+
+export function SessionTree({
+  nodes,
+  selectedSessionId,
+  onSelect,
+  onChanged,
+  onDeleted,
+}: {
+  nodes: SessionTreeNode[];
+  selectedSessionId: string | null;
+  onSelect: (session: SessionInfo) => void;
+  onChanged: () => Promise<void>;
+  onDeleted: (session: SessionInfo) => void;
+}) {
+  return nodes.map((node) => (
+    <SessionTreeItem
+      key={node.session.id}
+      node={node}
+      onChanged={onChanged}
+      onDeleted={onDeleted}
+      onSelect={onSelect}
+      selectedSessionId={selectedSessionId}
+    />
+  ));
+}
+
+function SessionTreeItem({
+  node,
+  selectedSessionId,
+  onSelect,
+  onChanged,
+  onDeleted,
+  depth = 0,
+}: {
+  node: SessionTreeNode;
+  selectedSessionId: string | null;
+  onSelect: (session: SessionInfo) => void;
+  onChanged: () => Promise<void>;
+  onDeleted: (session: SessionInfo) => void;
+  depth?: number;
+}) {
+  const [collapsed, setCollapsed] = useState(false);
+  return (
+    <div>
+      <SessionRow
+        collapsed={collapsed}
+        depth={depth}
+        hasChildren={node.children.length > 0}
+        onChanged={onChanged}
+        onDeleted={onDeleted}
+        onSelect={onSelect}
+        onToggle={() => setCollapsed((current) => !current)}
+        selected={node.session.id === selectedSessionId}
+        session={node.session}
+      />
+      {!collapsed && node.children.length ? (
+        <div className="ml-3 border-l border-line/80">
+          {node.children.map((child) => (
+            <SessionTreeItem
+              depth={depth + 1}
+              key={child.session.id}
+              node={child}
+              onChanged={onChanged}
+              onDeleted={onDeleted}
+              onSelect={onSelect}
+              selectedSessionId={selectedSessionId}
+            />
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function SessionRow({
+  session,
+  selected,
+  depth,
+  hasChildren,
+  collapsed,
+  onToggle,
+  onSelect,
+  onChanged,
+  onDeleted,
+}: {
+  session: SessionInfo;
+  selected: boolean;
+  depth: number;
+  hasChildren: boolean;
+  collapsed: boolean;
+  onToggle: () => void;
+  onSelect: (session: SessionInfo) => void;
+  onChanged: () => Promise<void>;
+  onDeleted: (session: SessionInfo) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [value, setValue] = useState(session.name ?? "");
+  const [error, setError] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+  const title = getSessionTitle(session);
+
+  useEffect(() => {
+    if (editing) inputRef.current?.select();
+  }, [editing]);
+
+  async function submitRename() {
+    const nextName = value.trim();
+    if (!nextName || nextName === (session.name ?? "")) {
+      setEditing(false);
+      setValue(session.name ?? "");
+      return;
+    }
+    setBusy(true);
+    try {
+      await renameSession(session.id, nextName);
+      await onChanged();
+      setEditing(false);
+      setError("");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Rename failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function remove() {
+    setBusy(true);
+    try {
+      await deleteSession(session.id);
+      onDeleted(session);
+      await onChanged();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Delete failed");
+      setBusy(false);
+    }
+  }
+
+  if (editing) {
+    return (
+      <div className="flex h-[54px] items-center gap-1 px-2">
+        <Input
+          aria-label={`Rename ${title}`}
+          className="h-8 text-xs"
+          disabled={busy}
+          onBlur={submitRename}
+          onChange={(event) => setValue(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") void submitRename();
+            if (event.key === "Escape") {
+              setEditing(false);
+              setValue(session.name ?? "");
+            }
+          }}
+          ref={inputRef}
+          value={value}
+        />
+        {error ? <span className="sr-only">{error}</span> : null}
+      </div>
+    );
+  }
+
+  if (confirming) {
+    return (
+      <div
+        className={`flex h-[54px] items-center gap-1 border-l-2 border-destructive bg-destructive/8 px-2 ${
+          busy ? "opacity-50" : ""
+        }`}
+      >
+        <span className="min-w-0 flex-1 truncate text-[11px]">
+          Delete &ldquo;{title.slice(0, 22)}&rdquo;?
+        </span>
+        <Button
+          disabled={busy}
+          onClick={remove}
+          size="sm"
+          type="button"
+          variant="destructive"
+        >
+          Delete
+        </Button>
+        <Button
+          disabled={busy}
+          onClick={() => setConfirming(false)}
+          size="sm"
+          type="button"
+          variant="ghost"
+        >
+          Cancel
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`group flex h-[54px] cursor-pointer items-center border-l-2 pr-1 transition-colors ${
+        selected
+          ? "border-accent bg-selected"
+          : "border-transparent hover:bg-hover"
+      }`}
+      onClick={() => onSelect(session)}
+      style={{ paddingLeft: `${4 + depth * 12}px` }}
+      title={title}
+    >
+      {hasChildren ? (
+        <Button
+          aria-label={collapsed ? "Expand session forks" : "Collapse session forks"}
+          className="size-6"
+          onClick={(event) => {
+            event.stopPropagation();
+            onToggle();
+          }}
+          size="icon-sm"
+          type="button"
+          variant="ghost"
+        >
+          <ChevronDown
+            className={`size-3 transition-transform ${collapsed ? "-rotate-90" : ""}`}
+          />
+        </Button>
+      ) : depth ? (
+        <GitFork className="mx-1.5 size-3 flex-none text-dim" />
+      ) : (
+        <span className="w-6 flex-none" />
+      )}
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-xs font-medium text-primary">{title}</div>
+        <div className="mt-0.5 truncate text-[10px] text-dim">
+          {formatRelativeTime(session.modified)} / {session.messageCount} msgs
+        </div>
+        {error ? (
+          <div className="truncate text-[9px] text-destructive">{error}</div>
+        ) : null}
+      </div>
+      <div className="hidden items-center group-hover:flex group-focus-within:flex">
+        <Button
+          aria-label={`Rename ${title}`}
+          className="size-7 hover:text-accent"
+          onClick={(event) => {
+            event.stopPropagation();
+            setEditing(true);
+            setError("");
+          }}
+          size="icon-sm"
+          type="button"
+          variant="ghost"
+        >
+          <Pencil className="size-3.5" />
+        </Button>
+        <Button
+          aria-label={`Delete ${title}`}
+          className="size-7 hover:text-destructive"
+          onClick={(event) => {
+            event.stopPropagation();
+            setConfirming(true);
+            setError("");
+          }}
+          size="icon-sm"
+          type="button"
+          variant="ghost"
+        >
+          <Trash2 className="size-3.5" />
+        </Button>
+      </div>
+    </div>
+  );
+}
