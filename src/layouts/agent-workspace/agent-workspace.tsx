@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import {
   Cpu,
   PanelRightClose,
@@ -8,6 +14,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ResizeHandle } from "@/components/ui/resize-handle";
 import { Separator } from "@/components/ui/separator";
 import {
   Tooltip,
@@ -34,6 +41,14 @@ import {
   WorkspaceTopBar,
   type TopPanel,
 } from "./workspace-top-bar";
+import {
+  DEFAULT_FILE_PANEL_WIDTH,
+  DEFAULT_SIDEBAR_WIDTH,
+  fitPanelWidths,
+  getFilePanelWidthBounds,
+  getSidebarWidthBounds,
+  type PanelWidths,
+} from "./panel-sizing";
 
 export function AgentWorkspace({
   hasActiveSession = false,
@@ -67,7 +82,26 @@ export function AgentWorkspace({
   const [systemPrompt, setSystemPrompt] = useState<string | null>(null);
   const [sessionStats, setSessionStats] = useState<SessionStats | null>(null);
   const [contextUsage, setContextUsage] = useState<ContextUsage | null>(null);
+  const [panelWidths, setPanelWidths] = useState<PanelWidths>({
+    filePanel: DEFAULT_FILE_PANEL_WIDTH,
+    sidebar: DEFAULT_SIDEBAR_WIDTH,
+  });
+  const [resizingPanel, setResizingPanel] = useState<
+    "filePanel" | "sidebar" | null
+  >(null);
+  const [workspaceWidth, setWorkspaceWidth] = useState(1280);
+  const workspaceRef = useRef<HTMLDivElement>(null);
   const sessionIsActive = hasActiveSession || sessionStarted;
+  const sidebarBounds = getSidebarWidthBounds(
+    workspaceWidth,
+    panelWidths.filePanel,
+    filePanelOpen,
+  );
+  const filePanelBounds = getFilePanelWidthBounds(
+    workspaceWidth,
+    panelWidths.sidebar,
+    sidebarOpen,
+  );
 
   useEffect(() => {
     const themeSync = window.setTimeout(() => {
@@ -92,6 +126,25 @@ export function AgentWorkspace({
     }, 0);
     return () => window.clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    const workspace = workspaceRef.current;
+    if (!workspace) return;
+
+    const fitToWorkspace = () => {
+      setWorkspaceWidth(workspace.clientWidth);
+      setPanelWidths((current) =>
+        fitPanelWidths(workspace.clientWidth, current, {
+          filePanelOpen,
+          sidebarOpen,
+        }),
+      );
+    };
+    const observer = new ResizeObserver(fitToWorkspace);
+    observer.observe(workspace);
+
+    return () => observer.disconnect();
+  }, [filePanelOpen, sidebarOpen]);
 
   function toggleTheme() {
     const nextDark = !dark;
@@ -209,6 +262,7 @@ export function AgentWorkspace({
         data-file-panel-open={filePanelOpen}
         data-sidebar-open={sidebarOpen}
         data-testid="agent-workspace"
+        ref={workspaceRef}
       >
 
         {/* 左侧 sidebar */}
@@ -227,12 +281,19 @@ export function AgentWorkspace({
 
           {/* sidebar content  */}
           <aside
-            className={`fixed inset-y-0 left-0 z-200 w-[min(280px,85vw)] flex-none overflow-hidden border-r border-line bg-panel shadow-[4px_0_20px_rgba(0,0,0,0.15)] transition-transform duration-250 min-[641px]:relative min-[641px]:inset-auto min-[641px]:shadow-none min-[641px]:transition-[width,border-width] min-[641px]:duration-200 ${sidebarOpen
-                ? "translate-x-0 min-[641px]:w-[260px] min-[641px]:border-r"
+            className={`fixed inset-y-0 left-0 z-200 w-[min(280px,85vw)] flex-none overflow-hidden border-r border-line bg-panel shadow-[4px_0_20px_rgba(0,0,0,0.15)] transition-transform duration-250 min-[641px]:relative min-[641px]:inset-auto min-[641px]:shadow-none min-[641px]:transition-[width,border-width] ${resizingPanel === "sidebar" ? "min-[641px]:duration-0" : "min-[641px]:duration-200"} ${sidebarOpen
+                ? "translate-x-0 min-[641px]:w-[var(--panel-width)] min-[641px]:border-r-0"
                 : "-translate-x-full min-[641px]:w-0 min-[641px]:translate-x-0 min-[641px]:border-r-0"
               }`}
+            style={
+              sidebarOpen
+                ? {
+                    "--panel-width": `${panelWidths.sidebar}px`,
+                  } as CSSProperties
+                : undefined
+            }
           >
-            <div className="flex h-full w-[260px] flex-col max-[640px]:w-[min(280px,85vw)]">
+            <div className="flex h-full w-full flex-col max-[640px]:w-[min(280px,85vw)]">
               <SessionSidebar
                 explorerRefreshKey={explorerRefreshKey}
                 initialSessionId={initialSessionId}
@@ -281,6 +342,20 @@ export function AgentWorkspace({
               </div>
             </div>
           </aside>
+          {sidebarOpen ? (
+            <ResizeHandle
+              ariaLabel="Resize session sidebar"
+              direction={1}
+              max={sidebarBounds.max}
+              min={sidebarBounds.min}
+              onResize={(sidebar) =>
+                setPanelWidths((current) => ({ ...current, sidebar }))
+              }
+              onResizeEnd={() => setResizingPanel(null)}
+              onResizeStart={() => setResizingPanel("sidebar")}
+              value={panelWidths.sidebar}
+            />
+          ) : null}
         </>
 
         {/* 中间 chat 部分 */}
@@ -344,12 +419,34 @@ export function AgentWorkspace({
               {filePanelOpen ? "Hide file panel" : "Show file panel"}
             </TooltipContent>
           </Tooltip>
-          
+
+          {filePanelOpen ? (
+            <ResizeHandle
+              ariaLabel="Resize file panel"
+              direction={-1}
+              max={filePanelBounds.max}
+              min={filePanelBounds.min}
+              onResize={(filePanel) =>
+                setPanelWidths((current) => ({ ...current, filePanel }))
+              }
+              onResizeEnd={() => setResizingPanel(null)}
+              onResizeStart={() => setResizingPanel("filePanel")}
+              value={panelWidths.filePanel}
+            />
+          ) : null}
+
           <aside
-            className={`flex-none overflow-hidden bg-canvas transition-[width,border-width] duration-200 max-[640px]:border-l-0 ${filePanelOpen
-              ? "w-full border-l border-line min-[641px]:w-[42%] min-[641px]:min-w-[300px]"
-              : "hidden w-0 min-w-0 border-l-0 min-[641px]:block"
+            className={`flex-none overflow-hidden bg-canvas transition-[width] ${resizingPanel === "filePanel" ? "duration-0" : "duration-200"} ${filePanelOpen
+              ? "w-full min-[641px]:w-[var(--panel-width)]"
+              : "hidden w-0 min-w-0 min-[641px]:block"
               }`}
+            style={
+              filePanelOpen
+                ? {
+                    "--panel-width": `${panelWidths.filePanel}px`,
+                  } as CSSProperties
+                : undefined
+            }
           >
             <FilePanel file={openFile} />
           </aside>
