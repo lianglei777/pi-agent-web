@@ -119,13 +119,23 @@ export function ChatCenter({
               }}
             >
               <div
-                className="mx-auto min-h-full w-full max-w-[820px] px-4 pt-4 pb-[190px]"
+                className="mx-auto min-h-full w-full max-w-[820px] px-4 pt-4 pb-[220px]"
                 ref={(node) => {
                   controller.setContentNode(node);
                   setContentNode(node);
                 }}
               >
-                {!hasConversation ? <Welcome /> : null}
+                {!hasConversation ? (
+                  <Welcome
+                    onSelectPrompt={(prompt) => {
+                      controller.setDraft(prompt);
+                      window.requestAnimationFrame(() => {
+                        controller.textareaRef.current?.focus();
+                        controller.resizeTextarea();
+                      });
+                    }}
+                  />
+                ) : null}
                 
                 {/* message list */}
                 <MessageList
@@ -142,13 +152,6 @@ export function ChatCenter({
                 />
 
 
-                    {
-                      controller.agentPhase && !controller.stream.streamingMessage ? (
-                        <div className="animate-pulse text-[13px] text-muted">
-                          {controller.agentPhase}
-                        </div>
-                      ) : null
-                    }
                 {controller.running ? <div className="h-[80vh]" /> : null}
               </div>
             </div>
@@ -165,20 +168,6 @@ export function ChatCenter({
           </div>
 
           {/* 错误提示 */}
-          {controller.actionError ? (
-            <div className="absolute right-12 bottom-44 z-30 max-w-sm rounded-lg border border-destructive/30 bg-card p-3 text-xs text-destructive shadow-lg">
-              {controller.actionError}
-              <Button
-                className="ml-2 h-6 px-2 text-[10px]"
-                onClick={() => controller.setActionError("")}
-                size="sm"
-                variant="ghost"
-              >
-                Dismiss
-              </Button>
-            </div>
-          ) : null}
-
           {/* chat 输入框 */}
           <ChatInput {...controller} />
         </>
@@ -187,17 +176,43 @@ export function ChatCenter({
   );
 }
 
-function Welcome() {
+const STARTER_PROMPTS = [
+  "Explain the architecture of this project",
+  "Find and fix a bug in the current workspace",
+  "Add a focused test for an important workflow",
+  "Review the latest changes for regressions",
+];
+
+function Welcome({
+  onSelectPrompt,
+}: {
+  onSelectPrompt: (prompt: string) => void;
+}) {
   return (
-    <section className="grid min-h-[calc(100dvh-260px)] place-items-center text-center">
-      <div>
-        <div className="font-ui-mono text-sm font-semibold text-primary">
+    <section className="grid min-h-[calc(100dvh-280px)] place-items-center px-3 py-12">
+      <div className="w-full max-w-xl text-center">
+        <div className="font-ui-mono text-xs font-semibold tracking-wide text-muted">
           Pi Agent Web
         </div>
-        <h1 className="mt-4 text-2xl font-semibold">What are we building?</h1>
-        <p className="mt-2 text-sm text-muted">
-          Ask a question, attach images, or describe a task.
+        <h1 className="mt-4 text-3xl font-semibold tracking-[-0.03em] text-primary max-[640px]:text-2xl">
+          What should we work on?
+        </h1>
+        <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted">
+          Ask a question, attach a screenshot, or choose a starting point.
         </p>
+        <div className="mt-7 grid grid-cols-2 gap-2 text-left max-[560px]:grid-cols-1">
+          {STARTER_PROMPTS.map((prompt) => (
+            <Button
+              className="h-auto min-h-12 justify-start whitespace-normal rounded-xl px-3 py-2.5 text-left text-xs leading-5"
+              key={prompt}
+              onClick={() => onSelectPrompt(prompt)}
+              type="button"
+              variant="outline"
+            >
+              {prompt}
+            </Button>
+          ))}
+        </div>
       </div>
     </section>
   );

@@ -6,6 +6,7 @@ import {
   Copy,
   GitBranch,
   GitFork,
+  MoreHorizontal,
   PencilLine,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
@@ -23,6 +24,12 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type {
   AgentMessage,
   AssistantMessage,
@@ -150,7 +157,7 @@ function UserMessageView({
       : message.content;
   return (
     <div className="flex flex-col items-end">
-      <div className="max-w-[85%] rounded-xl border border-blue-500/15 bg-[var(--user-bg)] px-3 py-2 text-sm leading-[1.6] break-words whitespace-pre-wrap max-[640px]:max-w-[94%]">
+      <div className="max-w-[76%] rounded-2xl rounded-br-md border border-blue-500/10 bg-[var(--user-bg)] px-3.5 py-2.5 text-sm leading-[1.65] break-words whitespace-pre-wrap shadow-[0_1px_1px_rgba(0,0,0,0.025)] max-[640px]:max-w-[90%]">
         <div className="flex flex-wrap gap-2">
 
           {/* image content */}
@@ -181,39 +188,52 @@ function UserMessageView({
       </div>
 
 
-      <div className="mt-1 flex min-h-7 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+      <div className="mt-1 flex min-h-7 items-center gap-1 opacity-100 transition-opacity min-[641px]:opacity-0 min-[641px]:group-hover:opacity-100 min-[641px]:group-focus-within:opacity-100">
         {message.status === "failed" ? (
           <Badge variant="destructive">Failed</Badge>
         ) : null}
 
-        {/* copy button */}
-        <SmallAction
-          label={copied ? "Copied" : "Copy"}
-          onClick={() => void copyText(messageText(message)).then(() => {
-            setCopied(true);
-            window.setTimeout(() => setCopied(false), 1500);
-          })}
-        >
-          {copied ? <Check /> : <Copy />}
-        </SmallAction>
-
-        {/* edit button  */}
-        {canEdit && !running ? (
-          <SmallAction label="Edit from here" onClick={onEdit}>
-            <PencilLine />
-          </SmallAction>
-        ) : null}
-
-        {/* fork  */}
-        {canFork && entryId && !running ? (
+        <div className="hidden items-center gap-1 min-[641px]:flex">
           <SmallAction
-            disabled={forking}
-            label={forking ? "Creating..." : "New session"}
-            onClick={onFork}
+            label={copied ? "Copied" : "Copy"}
+            onClick={() => void copyText(messageText(message)).then(() => {
+              setCopied(true);
+              window.setTimeout(() => setCopied(false), 1500);
+            })}
           >
-            <GitFork />
+            {copied ? <Check /> : <Copy />}
           </SmallAction>
-        ) : null}
+          {canEdit && !running ? (
+            <SmallAction label="Edit from here" onClick={onEdit}>
+              <PencilLine />
+            </SmallAction>
+          ) : null}
+          {canFork && entryId && !running ? (
+            <SmallAction
+              disabled={forking}
+              label={forking ? "Creating..." : "New session"}
+              onClick={onFork}
+            >
+              <GitFork />
+            </SmallAction>
+          ) : null}
+        </div>
+
+        <div className="min-[641px]:hidden">
+          <MessageActionMenu
+            canEdit={canEdit && !running}
+            canFork={canFork && Boolean(entryId) && !running}
+            copied={copied}
+            copyingText={messageText(message)}
+            forking={forking}
+            onCopied={() => {
+              setCopied(true);
+              window.setTimeout(() => setCopied(false), 1500);
+            }}
+            onEdit={onEdit}
+            onFork={onFork}
+          />
+        </div>
 
         {/* time */}
         {message.timestamp ? <MessageTime value={message.timestamp} /> : null}
@@ -240,11 +260,16 @@ function AssistantMessageView({
 
   return (
     <div>
-      <div className="mb-2 text-[11px] text-dim">
+      <div
+        className="mb-2 text-[11px] font-medium text-dim"
+        title={
+          message.provider && message.model
+            ? `${message.provider}:${message.model}`
+            : undefined
+        }
+      >
         {/* provider: model */}
-        {message.provider && message.model
-          ? `${message.provider}:${message.model}`
-          : "Pi Agent"}
+        {message.provider && message.model ? message.model : "Pi Agent"}
         
         {/* 对话传输速度 */}
         {streaming ? <StreamingSpeed message={message} /> : null}
@@ -261,7 +286,7 @@ function AssistantMessageView({
         // 思考内容
         if (block.type === "thinking") {
           return (
-            <Accordion className="my-2" collapsible key={index} type="single">
+            <Accordion className="my-1.5" collapsible key={index} type="single">
               <AccordionItem value="thinking">
                 <AccordionTrigger>Thinking</AccordionTrigger>
                 <AccordionContent>{block.thinking}</AccordionContent>
@@ -290,7 +315,7 @@ function AssistantMessageView({
         const summary = toolSummary(block.input);
 
         return (
-          <Accordion className="my-2" collapsible key={block.toolCallId} type="single">
+          <Accordion className="my-1.5" collapsible key={block.toolCallId} type="single">
             <AccordionItem
               className={result?.isError ? "border-destructive/40" : "border-green-600/25"}
               value={block.toolCallId}
@@ -317,7 +342,7 @@ function AssistantMessageView({
       })}
 
       {!streaming ? (
-        <div className="mt-2 flex min-h-7 items-center gap-2 text-[10px] text-dim opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+        <div className="mt-2 flex min-h-7 items-center gap-2 text-[10px] text-dim opacity-100 transition-opacity min-[641px]:opacity-0 min-[641px]:group-hover:opacity-100 min-[641px]:group-focus-within:opacity-100">
           
           {message.usage ? (
             <span>
@@ -436,6 +461,64 @@ function StreamingSpeed({ message }: { message: AssistantMessage }) {
     <span className={`ml-2 ${color}`}>
       ~{tokens} tokens / {speed.toFixed(1)} tok/s
     </span>
+  );
+}
+
+function MessageActionMenu({
+  canEdit,
+  canFork,
+  copied,
+  copyingText,
+  forking,
+  onCopied,
+  onEdit,
+  onFork,
+}: {
+  canEdit: boolean;
+  canFork: boolean;
+  copied: boolean;
+  copyingText: string;
+  forking: boolean;
+  onCopied: () => void;
+  onEdit: () => void;
+  onFork: () => void;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          aria-label="Message actions"
+          className="size-7"
+          size="icon-sm"
+          type="button"
+          variant="ghost"
+        >
+          <MoreHorizontal />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem
+          onSelect={() =>
+            void copyText(copyingText).then(() => onCopied())
+          }
+        >
+          {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+          {copied ? "Copied" : "Copy"}
+        </DropdownMenuItem>
+        {canEdit ? (
+          <DropdownMenuItem onSelect={onEdit}>
+            <PencilLine className="size-3.5" />
+            Edit from here
+          </DropdownMenuItem>
+        ) : null}
+        {canFork ? (
+          <DropdownMenuItem disabled={forking} onSelect={onFork}>
+            <GitFork className="size-3.5" />
+            {forking ? "Creating..." : "New session"}
+          </DropdownMenuItem>
+        ) : null}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 

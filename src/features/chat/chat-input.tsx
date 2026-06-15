@@ -7,21 +7,39 @@ import type {
   RefObject,
 } from "react";
 import {
-  Box,
+  Brain,
+  Clock3,
+  Cpu,
+  Minimize2,
   Paperclip,
   Send,
+  Settings2,
   Square,
   Volume2,
   VolumeX,
+  Wrench,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type {
@@ -30,6 +48,8 @@ import type {
   ThinkingLevel,
 } from "./agent-types";
 import { TOOL_PRESETS } from "./chat-logic";
+
+type ToolPreset = keyof typeof TOOL_PRESETS;
 
 export function ChatInput({
   draft,
@@ -45,7 +65,9 @@ export function ChatInput({
   soundEnabled,
   isCompacting,
   compactError,
+  actionError,
   retryInfo,
+  agentPhase,
   textareaRef,
   fileInputRef,
   setDraft,
@@ -61,6 +83,7 @@ export function ChatInput({
   toggleSound,
   handleKeyDown,
   handlePaste,
+  setActionError,
 }: {
   draft: string;
   images: AttachedImage[];
@@ -71,15 +94,17 @@ export function ChatInput({
   modelKey: string;
   currentModel?: ModelInfo;
   thinkingLevel: ThinkingLevel;
-  toolPreset: keyof typeof TOOL_PRESETS;
+  toolPreset: ToolPreset;
   soundEnabled: boolean;
   isCompacting: boolean;
   compactError: string;
+  actionError: string;
   retryInfo: {
     attempt: number;
     maxAttempts: number;
     errorMessage?: string;
   } | null;
+  agentPhase: string | null;
   textareaRef: RefObject<HTMLTextAreaElement | null>;
   fileInputRef: RefObject<HTMLInputElement | null>;
   setDraft: (value: string) => void;
@@ -90,11 +115,12 @@ export function ChatInput({
   stop: () => Promise<void>;
   changeModel: (value: string) => Promise<void>;
   changeThinking: (value: ThinkingLevel) => Promise<void>;
-  changeTools: (value: keyof typeof TOOL_PRESETS) => Promise<void>;
+  changeTools: (value: ToolPreset) => Promise<void>;
   compact: () => Promise<void>;
   toggleSound: () => void;
   handleKeyDown: KeyboardEventHandler<HTMLTextAreaElement>;
   handlePaste: ClipboardEventHandler<HTMLTextAreaElement>;
+  setActionError: (value: string) => void;
 }) {
   const thinkingOptions = [
     "auto",
@@ -106,227 +132,437 @@ export function ChatInput({
       "high",
       "xhigh",
     ]),
-  ].filter((value, index, array) => array.indexOf(value) === index) as ThinkingLevel[];
+  ].filter(
+    (value, index, array) => array.indexOf(value) === index,
+  ) as ThinkingLevel[];
+  const shortcut = running
+    ? "Enter to steer now · Shift+Enter for a new line"
+    : "Enter to send · Shift+Enter for a new line";
 
   return (
-    <div className="pointer-events-none absolute right-9 bottom-0 left-0 z-20 bg-[linear-gradient(transparent,var(--bg)_30%)] px-4 pt-12 pb-4 max-[640px]:right-0 max-[640px]:px-2">
-
-      {retryInfo ? (
-        <div className="pointer-events-auto mx-auto mb-2 max-w-[820px] rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-3 py-2 text-xs text-yellow-700 dark:text-yellow-300">
-          Retrying ({retryInfo.attempt}/{retryInfo.maxAttempts})
-          {retryInfo.errorMessage ? ` - ${retryInfo.errorMessage}` : ""}
-        </div>
-      ) : null}
-      {compactError ? (
-        <div className="pointer-events-auto mx-auto mb-2 max-w-[820px] text-xs text-destructive">
-          {compactError}
-        </div>
-      ) : null}
-
-      <div
-        className={`pointer-events-auto mx-auto max-w-[820px] overflow-hidden rounded-2xl border bg-card shadow-[var(--shadow-soft)] ${
-          running ? "border-yellow-500/45" : "border-border"
-        }`}
-      >
-
-        {/* 输入的图片 */}
-        {images.length ? (
-          <div className="flex gap-2 overflow-x-auto px-3 pt-2.5">
-            {images.map((image) => (
-              <div
-                className="relative size-14 flex-none overflow-hidden rounded-lg border border-line bg-panel"
-                key={image.id}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  alt={image.name}
-                  className="size-full object-cover"
-                  src={image.previewUrl}
-                />
-                <Button
-                  aria-label={`Remove ${image.name}`}
-                  className="absolute top-0.5 right-0.5 size-5 rounded-full bg-black/70 p-0 text-white"
-                  onClick={() => removeImage(image.id)}
-                  size="icon-sm"
-                  variant="ghost"
-                >
-                  <X className="size-3" />
-                </Button>
-              </div>
-            ))}
+    <div className="pointer-events-none absolute right-9 bottom-0 left-0 z-20 bg-[linear-gradient(transparent,var(--bg)_26%)] px-4 pt-14 pb-4 max-[640px]:right-0 max-[640px]:px-2 max-[640px]:pb-2">
+      <div className="pointer-events-auto mx-auto max-w-[820px]">
+        {retryInfo ? (
+          <InlineStatus tone="warning">
+            Retrying {retryInfo.attempt}/{retryInfo.maxAttempts}
+            {retryInfo.errorMessage ? ` · ${retryInfo.errorMessage}` : ""}
+          </InlineStatus>
+        ) : null}
+        {compactError ? (
+          <InlineStatus tone="error">{compactError}</InlineStatus>
+        ) : null}
+        {actionError ? (
+          <div className="mb-2 flex items-center gap-2 rounded-xl border border-destructive/25 bg-card px-3 py-2 text-xs text-destructive shadow-sm">
+            <span className="min-w-0 flex-1">{actionError}</span>
+            <Button
+              aria-label="Dismiss error"
+              className="size-6"
+              onClick={() => setActionError("")}
+              size="icon-sm"
+              type="button"
+              variant="ghost"
+            >
+              <X className="size-3.5" />
+            </Button>
           </div>
         ) : null}
 
-        {/* 文字输入框 */}
-        <Textarea
-          aria-label="Message"
-          className="min-h-[58px] max-h-[200px] resize-none overflow-y-auto rounded-none border-0 px-4 pt-3.5 pb-2 text-sm leading-[1.6] shadow-none focus-visible:ring-0"
-          onChange={(event) => {
-            setDraft(event.target.value);
-            resizeTextarea();
-          }}
-          onKeyDown={handleKeyDown}
-          onPaste={handlePaste}
-          placeholder={
+        <div
+          className={`overflow-hidden rounded-[20px] border bg-card shadow-[var(--shadow-composer)] transition-[border-color,box-shadow] ${
             running
-              ? "Steer immediately / queue a follow-up..."
-              : "Message..."
-          }
-          ref={textareaRef}
-          rows={1}
-          value={draft}
-        />
-
-        <div className="flex min-h-11 items-center gap-1 border-t border-line/60 px-2 py-1.5">
-          <input
-            accept="image/*"
-            className="hidden"
-            multiple
-            onChange={(event: ChangeEvent<HTMLInputElement>) => {
-              void addFiles(Array.from(event.target.files ?? []));
-              event.target.value = "";
-            }}
-            ref={fileInputRef}
-            type="file"
-          />
-          <IconButton
-            label="Attach images"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <Paperclip />
-          </IconButton>
-
-          {/* models select */}
-          <Select disabled={running} onValueChange={(value) => void changeModel(value)} value={modelKey}>
-            <SelectTrigger aria-label="Model" className="h-8 max-w-44 border-0 shadow-none">
-              <SelectValue placeholder="No models" />
-            </SelectTrigger>
-            <SelectContent side="top">
-              {models.map((model) => (
-                <SelectItem
-                  key={`${model.provider}:${model.id}`}
-                  value={`${model.provider}:${model.id}`}
-                >
-                  {model.name} ({model.provider})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          {!running ? (
-            <>
-
-             {/* thinking off / on */}
-              <Select
-                onValueChange={(value) => void changeThinking(value as ThinkingLevel)}
-                value={thinkingLevel}
-              >
-                <SelectTrigger aria-label="Thinking level" className="h-8 max-w-32 border-0 shadow-none max-[700px]:hidden">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent side="top">
-                  {thinkingOptions.map((level) => (
-                    <SelectItem key={level} value={level}>
-                      Thinking: {level}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {/* tools presets select  */}
-              <Select
-                onValueChange={(value) =>
-                  void changeTools(value as keyof typeof TOOL_PRESETS)
-                }
-                value={toolPreset}
-              >
-                <SelectTrigger aria-label="Tool preset" className="h-8 max-w-28 border-0 shadow-none max-[760px]:hidden">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent side="top">
-                  <SelectItem value="none">Tools off</SelectItem>
-                  <SelectItem value="default">Tools default</SelectItem>
-                  <SelectItem value="full">Tools full</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* prompt compact */}
-              <Button
-                className={`h-8 px-2 text-[11px] ${isCompacting ? "text-destructive" : ""}`}
-                onClick={() => void compact()}
-                size="sm"
-                variant="ghost"
-              >
-                <Box className="size-3.5" />
-                {isCompacting ? "Abort compact" : "Compact"}
-              </Button>
-            </>
+              ? "border-yellow-500/40 shadow-[var(--shadow-composer-active)]"
+              : "border-border"
+          }`}
+        >
+          {running && agentPhase ? (
+            <div
+              aria-live="polite"
+              className="flex items-center gap-2 border-b border-line/60 px-4 py-2 text-[11px] text-muted"
+            >
+              <span className="relative flex size-2">
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-yellow-500/50" />
+                <span className="relative inline-flex size-2 rounded-full bg-yellow-500" />
+              </span>
+              <span className="truncate">{agentPhase}</span>
+            </div>
           ) : null}
 
+          {images.length ? (
+            <div className="flex gap-2 overflow-x-auto px-4 pt-3">
+              {images.map((image) => (
+                <div
+                  className="relative size-16 flex-none overflow-hidden rounded-xl border border-line bg-panel"
+                  key={image.id}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    alt={image.name}
+                    className="size-full object-cover"
+                    src={image.previewUrl}
+                  />
+                  <Button
+                    aria-label={`Remove ${image.name}`}
+                    className="absolute top-1 right-1 size-5 rounded-full bg-black/70 p-0 text-white hover:bg-black/85"
+                    onClick={() => removeImage(image.id)}
+                    size="icon-sm"
+                    type="button"
+                    variant="ghost"
+                  >
+                    <X className="size-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : null}
 
-          {/* sound  */}
-          <IconButton
-            label={soundEnabled ? "Disable sound" : "Enable sound"}
-            onClick={toggleSound}
-            pressed={soundEnabled}
-          >
-            {soundEnabled ? <Volume2 /> : <VolumeX />}
-          </IconButton>
+          <Textarea
+            aria-describedby="composer-shortcut"
+            aria-label="Message"
+            className="min-h-[72px] max-h-[220px] resize-none overflow-y-auto rounded-none border-0 bg-transparent px-4 pt-4 pb-2 text-[15px] leading-[1.6] shadow-none placeholder:text-dim focus-visible:border-0 focus-visible:ring-0"
+            onChange={(event) => {
+              setDraft(event.target.value);
+              resizeTextarea();
+            }}
+            onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
+            placeholder={
+              running
+                ? "Adjust the current task or queue what comes next..."
+                : "Ask Pi to build, explain, or fix something..."
+            }
+            ref={textareaRef}
+            rows={1}
+            value={draft}
+          />
 
-          <div className="flex-1" />
-
-          {running ? (
-            
-            <>
-              <Button
-                className="h-8 px-2 text-[11px]"
-                disabled={!canSubmit}
-                onClick={() => void submit("follow_up")}
-                size="sm"
-                variant="outline"
-                title="在 Agent 完成后排队发送"
-              >
-                Follow-up
-              </Button>
-              <Button
-                className="h-8 px-2 text-[11px]"
-                disabled={!canSubmit}
-                onClick={() => void submit("steer")}
-                size="sm"
-                variant="outline"
-                title="打断 Agent 当前运行，立即注入消息"
-              >
-                Steer
-              </Button>
-
-              <Button
-                className="h-8 border-destructive/30 px-2 text-[11px] text-destructive"
-                disabled={stopping}
-                onClick={() => void stop()}
-                size="sm"
-                variant="outline"
-                title="立刻停止本次对话"
-              >
-                <Square className="size-3" />
-                {stopping ? "Stopping..." : "Stop"}
-              </Button>
-            </>
-          ) : (
-
-            // 发送消息
-            <Button
-              aria-label="Send message"
-              className="size-8"
-              disabled={!canSubmit}
-              onClick={() => void submit()}
-              size="icon-sm"
+          <div className="flex min-h-12 items-center gap-1.5 px-2.5 pb-2">
+            <input
+              accept="image/*"
+              className="hidden"
+              multiple
+              onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                void addFiles(Array.from(event.target.files ?? []));
+                event.target.value = "";
+              }}
+              ref={fileInputRef}
+              type="file"
+            />
+            <IconButton
+              label="Attach images"
+              onClick={() => fileInputRef.current?.click()}
             >
-              <Send />
-            </Button>
-          )}
+              <Paperclip />
+            </IconButton>
+
+            <Select
+              disabled={running}
+              onValueChange={(value) => void changeModel(value)}
+              value={modelKey}
+            >
+              <SelectTrigger
+                aria-label="Model"
+                className="h-9 max-w-52 border-0 bg-transparent px-2 shadow-none hover:bg-hover max-[480px]:max-w-36"
+              >
+                <Cpu className="size-3.5 opacity-60" />
+                <span className="truncate">
+                  {currentModel?.name ?? "Choose model"}
+                </span>
+              </SelectTrigger>
+              <SelectContent side="top">
+                {models.map((model) => (
+                  <SelectItem
+                    key={`${model.provider}:${model.id}`}
+                    value={`${model.provider}:${model.id}`}
+                  >
+                    {model.name} · {model.provider}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <div className="flex-1" />
+
+            {running ? (
+              <>
+                <Button
+                  className="h-9 px-2.5 text-xs max-[520px]:px-2"
+                  disabled={!canSubmit}
+                  onClick={() => void submit("follow_up")}
+                  size="sm"
+                  title="Queue this message after the current run"
+                  type="button"
+                  variant="outline"
+                >
+                  <Clock3 />
+                  <span className="max-[520px]:sr-only">Queue</span>
+                </Button>
+                <Button
+                  className="h-9 px-3 text-xs"
+                  disabled={!canSubmit}
+                  onClick={() => void submit("steer")}
+                  size="sm"
+                  title="Interrupt and steer the current run"
+                  type="button"
+                >
+                  <Send />
+                  <span className="max-[420px]:sr-only">Steer</span>
+                </Button>
+                <Button
+                  aria-label={stopping ? "Stopping agent" : "Stop agent"}
+                  className="size-9 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  disabled={stopping}
+                  onClick={() => void stop()}
+                  size="icon"
+                  title={stopping ? "Stopping..." : "Stop"}
+                  type="button"
+                  variant="outline"
+                >
+                  <Square className="size-3.5 fill-current" />
+                </Button>
+              </>
+            ) : (
+              <Button
+                aria-label="Send message"
+                className="h-9 min-w-24 rounded-xl px-4 text-xs max-[480px]:min-w-9 max-[480px]:px-0"
+                disabled={!canSubmit}
+                onClick={() => void submit()}
+                size="sm"
+                type="button"
+              >
+                <Send />
+                <span className="max-[480px]:sr-only">Send</span>
+              </Button>
+            )}
+          </div>
+
+          <div className="flex min-h-9 items-center gap-1 border-t border-line/55 bg-[var(--bg-subtle)] px-2.5 text-[11px] text-muted">
+            <div className="flex items-center gap-1 max-[700px]:hidden">
+              <CompactSelect
+                icon={<Brain />}
+                label="Thinking"
+                onValueChange={(value) =>
+                  void changeThinking(value as ThinkingLevel)
+                }
+                options={thinkingOptions.map((level) => ({
+                  label: level,
+                  value: level,
+                }))}
+                value={thinkingLevel}
+              />
+              <CompactSelect
+                icon={<Wrench />}
+                label="Tools"
+                onValueChange={(value) =>
+                  void changeTools(value as ToolPreset)
+                }
+                options={[
+                  { label: "off", value: "none" },
+                  { label: "default", value: "default" },
+                  { label: "full", value: "full" },
+                ]}
+                value={toolPreset}
+              />
+              <Button
+                className="h-7 gap-1.5 px-2 text-[11px]"
+                disabled={running}
+                onClick={() => void compact()}
+                size="sm"
+                title="Compact the current context"
+                type="button"
+                variant="ghost"
+              >
+                <Minimize2 className="size-3.5" />
+                {isCompacting ? "Abort compact" : "Compact"}
+              </Button>
+              <IconButton
+                className="size-7"
+                label={soundEnabled ? "Disable sound" : "Enable sound"}
+                onClick={toggleSound}
+                pressed={soundEnabled}
+              >
+                {soundEnabled ? <Volume2 /> : <VolumeX />}
+              </IconButton>
+            </div>
+
+            <div className="min-[701px]:hidden">
+              <SettingsMenu
+                isCompacting={isCompacting}
+                onCompact={compact}
+                onSoundChange={toggleSound}
+                onThinkingChange={changeThinking}
+                onToolsChange={changeTools}
+                running={running}
+                soundEnabled={soundEnabled}
+                thinkingLevel={thinkingLevel}
+                thinkingOptions={thinkingOptions}
+                toolPreset={toolPreset}
+              />
+            </div>
+
+            <span
+              className="ml-auto truncate text-[10px] text-dim max-[520px]:hidden"
+              id="composer-shortcut"
+            >
+              {shortcut}
+            </span>
+          </div>
         </div>
       </div>
     </div>
+  );
+}
+
+function InlineStatus({
+  children,
+  tone,
+}: {
+  children: React.ReactNode;
+  tone: "warning" | "error";
+}) {
+  return (
+    <div
+      aria-live="polite"
+      className={`mb-2 rounded-xl border px-3 py-2 text-xs shadow-sm ${
+        tone === "warning"
+          ? "border-yellow-500/25 bg-yellow-500/10 text-yellow-800 dark:text-yellow-300"
+          : "border-destructive/25 bg-destructive/8 text-destructive"
+      }`}
+    >
+      {children}
+    </div>
+  );
+}
+
+function CompactSelect({
+  icon,
+  label,
+  value,
+  options,
+  onValueChange,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  options: Array<{ label: string; value: string }>;
+  onValueChange: (value: string) => void;
+}) {
+  return (
+    <Select onValueChange={onValueChange} value={value}>
+      <SelectTrigger
+        aria-label={label}
+        className="h-7 max-w-36 border-0 bg-transparent px-2 text-[11px] shadow-none hover:bg-hover"
+      >
+        {icon}
+        <span className="truncate">
+          {label}: {value}
+        </span>
+      </SelectTrigger>
+      <SelectContent side="top">
+        {options.map((option) => (
+          <SelectItem key={option.value} value={option.value}>
+            {label}: {option.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+function SettingsMenu({
+  thinkingLevel,
+  thinkingOptions,
+  toolPreset,
+  soundEnabled,
+  isCompacting,
+  running,
+  onThinkingChange,
+  onToolsChange,
+  onSoundChange,
+  onCompact,
+}: {
+  thinkingLevel: ThinkingLevel;
+  thinkingOptions: ThinkingLevel[];
+  toolPreset: ToolPreset;
+  soundEnabled: boolean;
+  isCompacting: boolean;
+  running: boolean;
+  onThinkingChange: (value: ThinkingLevel) => Promise<void>;
+  onToolsChange: (value: ToolPreset) => Promise<void>;
+  onSoundChange: () => void;
+  onCompact: () => Promise<void>;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          aria-label="Agent settings"
+          className="h-7 px-2 text-[11px]"
+          size="sm"
+          type="button"
+          variant="ghost"
+        >
+          <Settings2 className="size-3.5" />
+          Settings
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" side="top">
+        <DropdownMenuLabel>Agent settings</DropdownMenuLabel>
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger>
+            <Brain className="size-3.5" />
+            Thinking: {thinkingLevel}
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent>
+            <DropdownMenuRadioGroup
+              onValueChange={(value) =>
+                void onThinkingChange(value as ThinkingLevel)
+              }
+              value={thinkingLevel}
+            >
+              {thinkingOptions.map((level) => (
+                <DropdownMenuRadioItem key={level} value={level}>
+                  {level}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger>
+            <Wrench className="size-3.5" />
+            Tools: {toolPreset}
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent>
+            <DropdownMenuRadioGroup
+              onValueChange={(value) =>
+                void onToolsChange(value as ToolPreset)
+              }
+              value={toolPreset}
+            >
+              <DropdownMenuRadioItem value="none">off</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="default">
+                default
+              </DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="full">full</DropdownMenuRadioItem>
+            </DropdownMenuRadioGroup>
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
+        <DropdownMenuSeparator />
+        <DropdownMenuCheckboxItem
+          checked={soundEnabled}
+          onCheckedChange={onSoundChange}
+        >
+          Completion sound
+        </DropdownMenuCheckboxItem>
+        <DropdownMenuItem
+          disabled={running}
+          onSelect={() => void onCompact()}
+        >
+          <Minimize2 className="size-3.5" />
+          {isCompacting ? "Abort compact" : "Compact context"}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -335,20 +571,23 @@ function IconButton({
   label,
   onClick,
   pressed,
+  className = "size-9",
 }: {
   children: React.ReactNode;
   label: string;
   onClick: () => void;
   pressed?: boolean;
+  className?: string;
 }) {
   return (
     <Button
       aria-label={label}
       aria-pressed={pressed}
-      className="size-8"
+      className={className}
       onClick={onClick}
       size="icon-sm"
       title={label}
+      type="button"
       variant="ghost"
     >
       {children}
