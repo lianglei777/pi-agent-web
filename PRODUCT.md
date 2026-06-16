@@ -10,7 +10,7 @@ Solo developers running Pi Agent locally to write, edit, and review code alongsi
 
 ## Product Purpose
 
-Pi Agent Web is the local web interface for the Pi coding agent. It turns agent sessions into a navigable, inspectable workspace: start a session, watch the agent's reasoning and tool calls, browse and open files, switch models and skills, and resume or fork past sessions. The interface exists to keep the developer in control, not to entertain them.
+Po Agent Web is the local web interface for the Pi coding agent. It turns agent sessions into a navigable, inspectable workspace: start a session, watch the agent's reasoning and tool calls, browse and open files, switch models and skills, and resume or fork past sessions. The interface exists to keep the developer in control, not to entertain them.
 
 ## Brand Personality
 

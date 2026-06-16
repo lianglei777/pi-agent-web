@@ -6,7 +6,7 @@ Before any Next.js work, find and read the relevant guide in
 truth because this Next.js version may differ from training data.
 <!-- END:nextjs-agent-rules -->
 
-# Pi Agent Web Project Instructions
+# Po Agent Web Project Instructions
 
 ## Sources Of Truth
 
@@ -15,6 +15,8 @@ truth because this Next.js version may differ from training data.
   backend capability.
 - Treat `docs/agent-api-reference.md` as the public HTTP contract, and keep it
   synchronized with endpoint changes.
+- For user-facing product or UI work, read `PRODUCT.md` and `DESIGN.md` before
+  editing.
 - Prefer installed package documentation and types over remembered APIs.
 
 ## Required Workflow
@@ -83,6 +85,51 @@ bypass it with relative paths, re-exports, lint disables, or duplicated types.
   independent workflows. File length alone is not a reason to split.
 - Preserve keyboard access, visible focus, labels, and semantic HTML.
 
+## Product And UI Rules
+
+- Preserve the product direction: precise, calm, utilitarian,
+  information-dense, and developer-controlled.
+- Keep the workspace focused on sessions, chat, files, models, skills, and
+  review workflows; do not turn the app into a marketing page or decorative AI
+  chat surface.
+- Follow `DESIGN.md` for visual decisions: quiet surfaces, restrained color,
+  clear hierarchy, purposeful density, and no decorative gradients,
+  glassmorphism, mascot-like elements, or overly playful copy.
+- Respect light/dark theme behavior, `prefers-color-scheme`, reduced motion,
+  keyboard navigation, focus visibility, labels, and WCAG AA contrast.
+- Use existing UI primitives and design tokens before adding new component
+  styles.
+- For layout, theme, dialog, sidebar, chat composer, file preview, or other
+  interaction-heavy UI changes, verify the affected workflow in the browser
+  when practical.
+
+## I18n Rules
+
+- Keep user-visible strings in `src/i18n/dictionaries`; do not hard-code new UI
+  copy inside components unless it is non-user-visible debug text.
+- Update both English and Chinese dictionaries when adding, renaming, or
+  removing UI copy.
+- Keep dictionary keys stable and feature-scoped where possible.
+- Update i18n tests when changing dictionary shape or locale behavior.
+
+## Client API And Cross-Cutting Rules
+
+- Keep frontend API clients, feature types, transport validators, domain
+  contracts, tests, and `docs/agent-api-reference.md` synchronized.
+- Do not duplicate endpoint contracts across components; keep protocol details
+  in feature API modules or a shared client-side contract when needed.
+- Preserve cancellation, cleanup, timeout, disconnect, and concurrency behavior
+  for SSE, OAuth, model tests, skill installation, process execution, and file
+  watching.
+- Never expose API keys or credential values in responses, logs, UI state, test
+  fixtures, or error messages.
+- Treat model test calls and skill installation as side-effectful operations;
+  preserve user feedback, error states, cost/side-effect warnings, and busy
+  guards.
+- Any endpoint that accepts paths, workspace roots, skill identifiers, provider
+  identifiers, or command input must validate them at the transport/application
+  boundary and keep filesystem access inside registered workspace roots.
+
 ## Change Discipline
 
 - Preserve unrelated user changes in the worktree.
@@ -92,6 +139,8 @@ bypass it with relative paths, re-exports, lint disables, or duplicated types.
   pass.
 - Avoid `any`, `@ts-ignore`, and lint disables. If unavoidable, keep the scope
   narrow and explain the reason in code.
+- Write new or updated code comments in Chinese. Do not churn existing comments
+  only to translate them unless the surrounding code is already being changed.
 - Use existing naming, import aliases, response helpers, validators, and test
   patterns.
 - Add abstractions only when they enforce a boundary, remove meaningful

@@ -253,7 +253,7 @@ function Welcome({
     <section className="grid min-h-[calc(100dvh-280px)] place-items-center px-3 py-12">
       <div className="w-full max-w-xl text-center">
         <div className="font-ui-mono text-xs font-semibold tracking-wide text-muted">
-          Pi Agent Web
+          Po Agent Web
         </div>
         <h1 className="mt-4 text-3xl font-semibold tracking-[-0.03em] text-primary max-[640px]:text-2xl">
           {t.chat.welcome.title}

@@ -1,4 +1,4 @@
-# Pi Agent Web API 文档
+# Po Agent Web API 文档
 
 本文档描述当前项目已经实现的 HTTP API。内容以 `src/app/api`、
 `src/server/transport` 和 `src/server/domain` 中的代码为准。
@@ -359,7 +359,7 @@ GET /api/default-cwd
 
 ```json
 {
-  "cwd": "C:\\workspace\\pi-agent-web"
+  "cwd": "C:\\workspace\\po-agent-web"
 }
 ```
 

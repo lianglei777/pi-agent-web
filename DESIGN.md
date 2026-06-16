@@ -1,5 +1,5 @@
 ---
-name: Pi Agent Web
+name: Po Agent Web
 description: A precise, calm web interface for the Pi coding agent.
 colors:
   canvas: "#f7f7f5"
@@ -91,13 +91,13 @@ components:
     padding: "6px 10px"
 ---
 
-# Design System: Pi Agent Web
+# Design System: Po Agent Web
 
 ## 1. Overview
 
 **Creative North Star: "The Focused Desk"**
 
-Pi Agent Web is a clean, well-lit desk for working with an AI coding agent. The interface exists to keep the developer in control: sessions, files, chat, and model settings are arranged in a three-panel workspace where every surface has a job and nothing competes for attention. The personality is precise, calm, and utilitarian — the agent is a tool, not a character.
+Po Agent Web is a clean, well-lit desk for working with an AI coding agent. The interface exists to keep the developer in control: sessions, files, chat, and model settings are arranged in a three-panel workspace where every surface has a job and nothing competes for attention. The personality is precise, calm, and utilitarian — the agent is a tool, not a character.
 
 The visual system rejects decoration for its own sake. Color is almost entirely Warm Paper and Ink; hierarchy comes from tone, spacing, and border rather than heavy shadows or saturated accents. Components feel like precision instruments: rounded just enough to be approachable, but never playful. Motion is short and state-driven, not choreographed. The result should feel like a focused productivity tool built by people who use it themselves.
 
@@ -143,7 +143,7 @@ The palette is **Warm Paper & Ink**: warm-tinted neutrals for surfaces, near-bla
 - **Headline** (semibold, `1.25rem` / 20px, line-height 1.3): Dialog titles, model-config header, and major section headers.
 - **Title** (semibold, `1rem` / 16px, line-height 1.35): Card titles, sidebar section labels, and emphasized inline labels.
 - **Body** (regular, `0.875rem` / 14px, line-height 1.5): Primary readable text, chat messages, descriptions, and form copy. Cap line length at 65–75ch for prose.
-- **Label** (semibold, `0.75rem` / 12px, line-height 1.4, letter-spacing `0.025em`): Mono labels, file paths, compact metadata, and the "Pi Agent Web" kicker. Not uppercase; the mono width provides the rhythm.
+- **Label** (semibold, `0.75rem` / 12px, line-height 1.4, letter-spacing `0.025em`): Mono labels, file paths, compact metadata, and the "Po Agent Web" kicker. Not uppercase; the mono width provides the rhythm.
 
 ### Named Rules
 **The One Family Rule.** Inter handles every sans-serif role. Do not introduce a second sans or a display font for "personality."

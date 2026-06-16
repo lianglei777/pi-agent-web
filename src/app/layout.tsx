@@ -9,7 +9,7 @@ const notoSansMono = Noto_Sans_Mono({
 
 export const metadata: Metadata = {
   title: "Po Agent Web",
-  description: "A web interface for Pi Agent",
+  description: "A web interface for Po Agent Web",
 };
 
 export default function RootLayout({
