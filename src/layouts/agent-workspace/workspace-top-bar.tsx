@@ -1,6 +1,5 @@
 import {
   GitBranch,
-  Languages,
   Moon,
   PanelLeftClose,
   PanelLeftOpen,
@@ -18,7 +17,6 @@ import type {
   SessionStats,
   SessionTreeNode,
 } from "@/features/chat/agent-types";
-import { localeLabel } from "@/i18n/locales";
 import { useI18n } from "@/i18n/use-i18n";
 
 export type TopPanel = "branches" | "system" | null;
@@ -88,12 +86,14 @@ export function WorkspaceTopBar({
           onClick={() => setLocale(nextLocale)}
           pressed={false}
         >
-          <Languages />
+          <span
+            aria-hidden="true"
+            className="flex size-4 items-center justify-center font-ui-mono text-[10px] font-semibold leading-none"
+          >
+            {locale === "zh" ? "中" : "EN"}
+          </span>
           <span className="sr-only">{t.common.language}</span>
         </TopBarIconButton>
-        <span className="flex items-center border-r border-line px-2 font-ui-mono text-[10px] text-dim">
-          {localeLabel(locale)}
-        </span>
 
         {/* {sessionIsActive ? (
           <>

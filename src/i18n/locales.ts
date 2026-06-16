@@ -9,10 +9,6 @@ export function isLocale(value: string | null | undefined): value is Locale {
   return SUPPORTED_LOCALES.some((locale) => locale === value);
 }
 
-export function localeLabel(locale: Locale) {
-  return locale === "zh" ? "中文" : "EN";
-}
-
 export function resolveLocale({
   storedLocale,
   browserLanguages = [],
