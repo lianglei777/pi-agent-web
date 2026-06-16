@@ -20,7 +20,7 @@ type IconComponent = React.ComponentType<{
   style?: React.CSSProperties;
 }>;
 
-// Map provider IDs to Lucide icons (fallback from @lobehub/icons)
+// 将 provider ID 映射到轻量 Lucide 图标。
 const PROVIDER_ICONS: Record<string, { Icon: IconComponent; hasColor: boolean }> = {
   anthropic: { Icon: Sparkles, hasColor: false },
   openai: { Icon: Zap, hasColor: false },

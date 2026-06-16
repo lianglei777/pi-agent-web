@@ -1,10 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/i18n/use-i18n";
 import ApiKeyDetail from "./api-key-detail";
-import { AddProviderDialog } from "./add-provider-dialog";
 import { ModalOverlay } from "./modal-overlay";
 import ModelDetail from "./model-detail";
 import { ModelsConfigSidebar } from "./models-config-sidebar";
@@ -14,7 +12,6 @@ import { useModelsConfig } from "./use-models-config";
 
 export function ModelsConfigDialog({ onClose }: { onClose: () => void }) {
   const modelConfig = useModelsConfig();
-  const [pickerOpen, setPickerOpen] = useState(false);
   const { t } = useI18n();
 
   return (
@@ -48,12 +45,10 @@ export function ModelsConfigDialog({ onClose }: { onClose: () => void }) {
             <div className="flex min-h-0 flex-1">
               <ModelsConfigSidebar
                 config={modelConfig.config}
-                oauthProviders={modelConfig.oauthProviders}
                 apiKeyProviders={modelConfig.apiKeyProviders}
                 selection={modelConfig.selection}
                 onSelect={modelConfig.setSelection}
-                onAddModel={modelConfig.addModel}
-                onOpenPicker={() => setPickerOpen(true)}
+                onAddProvider={modelConfig.addCustomProvider}
               />
               <main className="flex-1 overflow-y-auto p-5">
                 {modelConfig.loadError ? (
@@ -104,26 +99,6 @@ export function ModelsConfigDialog({ onClose }: { onClose: () => void }) {
           </footer>
         </div>
       </ModalOverlay>
-
-      {pickerOpen && (
-        <AddProviderDialog
-          oauthProviders={modelConfig.oauthProviders}
-          apiKeyProviders={modelConfig.apiKeyProviders}
-          onSelectOAuth={(providerId) => {
-            modelConfig.setSelection({ type: "oauth", providerId });
-            setPickerOpen(false);
-          }}
-          onSelectApiKey={(providerId) => {
-            modelConfig.setSelection({ type: "apikey", providerId });
-            setPickerOpen(false);
-          }}
-          onAddCustom={() => {
-            modelConfig.addCustomProvider();
-            setPickerOpen(false);
-          }}
-          onClose={() => setPickerOpen(false)}
-        />
-      )}
     </>
   );
 }

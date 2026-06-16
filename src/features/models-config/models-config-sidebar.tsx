@@ -1,30 +1,26 @@
 import type {
   ApiKeyProvider,
   ModelsJson,
-  OAuthProvider,
   Selection,
 } from "./types";
 import { useI18n } from "@/i18n/use-i18n";
+import { Server } from "lucide-react";
 import { ProviderIcon } from "./provider-icon";
 
 interface Props {
   config: ModelsJson;
-  oauthProviders: OAuthProvider[];
   apiKeyProviders: ApiKeyProvider[];
   selection: Selection | null;
   onSelect: (selection: Selection) => void;
-  onAddModel: (providerName: string) => void;
-  onOpenPicker: () => void;
+  onAddProvider: () => void;
 }
 
 export function ModelsConfigSidebar({
   config,
-  oauthProviders,
   apiKeyProviders,
   selection,
   onSelect,
-  onAddModel,
-  onOpenPicker,
+  onAddProvider,
 }: Props) {
   const providers = Object.entries(config.providers ?? {});
   const { t } = useI18n();
@@ -32,25 +28,6 @@ export function ModelsConfigSidebar({
     <aside className="flex w-[210px] shrink-0 flex-col border-r border-line bg-panel">
       <div className="flex-1 overflow-y-auto px-1.5 py-2">
         
-        {/* {oauthProviders.map((provider) => (
-          <NavButton
-            key={`oauth-${provider.id}`}
-            selected={
-              selection?.type === "oauth" &&
-              selection.providerId === provider.id
-            }
-            onClick={() =>
-              onSelect({ type: "oauth", providerId: provider.id })
-            }
-          >
-            <ProviderIcon id={provider.id} size={16} />
-            <span className="truncate text-[12px] text-primary">
-              {provider.name}
-            </span>
-          </NavButton>
-        ))} */}
-
-
         {apiKeyProviders
           .filter((provider) => provider.configured)
           .map((provider) => (
@@ -127,13 +104,23 @@ export function ModelsConfigSidebar({
       <div className="border-t border-line px-1.5 py-2">
         <button
           type="button"
-          onClick={onOpenPicker}
+          onClick={onAddProvider}
           className="w-full rounded-[5px] border border-dashed border-line bg-transparent py-1.5 text-[12px] text-muted hover:border-accent hover:text-accent"
         >
           + {t.models.addProvider}
         </button>
       </div>
     </aside>
+  );
+}
+
+function ServerIcon() {
+  return (
+    <Server
+      size={11}
+      className="shrink-0 text-dim"
+      aria-hidden="true"
+    />
   );
 }
 
@@ -159,23 +146,5 @@ function NavButton({
     >
       {children}
     </button>
-  );
-}
-
-function ServerIcon() {
-  return (
-    <svg
-      width="11"
-      height="11"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      className="shrink-0 text-dim"
-      aria-hidden="true"
-    >
-      <rect x="4" y="4" width="16" height="16" rx="2" />
-      <rect x="9" y="9" width="6" height="6" />
-    </svg>
   );
 }
