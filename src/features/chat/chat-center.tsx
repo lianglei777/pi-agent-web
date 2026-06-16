@@ -133,7 +133,7 @@ export function ChatCenter({
 
   return (
     <main
-      className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[radial-gradient(circle_at_50%_0%,color-mix(in_srgb,var(--text)_2.5%,transparent),transparent_30rem),var(--bg)]"
+      className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-canvas"
       onDragEnter={(event) => {
         if (!hasImages(event)) return;
         event.preventDefault();
@@ -152,9 +152,9 @@ export function ChatCenter({
       onDrop={handleDrop}
     >
       {dragActive ? (
-        <div className="pointer-events-none absolute inset-3 z-40 grid place-items-center rounded-xl border-2 border-dashed border-blue-500/50 bg-blue-500/8 backdrop-blur-sm">
-          <div className="flex flex-col items-center gap-2 text-sm font-semibold text-primary">
-            <ImagePlus className="size-8 text-blue-500" />
+        <div className="pointer-events-none absolute inset-3 z-40 grid place-items-center rounded-lg border-2 border-dashed border-line bg-hover">
+          <div className="flex flex-col items-center gap-2 text-sm font-semibold text-muted">
+            <ImagePlus className="size-8 text-muted" />
             Drop images to attach
           </div>
         </div>
@@ -225,8 +225,8 @@ export function ChatCenter({
             />
           </div>
 
-          {/* 错误提示 */}
-          {/* chat 输入框 */}
+          {/* Error indicators */}
+          {/* Chat input */}
           <ChatInput {...controller} rootRef={setComposerNode} />
         </>
       )}
@@ -261,7 +261,7 @@ function Welcome({
         <div className="mt-7 grid grid-cols-2 gap-2 text-left max-[560px]:grid-cols-1">
           {STARTER_PROMPTS.map((prompt) => (
             <Button
-              className="h-auto min-h-12 justify-start whitespace-normal rounded-xl px-3 py-2.5 text-left text-xs leading-5"
+              className="h-auto min-h-12 justify-start whitespace-normal rounded-lg px-3 py-2.5 text-left text-xs leading-5"
               key={prompt}
               onClick={() => onSelectPrompt(prompt)}
               type="button"

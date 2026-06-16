@@ -231,7 +231,7 @@ export function ChatMinimap({
   return (
     <div
       aria-label="Conversation minimap"
-      className="relative w-9 flex-shrink-0 touch-none select-none overflow-visible border-l border-line bg-panel/85"
+      className="relative w-9 flex-shrink-0 touch-none select-none overflow-visible border-l border-line bg-panel"
       onPointerCancel={(event) => {
         draggingRef.current = false;
         setHoverMessage(null);
@@ -312,7 +312,7 @@ export function ChatMinimap({
       ref={trackRef}
       role="presentation"
     >
-      {/* minimap 中线 */}
+      {/* Minimap center line */}
       <div className="absolute top-0 bottom-0 left-1/2 z-0 w-px -translate-x-1/2 bg-line" />
 
       {/* scroll bar */}
@@ -336,8 +336,8 @@ export function ChatMinimap({
             <span
               className={
                 node.role === "user"
-                  ? "size-2 flex-shrink-0 rounded-[2px] border-[1.5px] border-blue-600/70 bg-blue-600/20 transition-transform"
-                  : "size-1.5 flex-shrink-0 rounded-full border-[1.5px] border-gray-500/50 bg-gray-500/15 transition-transform"
+                  ? "size-2 flex-shrink-0 rounded-[2px] border-[1.5px] border-accent/70 bg-accent/20 transition-transform"
+                  : "size-1.5 flex-shrink-0 rounded-full border-[1.5px] border-dim/50 bg-dim/15 transition-transform"
               }
               style={{ transform: nearest ? "scale(1.6)" : "scale(1)" }}
             />
@@ -345,14 +345,14 @@ export function ChatMinimap({
         );
       })}
 
-      {/* hover node 展示的 chat 对话缩略内容 */}
+      {/* Preview shown when hovering a minimap node */}
       {hovered
         ? tooltipEntries.map(({ node, index }, tooltipIndex) => {
             const nearest = index === nearestIndex;
             const roleBorder =
               node.role === "user"
-                ? "rgba(37, 99, 235, 0.7)"
-                : "rgba(107, 114, 128, 0.5)";
+                ? "rgba(23, 23, 23, 0.7)"
+                : "rgba(157, 157, 151, 0.5)";
 
             return (
               <div

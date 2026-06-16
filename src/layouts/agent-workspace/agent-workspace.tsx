@@ -265,9 +265,9 @@ export function AgentWorkspace({
         ref={workspaceRef}
       >
 
-        {/* 左侧 sidebar */}
+        {/* Left sidebar */}
         <>
-          {/* 适配 mobile：sidebar 滑出时，背后显示一层半透明遮罩，用户点击遮罩即可关闭 sidebar */}
+          {/* Mobile: semi-transparent overlay behind the sliding sidebar; tapping it closes the sidebar */}
           <Button
             aria-label="Close sidebar"
             className={`fixed inset-0 z-199 hidden h-auto cursor-default rounded-none bg-black/40 p-0 hover:bg-black/40 max-[640px]:block ${sidebarOpen
@@ -358,7 +358,7 @@ export function AgentWorkspace({
           ) : null}
         </>
 
-        {/* 中间 chat 部分 */}
+        {/* Center chat area */}
         <section
           className={`relative min-w-0 flex-1 flex-col bg-canvas ${
             filePanelOpen ? "hidden min-[641px]:flex" : "flex"
@@ -396,7 +396,7 @@ export function AgentWorkspace({
 
 
 
-        {/* 右侧file panel */}
+        {/* Right file panel */}
         <>
           <Tooltip>
             <TooltipTrigger asChild>

@@ -148,7 +148,7 @@ export function SessionSidebar({
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       <div className="flex items-center gap-1.5 px-2.5 pt-3 pb-2.5">
-        <div className="min-w-0 flex-1 overflow-hidden font-ui-mono text-[15px] font-bold whitespace-nowrap text-primary">
+        <div className="min-w-0 flex-1 overflow-hidden font-ui-mono text-[15px] font-semibold whitespace-nowrap text-primary">
           Pi Agent Web
         </div>
         <Button

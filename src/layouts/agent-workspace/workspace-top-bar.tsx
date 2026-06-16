@@ -55,7 +55,7 @@ export function WorkspaceTopBar({
     <>
       <header className="flex h-9 flex-none items-stretch border-b border-line bg-panel pr-12">
 
-        {/* left session sidebar  panel  展示开关*/}
+        {/* Left session sidebar toggle */}
         <TopBarIconButton
           label={sidebarOpen ? "Hide sidebar" : "Show sidebar"}
           onClick={onToggleSidebar}
@@ -95,12 +95,12 @@ export function WorkspaceTopBar({
 
         {/* input + output token / cost */}
         {stats ? (
-          <div className="flex items-center px-2 font-ui-mono text-[10px] text-dim">
+          <div className="flex items-center px-2 font-ui-mono text-xs text-dim">
             {stats.input + stats.output} tokens / ${stats.cost.toFixed(4)}
           </div>
         ) : null}
         {contextUsage ? (
-          <div className="flex items-center px-2 font-ui-mono text-[10px] text-dim">
+          <div className="flex items-center px-2 font-ui-mono text-xs text-dim">
             context{" "}
             {contextUsage.percent === null
               ? "n/a"

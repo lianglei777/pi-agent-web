@@ -92,7 +92,7 @@ export function MessageList({
             className={cn(
               "group relative mb-8 scroll-mt-4 rounded-lg px-2 py-1 transition-[background-color,box-shadow,outline-color] duration-150 -mx-2",
               highlighted &&
-                "bg-blue-500/5 outline outline-1 outline-blue-500/20 shadow-[0_0_0_3px_rgba(37,99,235,0.035)]",
+                "bg-[var(--bg-subtle)] outline outline-1 outline-[var(--border)] shadow-[0_0_0_3px_rgba(23,23,23,0.035)]",
             )}
             data-message-role={message.role}
             key={entryId ?? `${message.role}-${index}-${message.timestamp ?? 0}`}
@@ -125,13 +125,13 @@ export function MessageList({
         );
       })}
 
-      {/* 正在流方式输出内容 */}
+      {/* Streaming assistant output */}
       {streamingMessage ? (
         <article
           className={cn(
             "relative mb-8 rounded-lg px-2 py-1 transition-[background-color,box-shadow,outline-color] duration-150 -mx-2",
             highlightedMessageId === "streaming-assistant" &&
-              "bg-blue-500/5 outline outline-1 outline-blue-500/20 shadow-[0_0_0_3px_rgba(37,99,235,0.035)]",
+              "bg-[var(--bg-subtle)] outline outline-1 outline-[var(--border)] shadow-[0_0_0_3px_rgba(23,23,23,0.035)]",
           )}
           data-message-role="assistant"
           data-streaming="true"
@@ -181,7 +181,7 @@ function UserMessageView({
       : message.content;
   return (
     <div className="flex flex-col items-end">
-      <div className="max-w-[76%] rounded-2xl rounded-br-md border border-blue-500/10 bg-[var(--user-bg)] px-3.5 py-2.5 text-sm leading-[1.65] break-words whitespace-pre-wrap shadow-[0_1px_1px_rgba(0,0,0,0.025)] max-[640px]:max-w-[90%]">
+      <div className="max-w-[76%] rounded-2xl border border-line bg-[var(--user-bg)] px-3.5 py-2.5 text-sm leading-[1.65] break-words whitespace-pre-wrap shadow-[0_1px_1px_rgba(0,0,0,0.025)] max-[640px]:max-w-[90%]">
         <div className="flex flex-wrap gap-2">
 
           {/* image content */}
@@ -295,19 +295,19 @@ function AssistantMessageView({
         {/* provider: model */}
         {message.provider && message.model ? message.model : "Pi Agent"}
         
-        {/* 对话传输速度 */}
+        {/* Token throughput */}
         {streaming ? <StreamingSpeed message={message} /> : null}
       </div>
 
 
-      {/* 助手回复内容 */}
+      {/* Assistant reply content */}
       {message.content.map((block, index) => {
-        // 以 markdown 形式展示 模型返回的文字内容
+        // Render text returned by the model as Markdown
         if (block.type === "text") {
           return <Markdown key={index} text={block.text} />;
         }
 
-        // 思考内容
+        // Thinking content
         if (block.type === "thinking") {
           return (
             <Accordion className="my-1.5" collapsible key={index} type="single">
@@ -319,7 +319,7 @@ function AssistantMessageView({
           );
         }
 
-        // 图片
+        // Image
         if (block.type === "image") {
           return (
             // eslint-disable-next-line @next/next/no-img-element
@@ -473,16 +473,8 @@ function StreamingSpeed({ message }: { message: AssistantMessage }) {
   const chars = JSON.stringify(message.content).length;
   const tokens = Math.ceil(chars / 4);
   const speed = tokens / elapsed;
-  const color =
-    speed >= 50
-      ? "text-cyan-500"
-      : speed >= 30
-        ? "text-green-500"
-        : speed >= 15
-          ? "text-yellow-500"
-          : "text-red-500";
   return (
-    <span className={`ml-2 ${color}`}>
+    <span className="ml-2 text-dim">
       ~{tokens} tokens / {speed.toFixed(1)} tok/s
     </span>
   );

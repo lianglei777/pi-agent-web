@@ -158,7 +158,7 @@ export function ChatInput({
           <InlineStatus tone="error">{compactError}</InlineStatus>
         ) : null}
         {actionError ? (
-          <div className="mb-2 flex items-center gap-2 rounded-xl border border-destructive/25 bg-card px-3 py-2 text-xs text-destructive shadow-sm">
+          <div className="mb-2 flex items-center gap-2 rounded-lg border border-destructive/25 bg-card px-3 py-2 text-xs text-destructive shadow-sm">
             <span className="min-w-0 flex-1">{actionError}</span>
             <Button
               aria-label="Dismiss error"
@@ -176,7 +176,7 @@ export function ChatInput({
         <div
           className={`overflow-hidden rounded-[20px] border bg-card shadow-[var(--shadow-composer)] transition-[border-color,box-shadow] ${
             running
-              ? "border-yellow-500/40 shadow-[var(--shadow-composer-active)]"
+              ? "border-text-muted/40 shadow-[var(--shadow-composer-active)]"
               : "border-border"
           }`}
         >
@@ -186,8 +186,8 @@ export function ChatInput({
               className="flex items-center gap-2 border-b border-line/60 px-4 py-2 text-[11px] text-muted"
             >
               <span className="relative flex size-2">
-                <span className="absolute inline-flex size-full animate-ping rounded-full bg-yellow-500/50" />
-                <span className="relative inline-flex size-2 rounded-full bg-yellow-500" />
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-text-muted/50" />
+                <span className="relative inline-flex size-2 rounded-full bg-text-muted" />
               </span>
               <span className="truncate">{agentPhase}</span>
             </div>
@@ -197,7 +197,7 @@ export function ChatInput({
             <div className="flex gap-2 overflow-x-auto px-4 pt-3">
               {images.map((image) => (
                 <div
-                  className="relative size-16 flex-none overflow-hidden rounded-xl border border-line bg-panel"
+                  className="relative size-16 flex-none overflow-hidden rounded-lg border border-line bg-panel"
                   key={image.id}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -208,7 +208,7 @@ export function ChatInput({
                   />
                   <Button
                     aria-label={`Remove ${image.name}`}
-                    className="absolute top-1 right-1 size-5 rounded-full bg-black/70 p-0 text-white hover:bg-black/85"
+                    className="absolute top-1 right-1 size-5 rounded-full bg-[var(--text)]/70 p-0 text-[var(--bg-panel)] hover:bg-[var(--text)]/85"
                     onClick={() => removeImage(image.id)}
                     size="icon-sm"
                     type="button"
@@ -329,7 +329,7 @@ export function ChatInput({
             ) : (
               <Button
                 aria-label="Send message"
-                className="h-9 min-w-24 rounded-xl px-4 text-xs max-[480px]:min-w-9 max-[480px]:px-0"
+                className="h-9 min-w-24 rounded-lg px-4 text-xs max-[480px]:min-w-9 max-[480px]:px-0"
                 disabled={!canSubmit}
                 onClick={() => void submit()}
                 size="sm"
@@ -413,6 +413,9 @@ export function ChatInput({
             </span>
           </div>
         </div>
+        <p className="mt-2 text-center text-[11px] leading-5 text-dim">
+          AI can make mistakes. Please verify important information.
+        </p>
       </div>
     </div>
   );
@@ -428,9 +431,9 @@ function InlineStatus({
   return (
     <div
       aria-live="polite"
-      className={`mb-2 rounded-xl border px-3 py-2 text-xs shadow-sm ${
+      className={`mb-2 rounded-lg border px-3 py-2 text-xs shadow-sm ${
         tone === "warning"
-          ? "border-yellow-500/25 bg-yellow-500/10 text-yellow-800 dark:text-yellow-300"
+          ? "border-text-muted/25 bg-[var(--bg-subtle)] text-muted"
           : "border-destructive/25 bg-destructive/8 text-destructive"
       }`}
     >

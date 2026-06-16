@@ -44,3 +44,13 @@ package-lock.json*
 
 .pi/*
 skills-lock.json*
+
+
+# Impeccable
+.impeccable/critique/*
+.impeccable/live/annotations/*
+.impeccable/live/sessions/*
+.impeccable/live/server.json
+
+# Claude
+.claude/*
