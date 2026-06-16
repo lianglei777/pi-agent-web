@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { loadSkills, setSkillModelInvocation } from "./api";
+import { useI18n } from "@/i18n/use-i18n";
 import { reconcileSelectedSkill } from "./skill-state";
 import type { SkillLoadResult } from "./types";
 
@@ -12,6 +13,7 @@ const EMPTY_RESULT: SkillLoadResult = {
 };
 
 export function useSkillsConfig(cwd: string) {
+  const { t } = useI18n();
   const [result, setResult] = useState(EMPTY_RESULT);
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -36,12 +38,12 @@ export function useSkillsConfig(cwd: string) {
       applyResult(await loadSkills(cwd, controller.signal));
     } catch (nextError) {
       if (!controller.signal.aborted) {
-        setError(errorMessage(nextError));
+        setError(errorMessage(nextError, t.skills.somethingWentWrong));
       }
     } finally {
       if (!controller.signal.aborted) setLoading(false);
     }
-  }, [applyResult, cwd]);
+  }, [applyResult, cwd, t.skills.somethingWentWrong]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void refresh(), 0);
@@ -79,12 +81,12 @@ export function useSkillsConfig(cwd: string) {
       );
     } catch (nextError) {
       if (!controller.signal.aborted) {
-        setError(errorMessage(nextError));
+        setError(errorMessage(nextError, t.skills.somethingWentWrong));
       }
     } finally {
       if (!controller.signal.aborted) setSavingSkillId(null);
     }
-  }, [applyResult, cwd, selectedSkill]);
+  }, [applyResult, cwd, selectedSkill, t.skills.somethingWentWrong]);
 
   return {
     ...result,
@@ -99,6 +101,6 @@ export function useSkillsConfig(cwd: string) {
   };
 }
 
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : "Something went wrong.";
+function errorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
 }

@@ -8,6 +8,7 @@ import {
   type ModelsJson,
   type ModelTestState,
 } from "./types";
+import { useI18n } from "@/i18n/use-i18n";
 import { SectionTitle, Field, inputStyle } from "./shared";
 import ThinkingLevelMapEditor from "./thinking-level-editor";
 
@@ -33,6 +34,7 @@ export default function ModelDetail({
 }: Props) {
   const [testState, setTestState] = useState<ModelTestState>({ phase: "idle" });
   const [testedConfig, setTestedConfig] = useState("");
+  const { t } = useI18n();
   const currentConfig = JSON.stringify({ providerName, config, model });
   const visibleTestState: ModelTestState =
     testedConfig === currentConfig ? testState : { phase: "idle" };
@@ -51,7 +53,7 @@ export default function ModelDetail({
       if (!result.ok) {
         setTestState({
           phase: "error",
-          message: result.error ?? "Model test failed",
+          message: result.error ?? t.models.modelTestFailed,
           latencyMs: result.latencyMs,
         });
       } else {
@@ -64,27 +66,35 @@ export default function ModelDetail({
     } catch (e) {
       setTestState({
         phase: "error",
-        message: e instanceof Error ? e.message : "Unknown error",
+        message: e instanceof Error ? e.message : t.models.unknownError,
       });
     }
-  }, [providerName, config, model, currentConfig, visibleTestState.phase]);
+  }, [
+    providerName,
+    config,
+    model,
+    currentConfig,
+    visibleTestState.phase,
+    t.models.modelTestFailed,
+    t.models.unknownError,
+  ]);
 
   let testSummary: string | null = null;
   let testBorderColor = "var(--border)";
   let testBgColor = "#e5e7eb";
 
   if (visibleTestState.phase === "testing") {
-    testSummary = "Testing model connection...";
+    testSummary = t.models.testingConnection;
     testBorderColor = "var(--border)";
     testBgColor = "#e5e7eb";
   } else if (visibleTestState.phase === "success") {
-    testSummary = `Connected | ${visibleTestState.latencyMs ?? "?"}ms${
+    testSummary = `${t.models.connected} | ${visibleTestState.latencyMs ?? "?"}ms${
       visibleTestState.responseText ? ` | ${visibleTestState.responseText}` : ""
     }`;
     testBorderColor = "#bbf7d0";
     testBgColor = "#dcfce7";
   } else if (visibleTestState.phase === "error") {
-    testSummary = `Failed | ${visibleTestState.latencyMs ?? "?"}ms | ${visibleTestState.message}`;
+    testSummary = `${t.models.failed} | ${visibleTestState.latencyMs ?? "?"}ms | ${visibleTestState.message}`;
     testBorderColor = "#fecaca";
     testBgColor = "#fee2e2";
   }
@@ -100,7 +110,7 @@ export default function ModelDetail({
     <div className="flex flex-col gap-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <SectionTitle>Model</SectionTitle>
+        <SectionTitle>{t.models.model}</SectionTitle>
         <div className="flex items-center gap-2">
           {testSummary && (
             <span
@@ -142,10 +152,10 @@ export default function ModelDetail({
           >
             {visibleTestState.phase === "success" && <CheckIcon />}
             {visibleTestState.phase === "testing"
-              ? "Testing..."
+              ? t.models.testing
               : visibleTestState.phase === "success"
-                ? "OK"
-                : "Test"}
+                ? t.models.ok
+                : t.models.test}
           </button>
           <button
             onClick={onDelete}
@@ -157,14 +167,14 @@ export default function ModelDetail({
             }}
             type="button"
           >
-            Remove
+            {t.models.remove}
           </button>
         </div>
       </div>
 
       {/* Row 1: ID + Name */}
       <div className="grid grid-cols-2 gap-2.5">
-        <Field label="ID">
+        <Field label={t.models.id}>
           <input
             value={model.id}
             onChange={(e) => onChange({ ...model, id: e.target.value })}
@@ -172,7 +182,7 @@ export default function ModelDetail({
             style={{ ...inputStyle }}
           />
         </Field>
-        <Field label="Name">
+        <Field label={t.models.name}>
           <input
             value={model.name ?? ""}
             onChange={(e) =>
@@ -187,7 +197,7 @@ export default function ModelDetail({
       </div>
 
       {/* API override */}
-      <Field label="API override">
+      <Field label={t.models.apiOverride}>
         <select
           value={model.api ?? ""}
           onChange={(e) =>
@@ -201,7 +211,7 @@ export default function ModelDetail({
             color: model.api ? "var(--text)" : "var(--text-dim)",
           }}
         >
-          <option value="">inherit / none</option>
+          <option value="">{t.models.inheritNone}</option>
           {API_OPTIONS.map((opt) => (
             <option key={opt} value={opt}>
               {opt}
@@ -224,7 +234,7 @@ export default function ModelDetail({
             }
             className="h-[13px] w-[13px] accent-accent"
           />
-          Reasoning / thinking
+          {t.models.reasoningThinking}
         </label>
         <label className="flex cursor-pointer items-center gap-1.5 text-[12px] text-muted">
           <input
@@ -240,7 +250,7 @@ export default function ModelDetail({
             }
             className="h-[13px] w-[13px] accent-accent"
           />
-          Image input
+          {t.models.imageInput}
         </label>
       </div>
 
@@ -270,7 +280,7 @@ export default function ModelDetail({
             }}
             className="h-[13px] w-[13px] accent-accent"
           />
-          DeepSeek thinking compat
+          {t.models.deepSeekCompat}
         </label>
       )}
 
@@ -289,7 +299,7 @@ export default function ModelDetail({
 
       {/* Row 4: Context window + Max output tokens */}
       <div className="grid grid-cols-2 gap-2.5">
-        <Field label="Context window">
+        <Field label={t.models.contextWindow}>
           <input
             type="number"
             value={model.contextWindow ?? ""}
@@ -305,7 +315,7 @@ export default function ModelDetail({
             style={{ ...inputStyle }}
           />
         </Field>
-        <Field label="Max output tokens">
+        <Field label={t.models.maxOutputTokens}>
           <input
             type="number"
             value={model.maxTokens ?? ""}
@@ -325,9 +335,9 @@ export default function ModelDetail({
 
       {/* Cost */}
       <div>
-        <SectionTitle>Cost (per million tokens)</SectionTitle>
+        <SectionTitle>{t.models.costPerMillionTokens}</SectionTitle>
         <div className="mt-2 grid grid-cols-4 gap-2">
-          <Field label="Input">
+          <Field label={t.models.input}>
             <input
               type="number"
               step="0.01"
@@ -346,7 +356,7 @@ export default function ModelDetail({
               style={{ ...inputStyle }}
             />
           </Field>
-          <Field label="Output">
+          <Field label={t.models.output}>
             <input
               type="number"
               step="0.01"
@@ -365,7 +375,7 @@ export default function ModelDetail({
               style={{ ...inputStyle }}
             />
           </Field>
-          <Field label="Cache read">
+          <Field label={t.models.cacheRead}>
             <input
               type="number"
               step="0.01"
@@ -384,7 +394,7 @@ export default function ModelDetail({
               style={{ ...inputStyle }}
             />
           </Field>
-          <Field label="Cache write">
+          <Field label={t.models.cacheWrite}>
             <input
               type="number"
               step="0.01"

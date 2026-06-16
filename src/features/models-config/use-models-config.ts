@@ -6,6 +6,7 @@ import {
   loadModelsConfigData,
   saveModelsConfig,
 } from "./api";
+import { useI18n } from "@/i18n/use-i18n";
 import type {
   ApiKeyProvider,
   ModelEntry,
@@ -18,6 +19,7 @@ import type {
 const EMPTY_CONFIG: ModelsJson = { providers: {} };
 
 export function useModelsConfig() {
+  const { t } = useI18n();
   const [config, setConfig] = useState<ModelsJson>(EMPTY_CONFIG);
   const [oauthProviders, setOauthProviders] = useState<OAuthProvider[]>([]);
   const [apiKeyProviders, setApiKeyProviders] = useState<ApiKeyProvider[]>([]);
@@ -43,7 +45,7 @@ export function useModelsConfig() {
       })
       .catch((error: unknown) => {
         if (!active) return;
-        setLoadError(toMessage(error, "Failed to load model configuration"));
+        setLoadError(toMessage(error, t.models.failedToLoadConfig));
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -51,7 +53,7 @@ export function useModelsConfig() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [t.models.failedToLoadConfig]);
 
   const addCustomProvider = useCallback(() => {
     const name = getUniqueProviderName(config.providers ?? {});
@@ -70,7 +72,7 @@ export function useModelsConfig() {
       const newName = requestedName.trim();
       if (!newName || oldName === newName) return;
       if (config.providers?.[newName]) {
-        setSaveError(`Provider "${newName}" already exists`);
+        setSaveError(`${t.models.providerExists}: "${newName}"`);
         return;
       }
       setSaveError(null);
@@ -93,7 +95,7 @@ export function useModelsConfig() {
         return current;
       });
     },
-    [config.providers],
+    [config.providers, t.models.providerExists],
   );
 
   const deleteProvider = useCallback(
@@ -188,11 +190,11 @@ export function useModelsConfig() {
       setSavedOk(true);
       window.setTimeout(() => setSavedOk(false), 2_000);
     } catch (error) {
-      setSaveError(toMessage(error, "Failed to save"));
+      setSaveError(toMessage(error, t.models.failedToSave));
     } finally {
       setSaving(false);
     }
-  }, [config]);
+  }, [config, t.models.failedToSave]);
 
   const refreshApiKeyProvider = useCallback(
     async (providerId: string) => {

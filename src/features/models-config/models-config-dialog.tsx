@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/i18n/use-i18n";
 import ApiKeyDetail from "./api-key-detail";
 import { AddProviderDialog } from "./add-provider-dialog";
 import { ModalOverlay } from "./modal-overlay";
@@ -14,14 +15,17 @@ import { useModelsConfig } from "./use-models-config";
 export function ModelsConfigDialog({ onClose }: { onClose: () => void }) {
   const modelConfig = useModelsConfig();
   const [pickerOpen, setPickerOpen] = useState(false);
+  const { t } = useI18n();
 
   return (
     <>
-      <ModalOverlay onClose={onClose} label="Models configuration">
+      <ModalOverlay onClose={onClose} label={t.models.configuration}>
         <div className="flex h-[78vh] w-[min(860px,calc(100vw-32px))] flex-col overflow-hidden rounded-[10px] border border-line bg-canvas shadow-2xl">
           <header className="flex shrink-0 items-center justify-between border-b border-line px-[18px] py-3">
             <div className="flex items-baseline gap-2.5">
-              <span className="text-[15px] font-bold text-primary">Models</span>
+              <span className="text-[15px] font-bold text-primary">
+                {t.models.title}
+              </span>
               <code className="font-ui-mono text-[11px] text-muted">
                 ~/.pi/agent/models.json
               </code>
@@ -29,7 +33,7 @@ export function ModelsConfigDialog({ onClose }: { onClose: () => void }) {
             <button
               type="button"
               onClick={onClose}
-              aria-label="Close models configuration"
+              aria-label={t.models.closeConfiguration}
               className="px-1.5 py-0.5 text-[20px] leading-none text-muted"
             >
               &times;
@@ -38,7 +42,7 @@ export function ModelsConfigDialog({ onClose }: { onClose: () => void }) {
 
           {modelConfig.loading ? (
             <div className="flex flex-1 items-center justify-center text-[13px] text-dim">
-              Loading...
+              {t.common.loading}
             </div>
           ) : (
             <div className="flex min-h-0 flex-1">
@@ -76,7 +80,7 @@ export function ModelsConfigDialog({ onClose }: { onClose: () => void }) {
               size="sm"
               className="text-[13px]"
             >
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button
               type="button"
@@ -92,10 +96,10 @@ export function ModelsConfigDialog({ onClose }: { onClose: () => void }) {
               style={{ color: "var(--primary-foreground)" }}
             >
               {modelConfig.savedOk
-                ? "Saved"
+                ? t.common.saved
                 : modelConfig.saving
-                  ? "Saving..."
-                  : "Save"}
+                  ? t.common.saving
+                  : t.common.save}
             </Button>
           </footer>
         </div>
@@ -133,7 +137,7 @@ function ModelsConfigDetail({
   if (!selection) {
     return (
       <div className="flex h-full items-center justify-center text-[13px] text-dim">
-        Select a provider or model
+        <EmptySelection />
       </div>
     );
   }
@@ -198,4 +202,9 @@ function ModelsConfigDetail({
       onRefresh={() => modelConfig.refreshApiKeyProvider(provider.id)}
     />
   ) : null;
+}
+
+function EmptySelection() {
+  const { t } = useI18n();
+  return <>{t.models.selectProviderOrModel}</>;
 }

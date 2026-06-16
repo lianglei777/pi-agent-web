@@ -11,6 +11,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useI18n } from "@/i18n/use-i18n";
 import { loadHome, loadSessions } from "./api";
 import { CwdPicker } from "./cwd-picker";
 import { FileExplorer } from "./file-explorer";
@@ -57,18 +58,26 @@ export function SessionSidebar({
   const [refreshed, setRefreshed] = useState(false);
   const restoreAttempted = useRef(false);
   const feedbackTimer = useRef<number | null>(null);
+  const { t } = useI18n();
 
-  const refresh = useCallback(async (showLoading = false) => {
-    if (showLoading) setLoading(true);
-    try {
-      setSessions(await loadSessions());
-      setError("");
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Unable to load sessions");
-    } finally {
-      if (showLoading) setLoading(false);
-    }
-  }, []);
+  const refresh = useCallback(
+    async (showLoading = false) => {
+      if (showLoading) setLoading(true);
+      try {
+        setSessions(await loadSessions());
+        setError("");
+      } catch (cause) {
+        setError(
+          cause instanceof Error
+            ? cause.message
+            : t.sessions.unableToLoadSessions,
+        );
+      } finally {
+        if (showLoading) setLoading(false);
+      }
+    },
+    [t.sessions.unableToLoadSessions],
+  );
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -161,12 +170,12 @@ export function SessionSidebar({
           type="button"
         >
           <Plus />
-          New
+          {t.sessions.new}
         </Button>
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              aria-label="Refresh sessions"
+              aria-label={t.sessions.refreshSessions}
               onClick={manualRefresh}
               size="icon-sm"
               type="button"
@@ -179,7 +188,7 @@ export function SessionSidebar({
               )}
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Refresh sessions</TooltipContent>
+          <TooltipContent>{t.sessions.refreshSessions}</TooltipContent>
         </Tooltip>
       </div>
 
@@ -195,7 +204,10 @@ export function SessionSidebar({
         className={selectedCwd ? "min-h-20 flex-1" : "min-h-20 flex-[1_1_100%]"}
       >
         {loading ? (
-          <div className="space-y-2 px-3 py-3.5" aria-label="Loading sessions">
+          <div
+            className="space-y-2 px-3 py-3.5"
+            aria-label={t.sessions.loadingSessions}
+          >
             <Skeleton className="h-[54px] w-full" />
             <Skeleton className="h-[54px] w-[88%]" />
             <Skeleton className="h-[54px] w-[72%]" />
@@ -209,12 +221,12 @@ export function SessionSidebar({
               size="sm"
               variant="outline"
             >
-              Retry
+              {t.common.retry}
             </Button>
           </div>
         ) : !selectedCwd ? (
           <div className="p-4 text-center text-[11px] text-dim">
-            Select a project to view sessions
+            {t.sessions.selectProjectToViewSessions}
           </div>
         ) : tree.length ? (
           <div className="py-1">
@@ -228,7 +240,7 @@ export function SessionSidebar({
           </div>
         ) : (
           <div className="p-4 text-center text-[11px] text-dim">
-            No sessions found
+            {t.sessions.noSessions}
           </div>
         )}
       </ScrollArea>

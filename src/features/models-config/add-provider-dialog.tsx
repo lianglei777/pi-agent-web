@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { ApiKeyProvider, OAuthProvider } from "./types";
+import { useI18n } from "@/i18n/use-i18n";
 import { ModalOverlay } from "./modal-overlay";
 import { ProviderIcon } from "./provider-icon";
 
@@ -24,6 +25,7 @@ export function AddProviderDialog({
 }: Props) {
   const [search, setSearch] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const { t } = useI18n();
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
@@ -52,7 +54,7 @@ export function AddProviderDialog({
     <ModalOverlay
       onClose={onClose}
       zIndex={1100}
-      label="Add model provider"
+      label={t.models.addModelProvider}
     >
       <div className="flex max-h-[72vh] w-[min(820px,calc(100vw-32px))] flex-col overflow-hidden rounded-[10px] border border-line bg-canvas shadow-2xl">
         <div className="border-b border-line px-3.5 py-2.5">
@@ -60,25 +62,25 @@ export function AddProviderDialog({
             ref={inputRef}
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search providers..."
-            aria-label="Search providers"
+            placeholder={t.models.searchProviders}
+            aria-label={t.models.searchProviders}
             className="w-full border-none bg-transparent text-[13px] text-primary outline-none"
           />
         </div>
         <div className="grid flex-1 grid-cols-[repeat(auto-fit,minmax(min(240px,100%),1fr))] gap-2 overflow-y-auto p-3.5">
           {showCustom && (
             <>
-              <CategoryTitle>Custom</CategoryTitle>
+              <CategoryTitle>{t.models.custom}</CategoryTitle>
               <ProviderCard
-                title="OpenAI / Anthropic compatible"
-                detail="Custom endpoint format"
+                title={t.models.compatibleProvider}
+                detail={t.models.customEndpointFormat}
                 onClick={onAddCustom}
               />
             </>
           )}
           {oauth.length > 0 && (
             <>
-              <CategoryTitle>Subscriptions</CategoryTitle>
+              <CategoryTitle>{t.models.subscriptions}</CategoryTitle>
               {oauth.map((provider) => (
                 <ProviderCard
                   key={provider.id}
@@ -92,7 +94,7 @@ export function AddProviderDialog({
           )}
           {apiKey.length > 0 && (
             <>
-              <CategoryTitle>API Key</CategoryTitle>
+              <CategoryTitle>{t.models.apiKey}</CategoryTitle>
               {apiKey.map((provider) => (
                 <ProviderCard
                   key={provider.id}
@@ -108,7 +110,7 @@ export function AddProviderDialog({
           )}
           {!showCustom && oauth.length === 0 && apiKey.length === 0 && (
             <p className="col-span-full py-8 text-center text-[12px] text-dim">
-              No providers match
+              {t.models.noProvidersMatch}
             </p>
           )}
         </div>

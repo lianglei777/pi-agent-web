@@ -16,6 +16,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useI18n } from "@/i18n/use-i18n";
 import { AddSkillPanel } from "./add-skill-panel";
 import { SkillDetail } from "./skill-detail";
 import { SkillList } from "./skill-list";
@@ -30,6 +31,7 @@ export function SkillsConfigDialog({
 }) {
   const [adding, setAdding] = useState(false);
   const skills = useSkillsConfig(cwd);
+  const { t } = useI18n();
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
@@ -41,7 +43,7 @@ export function SkillsConfigDialog({
         <header className="flex min-h-[49px] shrink-0 items-center gap-3 border-b border-line bg-panel px-[18px] py-3">
           <Sparkles className="size-4" />
           <div className="min-w-0 flex-1">
-            <DialogTitle className="text-base">Skills</DialogTitle>
+            <DialogTitle className="text-base">{t.skills.title}</DialogTitle>
             <DialogDescription
               className="truncate text-xs"
               id="skills-config-description"
@@ -50,7 +52,7 @@ export function SkillsConfigDialog({
             </DialogDescription>
           </div>
           <Button
-            aria-label="Refresh skills"
+            aria-label={t.skills.refreshSkills}
             disabled={skills.loading}
             onClick={() => void skills.refresh()}
             size="icon-sm"
@@ -60,7 +62,7 @@ export function SkillsConfigDialog({
             <RefreshCw className={skills.loading ? "animate-spin" : ""} />
           </Button>
           <Button
-            aria-label="Close skills"
+            aria-label={t.skills.closeSkills}
             onClick={onClose}
             size="icon-sm"
             type="button"
@@ -82,14 +84,14 @@ export function SkillsConfigDialog({
                 variant={adding ? "secondary" : "ghost"}
               >
                 <Plus />
-                Add skill
+                {t.skills.addSkill}
               </Button>
             </div>
 
             {skills.loading && skills.skills.length === 0 ? (
               <div className="flex flex-1 items-center justify-center text-muted">
                 <LoaderCircle className="size-5 animate-spin" />
-                <span className="sr-only">Loading skills</span>
+                <span className="sr-only">{t.skills.loadingSkills}</span>
               </div>
             ) : skills.skills.length > 0 ? (
               <SkillList
@@ -103,9 +105,11 @@ export function SkillsConfigDialog({
             ) : (
               <div className="flex flex-1 flex-col items-center justify-center p-6 text-center">
                 <Sparkles className="size-6 text-dim" />
-                <p className="mt-3 text-sm font-medium">No skills found</p>
+                <p className="mt-3 text-sm font-medium">
+                  {t.skills.noSkillsFound}
+                </p>
                 <p className="mt-1 text-xs leading-5 text-muted">
-                  Add one from the market or configure a resource path.
+                  {t.skills.noSkillsFoundDescription}
                 </p>
               </div>
             )}
@@ -114,8 +118,10 @@ export function SkillsConfigDialog({
               <details className="border-t border-line p-3 text-xs">
                 <summary className="flex cursor-pointer items-center gap-2 text-muted">
                   <AlertTriangle className="size-3.5" />
-                  {skills.diagnostics.length} diagnostic
-                  {skills.diagnostics.length === 1 ? "" : "s"}
+                  {skills.diagnostics.length}{" "}
+                  {skills.diagnostics.length === 1
+                    ? t.skills.diagnostic
+                    : t.skills.diagnostics}
                 </summary>
                 <ul className="mt-2 space-y-2 text-muted">
                   {skills.diagnostics.map((diagnostic, index) => (
@@ -147,7 +153,7 @@ export function SkillsConfigDialog({
                   type="button"
                   variant="ghost"
                 >
-                  Retry
+                  {t.common.retry}
                 </Button>
               </div>
             ) : null}
@@ -166,7 +172,7 @@ export function SkillsConfigDialog({
               />
             ) : (
               <div className="flex flex-1 items-center justify-center p-8 text-sm text-muted">
-                Select a skill to view its details.
+                {t.skills.selectSkill}
               </div>
             )}
           </main>

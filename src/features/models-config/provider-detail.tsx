@@ -5,6 +5,7 @@ import {
   API_OPTIONS,
   type ProviderEntry,
 } from "./types";
+import { useI18n } from "@/i18n/use-i18n";
 import { SectionTitle, Field, inputStyle } from "./shared";
 
 interface Props {
@@ -23,6 +24,7 @@ export default function ProviderDetail({
   onDelete,
 }: Props) {
   const [editingName, setEditingName] = useState(name);
+  const { t } = useI18n();
 
   const canRename = editingName !== name && editingName.trim().length > 0;
 
@@ -30,7 +32,7 @@ export default function ProviderDetail({
     <div className="flex flex-col gap-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <SectionTitle>Provider</SectionTitle>
+        <SectionTitle>{t.models.provider}</SectionTitle>
         <button
           onClick={() => onDelete(name)}
           className="cursor-pointer rounded border px-2 py-[3px] text-[11px]"
@@ -41,12 +43,12 @@ export default function ProviderDetail({
           }}
           type="button"
         >
-          Delete
+          {t.common.delete}
         </button>
       </div>
 
       {/* Provider name */}
-      <Field label="Provider name">
+      <Field label={t.models.providerName}>
         <input
           value={editingName}
           onChange={(e) => setEditingName(e.target.value)}
@@ -58,15 +60,15 @@ export default function ProviderDetail({
             onClick={() => onRename(name, editingName.trim())}
             className="mt-1 cursor-pointer self-start rounded border-none px-2.5 py-[3px] text-[11px] text-white"
             style={{ background: "var(--accent)" }}
-            type="button"
-          >
-            Rename
+          type="button"
+        >
+            {t.models.rename}
           </button>
         )}
       </Field>
 
       {/* Base URL */}
-      <Field label="Base URL">
+      <Field label={t.models.baseUrl}>
         <input
           value={provider.baseUrl ?? ""}
           onChange={(e) => onChange({ ...provider, baseUrl: e.target.value })}
@@ -77,20 +79,20 @@ export default function ProviderDetail({
       </Field>
 
       {/* API Key */}
-      <Field label="API Key">
+      <Field label={t.models.apiKey}>
         <SecretTextInput
           value={provider.apiKey ?? ""}
           onChange={(v) => onChange({ ...provider, apiKey: v })}
-          placeholder="ENV_VAR_NAME, !shell-command, or literal key"
+          placeholder={t.models.apiKeyPlaceholder}
           mono
         />
         <span className="mt-0.5 text-[10px] text-dim">
-          Prefix with <code>!</code> to run a shell command, or use an env var name
+          {t.models.apiKeyHelp}
         </span>
       </Field>
 
       {/* API */}
-      <Field label="API">
+      <Field label={t.models.api}>
         <select
           value={provider.api ?? ""}
           onChange={(e) => onChange({ ...provider, api: e.target.value })}

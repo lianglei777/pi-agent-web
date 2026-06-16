@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Check, ChevronDown, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useI18n } from "@/i18n/use-i18n";
 import { loadDefaultCwd } from "./api";
 import { shortenCwd } from "./session-utils";
 
@@ -24,6 +25,7 @@ export function CwdPicker({
   const [error, setError] = useState("");
   const rootRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { t } = useI18n();
 
   useEffect(() => {
     function close(event: PointerEvent) {
@@ -53,7 +55,7 @@ export function CwdPicker({
     try {
       select((await loadDefaultCwd()).cwd);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Unable to load directory");
+      setError(cause instanceof Error ? cause.message : t.sessions.unableToLoadDirectory);
     }
   }
 
@@ -70,13 +72,13 @@ export function CwdPicker({
         className="w-full justify-start px-2.5 font-ui-mono text-[11px]"
         onClick={() => setOpen((current) => !current)}
         size="sm"
-        title={cwd ?? "Select project"}
+        title={cwd ?? t.sessions.selectProject}
         type="button"
         variant="outline"
       >
         <FolderOpen />
         <span className="min-w-0 flex-1 truncate text-left">
-          {cwd ? shortenCwd(cwd, home) : "Select project..."}
+          {cwd ? shortenCwd(cwd, home) : t.sessions.selectProjectEllipsis}
         </span>
         <ChevronDown className="size-3" />
       </Button>
@@ -102,7 +104,7 @@ export function CwdPicker({
           {custom ? (
             <div className="space-y-1.5 p-1">
               <Input
-                aria-label="Custom project path"
+                aria-label={t.sessions.customProjectPath}
                 className="h-8 font-ui-mono text-[11px]"
                 onChange={(event) => setValue(event.target.value)}
                 onKeyDown={(event) => {
@@ -112,13 +114,13 @@ export function CwdPicker({
                     setValue("");
                   }
                 }}
-                placeholder="Absolute path"
+                placeholder={t.sessions.absolutePath}
                 ref={inputRef}
                 value={value}
               />
               <div className="flex gap-1">
                 <Button className="flex-1" onClick={submitCustom} size="sm">
-                  Open
+                  {t.common.open}
                 </Button>
                 <Button
                   className="flex-1"
@@ -129,7 +131,7 @@ export function CwdPicker({
                   size="sm"
                   variant="ghost"
                 >
-                  Cancel
+                  {t.common.cancel}
                 </Button>
               </div>
             </div>
@@ -141,7 +143,7 @@ export function CwdPicker({
                 type="button"
                 variant="ghost"
               >
-                Use default directory
+                {t.sessions.useDefaultDirectory}
               </Button>
               <Button
                 className="h-8 w-full justify-start text-[11px]"
@@ -149,7 +151,7 @@ export function CwdPicker({
                 type="button"
                 variant="ghost"
               >
-                Custom path...
+                {t.sessions.customPath}
               </Button>
             </>
           )}

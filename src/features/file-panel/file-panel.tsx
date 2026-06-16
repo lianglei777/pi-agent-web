@@ -3,15 +3,18 @@
 import { useEffect, useState } from "react";
 import { FileText } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { useI18n } from "@/i18n/use-i18n";
 
 export type OpenFile = { path: string; name: string };
 
 export function FilePanel({ file }: { file: OpenFile | null }) {
+  const { t } = useI18n();
+
   return (
     <div className="flex h-full w-full min-w-0 flex-col">
       <div className="flex h-9 flex-none items-center border-b border-line bg-panel px-3 text-[11px] text-muted">
         <span className="truncate" title={file?.path}>
-          {file?.name ?? "Files"}
+          {file?.name ?? t.files.files}
         </span>
       </div>
       {file ? <LoadedFile file={file} key={file.path} /> : <EmptyFile />}
@@ -20,6 +23,8 @@ export function FilePanel({ file }: { file: OpenFile | null }) {
 }
 
 function EmptyFile() {
+  const { t } = useI18n();
+
   return (
     <div className="grid flex-1 place-items-center p-6">
       <Card className="border-0 bg-transparent text-center shadow-none">
@@ -27,7 +32,9 @@ function EmptyFile() {
           <div className="mx-auto mb-3 grid size-10 place-items-center rounded-lg border border-border bg-card text-muted-foreground">
             <FileText className="size-5" />
           </div>
-          <p className="m-0 text-xs text-muted-foreground">No file open</p>
+          <p className="m-0 text-xs text-muted-foreground">
+            {t.files.noFileOpen}
+          </p>
         </CardContent>
       </Card>
     </div>
@@ -35,6 +42,7 @@ function EmptyFile() {
 }
 
 function LoadedFile({ file }: { file: OpenFile }) {
+  const { t } = useI18n();
   const [result, setResult] = useState<{
     content: string;
     error: string;
@@ -50,7 +58,9 @@ function LoadedFile({ file }: { file: OpenFile }) {
           error?: { message?: string };
         };
         if (!response.ok) {
-          throw new Error(data.error?.message ?? `Request failed (${response.status})`);
+          throw new Error(
+            data.error?.message ?? `${t.files.requestFailed} (${response.status})`,
+          );
         }
         setResult({ content: data.content ?? "", error: "" });
       })
@@ -58,14 +68,16 @@ function LoadedFile({ file }: { file: OpenFile }) {
         if ((cause as { name?: string }).name !== "AbortError") {
           setResult({
             content: "",
-            error: cause instanceof Error ? cause.message : "Unable to open file",
+            error: cause instanceof Error ? cause.message : t.files.unableToOpenFile,
           });
         }
       });
     return () => controller.abort();
-  }, [file]);
+  }, [file, t.files.requestFailed, t.files.unableToOpenFile]);
 
-  if (!result) return <div className="p-4 text-xs text-dim">Loading...</div>;
+  if (!result) {
+    return <div className="p-4 text-xs text-dim">{t.files.loading}</div>;
+  }
   if (result.error) {
     return <div className="p-4 text-xs text-destructive">{result.error}</div>;
   }

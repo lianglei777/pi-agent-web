@@ -1,5 +1,6 @@
 import {
   GitBranch,
+  Languages,
   Moon,
   PanelLeftClose,
   PanelLeftOpen,
@@ -17,6 +18,8 @@ import type {
   SessionStats,
   SessionTreeNode,
 } from "@/features/chat/agent-types";
+import { localeLabel } from "@/i18n/locales";
+import { useI18n } from "@/i18n/use-i18n";
 
 export type TopPanel = "branches" | "system" | null;
 
@@ -51,13 +54,16 @@ export function WorkspaceTopBar({
   stats,
   contextUsage,
 }: WorkspaceTopBarProps) {
+  const { locale, setLocale, t } = useI18n();
+  const nextLocale = locale === "zh" ? "en" : "zh";
+
   return (
     <>
       <header className="flex h-9 flex-none items-stretch border-b border-line bg-panel pr-12">
 
         {/* Left session sidebar toggle */}
         <TopBarIconButton
-          label={sidebarOpen ? "Hide sidebar" : "Show sidebar"}
+          label={sidebarOpen ? t.workspace.hideSidebar : t.workspace.showSidebar}
           onClick={onToggleSidebar}
           pressed={sidebarOpen}
         >
@@ -66,12 +72,28 @@ export function WorkspaceTopBar({
 
         {/* color theme */}
         <TopBarIconButton
-          label={dark ? "Use light theme" : "Use dark theme"}
+          label={dark ? t.workspace.useLightTheme : t.workspace.useDarkTheme}
           onClick={onToggleTheme}
           pressed={dark}
         >
           {dark ? <Sun /> : <Moon />}
         </TopBarIconButton>
+
+        <TopBarIconButton
+          label={
+            nextLocale === "zh"
+              ? t.common.switchToChinese
+              : t.common.switchToEnglish
+          }
+          onClick={() => setLocale(nextLocale)}
+          pressed={false}
+        >
+          <Languages />
+          <span className="sr-only">{t.common.language}</span>
+        </TopBarIconButton>
+        <span className="flex items-center border-r border-line px-2 font-ui-mono text-[10px] text-dim">
+          {localeLabel(locale)}
+        </span>
 
         {/* {sessionIsActive ? (
           <>
@@ -101,7 +123,7 @@ export function WorkspaceTopBar({
         ) : null}
         {contextUsage ? (
           <div className="flex items-center px-2 font-ui-mono text-xs text-dim">
-            context{" "}
+            {t.workspace.context}{" "}
             {contextUsage.percent === null
               ? "n/a"
               : `${contextUsage.percent.toFixed(0)}%`}
@@ -122,14 +144,14 @@ export function WorkspaceTopBar({
                 onLeafChange={onLeafChange}
               />
             ) : (
-              "No branches in this session"
+              t.workspace.noBranches
             )
           ) : systemPrompt ? (
             <pre className="m-0 font-ui-mono text-[11px] leading-5 whitespace-pre-wrap">
               {systemPrompt}
             </pre>
           ) : (
-            "No system prompt available"
+            t.workspace.noSystemPrompt
           )}
         </section>
       ) : null}

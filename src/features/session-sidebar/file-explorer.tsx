@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useI18n } from "@/i18n/use-i18n";
 import { loadDirectory } from "./api";
 import { joinPath, relativePath } from "./session-utils";
 import type { FileEntry } from "./types";
@@ -34,23 +35,29 @@ export function FileExplorer({
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState<Set<string>>(new Set());
   const [error, setError] = useState("");
+  const { t } = useI18n();
 
-  const load = useCallback(async (path: string) => {
-    setLoading((current) => new Set(current).add(path));
-    try {
-      const entries = await loadDirectory(path);
-      setEntriesByPath((current) => ({ ...current, [path]: entries }));
-      setError("");
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Unable to load files");
-    } finally {
-      setLoading((current) => {
-        const next = new Set(current);
-        next.delete(path);
-        return next;
-      });
-    }
-  }, []);
+  const load = useCallback(
+    async (path: string) => {
+      setLoading((current) => new Set(current).add(path));
+      try {
+        const entries = await loadDirectory(path);
+        setEntriesByPath((current) => ({ ...current, [path]: entries }));
+        setError("");
+      } catch (cause) {
+        setError(
+          cause instanceof Error ? cause.message : t.files.unableToLoadFiles,
+        );
+      } finally {
+        setLoading((current) => {
+          const next = new Set(current);
+          next.delete(path);
+          return next;
+        });
+      }
+    },
+    [t.files.unableToLoadFiles],
+  );
 
   useEffect(() => {
     const timer = window.setTimeout(() => void load(cwd), 0);
@@ -90,10 +97,10 @@ export function FileExplorer({
           <ChevronDown
             className={`size-3 transition-transform ${open ? "" : "-rotate-90"}`}
           />
-          Explorer
+          {t.files.explorer}
         </Button>
         <Button
-          aria-label="Refresh files"
+          aria-label={t.files.refreshFiles}
           className="size-7"
           onClick={() => void load(cwd)}
           size="icon-sm"
@@ -112,9 +119,9 @@ export function FileExplorer({
                 className="mt-2"
                 onClick={() => void load(cwd)}
                 size="sm"
-                variant="outline"
-              >
-                Retry
+              variant="outline"
+            >
+                {t.common.retry}
               </Button>
             </div>
           ) : (
@@ -127,6 +134,11 @@ export function FileExplorer({
               onAtMention={onAtMention}
               onOpenFile={onOpenFile}
               onToggle={toggleDirectory}
+              text={{
+                empty: t.files.empty,
+                loading: t.files.loading,
+                mention: t.files.mention,
+              }}
             />
           )}
         </ScrollArea>
@@ -141,6 +153,7 @@ function FileNodes({
   entriesByPath,
   expanded,
   loading,
+  text,
   onToggle,
   onOpenFile,
   onAtMention,
@@ -151,13 +164,18 @@ function FileNodes({
   entriesByPath: Record<string, FileEntry[]>;
   expanded: Set<string>;
   loading: Set<string>;
+  text: {
+    empty: string;
+    loading: string;
+    mention: string;
+  };
   onToggle: (path: string) => Promise<void>;
   onOpenFile?: (path: string, name: string) => void;
   onAtMention?: (path: string) => void;
   depth?: number;
 }) {
   if (!entries.length) {
-    return <div className="px-4 py-2 text-[10px] text-dim">empty</div>;
+    return <div className="px-4 py-2 text-[10px] text-dim">{text.empty}</div>;
   }
   return entries.map((entry) => {
     const path = entry.path || joinPath(cwd, entry.name);
@@ -194,7 +212,7 @@ function FileNodes({
           <span className="min-w-0 flex-1 truncate">{entry.name}</span>
           {onAtMention ? (
             <Button
-              aria-label={`Mention ${entry.name}`}
+              aria-label={`${text.mention} ${entry.name}`}
               className="hidden size-6 group-hover:inline-flex group-focus-within:inline-flex"
               onClick={(event) => {
                 event.stopPropagation();
@@ -214,7 +232,7 @@ function FileNodes({
               className="h-6 text-[10px] text-dim"
               style={{ paddingLeft: `${20 + depth * 14}px` }}
             >
-              Loading...
+              {text.loading}
             </div>
           ) : (
             <FileNodes
@@ -224,6 +242,7 @@ function FileNodes({
               entriesByPath={entriesByPath}
               expanded={expanded}
               loading={loading}
+              text={text}
               onAtMention={onAtMention}
               onOpenFile={onOpenFile}
               onToggle={onToggle}

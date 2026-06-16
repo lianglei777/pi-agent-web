@@ -1,4 +1,5 @@
 import { LoaderCircle } from "lucide-react";
+import { useI18n } from "@/i18n/use-i18n";
 import type { SkillInfo } from "./types";
 
 export function SkillDetail({
@@ -11,6 +12,7 @@ export function SkillDetail({
   onToggle: () => void;
 }) {
   const enabled = !skill.disableModelInvocation;
+  const { t } = useI18n();
   return (
     <div className="min-h-0 flex-1 overflow-y-auto p-5">
       <div className="mx-auto max-w-2xl">
@@ -18,12 +20,12 @@ export function SkillDetail({
           <div className="min-w-0">
             <h2 className="truncate text-[15px] font-semibold">{skill.name}</h2>
             <p className="mt-1 text-[13px] leading-5 text-muted">
-              {skill.description || "No description provided."}
+              {skill.description || t.skills.noDescription}
             </p>
           </div>
           <button
             aria-checked={enabled}
-            aria-label="Allow model invocation"
+            aria-label={t.skills.allowModelInvocation}
             className={`relative mt-1 h-6 w-11 shrink-0 rounded-full border outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/40 ${
               enabled
                 ? "border-accent bg-accent"
@@ -47,26 +49,26 @@ export function SkillDetail({
 
         <div className="mt-6 rounded-xl border border-line bg-panel">
           <div className="border-b border-line p-4">
-            <h3 className="text-sm font-medium">Model invocation</h3>
+            <h3 className="text-sm font-medium">
+              {t.skills.modelInvocation}
+            </h3>
             <p className="mt-1 text-xs leading-5 text-muted">
-              When off, this skill is omitted from the model prompt. It remains
-              available for explicit <code>/skill:{skill.name}</code> calls.
+              {t.skills.modelInvocationDescription}{" "}
+              <code>/skill:{skill.name}</code> {t.skills.calls}
             </p>
           </div>
           <dl className="grid gap-4 p-4 text-sm sm:grid-cols-2">
-            <Detail label="Source" value={skill.sourceInfo.source} />
-            <Detail label="Scope" value={scopeLabel(skill)} />
-            <Detail label="Path" value={skill.displayPath} wide />
+            <Detail label={t.skills.source} value={skill.sourceInfo.source} />
+            <Detail label={t.skills.scope} value={scopeLabel(skill, t)} />
+            <Detail label={t.skills.path} value={skill.displayPath} wide />
           </dl>
         </div>
 
         <p className="mt-4 rounded-lg bg-hover px-3 py-2 text-xs leading-5 text-muted">
           {!skill.canModify
-            ? "This skill was discovered through a symlink and is read-only. "
+            ? `${t.skills.readOnlySymlink} `
             : ""}
-          Changes affect newly created sessions, restored sessions, or a
-          session after its resources are reloaded. The current running session
-          is not silently restarted.
+          {t.skills.changesNotice}
         </p>
       </div>
     </div>
@@ -92,8 +94,8 @@ function Detail({
   );
 }
 
-function scopeLabel(skill: SkillInfo): string {
-  if (skill.sourceInfo.scope === "project") return "Project";
-  if (skill.sourceInfo.scope === "user") return "Global";
-  return "Path";
+function scopeLabel(skill: SkillInfo, t: ReturnType<typeof useI18n>["t"]): string {
+  if (skill.sourceInfo.scope === "project") return t.common.project;
+  if (skill.sourceInfo.scope === "user") return t.common.global;
+  return t.skills.path;
 }

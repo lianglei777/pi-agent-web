@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useI18n } from "@/i18n/use-i18n";
 import { deleteSession, renameSession } from "./api";
 import {
   formatRelativeTime,
@@ -117,6 +118,7 @@ function SessionRow({
   const [error, setError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const title = getSessionTitle(session);
+  const { locale, t } = useI18n();
 
   useEffect(() => {
     if (editing) inputRef.current?.select();
@@ -136,7 +138,7 @@ function SessionRow({
       setEditing(false);
       setError("");
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Rename failed");
+      setError(cause instanceof Error ? cause.message : t.sessions.renameFailed);
     } finally {
       setBusy(false);
     }
@@ -149,7 +151,7 @@ function SessionRow({
       onDeleted(session);
       await onChanged();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Delete failed");
+      setError(cause instanceof Error ? cause.message : t.sessions.deleteFailed);
       setBusy(false);
     }
   }
@@ -158,7 +160,7 @@ function SessionRow({
     return (
       <div className="flex h-[54px] items-center gap-1 px-2">
         <Input
-          aria-label={`Rename ${title}`}
+          aria-label={`${t.sessions.rename} ${title}`}
           className="h-8 text-xs"
           disabled={busy}
           onBlur={submitRename}
@@ -186,7 +188,7 @@ function SessionRow({
         }`}
       >
         <span className="min-w-0 flex-1 truncate text-[11px]">
-          Delete &ldquo;{title.slice(0, 22)}&rdquo;?
+          {t.sessions.deleteQuestionPrefix} &ldquo;{title.slice(0, 22)}&rdquo;?
         </span>
         <Button
           disabled={busy}
@@ -195,7 +197,7 @@ function SessionRow({
           type="button"
           variant="destructive"
         >
-          Delete
+          {t.common.delete}
         </Button>
         <Button
           disabled={busy}
@@ -204,7 +206,7 @@ function SessionRow({
           type="button"
           variant="ghost"
         >
-          Cancel
+          {t.common.cancel}
         </Button>
       </div>
     );
@@ -223,7 +225,11 @@ function SessionRow({
     >
       {hasChildren ? (
         <Button
-          aria-label={collapsed ? "Expand session forks" : "Collapse session forks"}
+          aria-label={
+            collapsed
+              ? t.sessions.expandForks
+              : t.sessions.collapseForks
+          }
           className="size-6"
           onClick={(event) => {
             event.stopPropagation();
@@ -245,7 +251,8 @@ function SessionRow({
       <div className="min-w-0 flex-1">
         <div className="truncate text-xs font-medium text-primary">{title}</div>
         <div className="mt-0.5 truncate text-[10px] text-dim">
-          {formatRelativeTime(session.modified)} / {session.messageCount} msgs
+          {formatRelativeTime(session.modified, undefined, locale)} /{" "}
+          {session.messageCount} {t.sessions.msgs}
         </div>
         {error ? (
           <div className="truncate text-[9px] text-destructive">{error}</div>
@@ -253,7 +260,7 @@ function SessionRow({
       </div>
       <div className="hidden items-center group-hover:flex group-focus-within:flex">
         <Button
-          aria-label={`Rename ${title}`}
+          aria-label={`${t.sessions.rename} ${title}`}
           className="size-7 hover:text-accent"
           onClick={(event) => {
             event.stopPropagation();
@@ -267,7 +274,7 @@ function SessionRow({
           <Pencil className="size-3.5" />
         </Button>
         <Button
-          aria-label={`Delete ${title}`}
+          aria-label={`${t.common.delete} ${title}`}
           className="size-7 hover:text-destructive"
           onClick={(event) => {
             event.stopPropagation();

@@ -37,6 +37,7 @@ import { SessionSidebar } from "@/features/session-sidebar/session-sidebar";
 import { loadSessions } from "@/features/session-sidebar/api";
 import type { SessionInfo } from "@/features/session-sidebar/types";
 import { SkillsConfigDialog } from "@/features/skills-config/skills-config-dialog";
+import { useI18n } from "@/i18n/use-i18n";
 import {
   WorkspaceTopBar,
   type TopPanel,
@@ -92,6 +93,7 @@ export function AgentWorkspace({
   const [workspaceWidth, setWorkspaceWidth] = useState(1280);
   const workspaceRef = useRef<HTMLDivElement>(null);
   const sessionIsActive = hasActiveSession || sessionStarted;
+  const { t } = useI18n();
   const sidebarBounds = getSidebarWidthBounds(
     workspaceWidth,
     panelWidths.filePanel,
@@ -269,7 +271,7 @@ export function AgentWorkspace({
         <>
           {/* Mobile: semi-transparent overlay behind the sliding sidebar; tapping it closes the sidebar */}
           <Button
-            aria-label="Close sidebar"
+            aria-label={t.workspace.closeSidebar}
             className={`fixed inset-0 z-199 hidden h-auto cursor-default rounded-none bg-black/40 p-0 hover:bg-black/40 max-[640px]:block ${sidebarOpen
                 ? "max-[640px]:visible max-[640px]:opacity-100"
                 : "max-[640px]:invisible max-[640px]:opacity-0"
@@ -325,7 +327,7 @@ export function AgentWorkspace({
                   variant="ghost"
                 >
                   <Cpu />
-                  Models
+                  {t.workspace.models}
                 </Button>
                 <Separator orientation="vertical" />
                 <Button
@@ -337,14 +339,14 @@ export function AgentWorkspace({
                   variant="ghost"
                 >
                   <Sparkles />
-                  Skills
+                  {t.workspace.skills}
                 </Button>
               </div>
             </div>
           </aside>
           {sidebarOpen ? (
             <ResizeHandle
-              ariaLabel="Resize session sidebar"
+              ariaLabel={t.workspace.resizeSessionSidebar}
               direction={1}
               max={sidebarBounds.max}
               min={sidebarBounds.min}
@@ -402,7 +404,9 @@ export function AgentWorkspace({
             <TooltipTrigger asChild>
               <Button
                 aria-label={
-                  filePanelOpen ? "Hide file panel" : "Show file panel"
+                  filePanelOpen
+                    ? t.workspace.hideFilePanel
+                    : t.workspace.showFilePanel
                 }
                 aria-pressed={filePanelOpen}
                 className={`fixed top-0 right-0 z-300 rounded-none ${filePanelOpen ? "bg-selected text-accent" : ""
@@ -416,13 +420,15 @@ export function AgentWorkspace({
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom">
-              {filePanelOpen ? "Hide file panel" : "Show file panel"}
+              {filePanelOpen
+                ? t.workspace.hideFilePanel
+                : t.workspace.showFilePanel}
             </TooltipContent>
           </Tooltip>
 
           {filePanelOpen ? (
             <ResizeHandle
-              ariaLabel="Resize file panel"
+              ariaLabel={t.workspace.resizeFilePanel}
               direction={-1}
               max={filePanelBounds.max}
               min={filePanelBounds.min}
@@ -455,7 +461,7 @@ export function AgentWorkspace({
         </>
 
 
-         {/* Model Config  dialog*/}
+        {/* Model Config  dialog*/}
         {modelsOpen ? (
           <ModelsConfigDialog onClose={() => setModelsOpen(false)} />
         ) : null}

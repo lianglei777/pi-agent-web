@@ -43,6 +43,7 @@ import {
   SelectTrigger,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useI18n } from "@/i18n/use-i18n";
 import type {
   AttachedImage,
   ModelInfo,
@@ -125,6 +126,7 @@ export function ChatInput({
   setActionError: (value: string) => void;
   rootRef?: Ref<HTMLDivElement>;
 }) {
+  const { t } = useI18n();
   const thinkingOptions = [
     "auto",
     ...(currentModel?.thinkingLevels ?? [
@@ -139,8 +141,8 @@ export function ChatInput({
     (value, index, array) => array.indexOf(value) === index,
   ) as ThinkingLevel[];
   const shortcut = running
-    ? "Enter to steer now · Shift+Enter for a new line"
-    : "Enter to send · Shift+Enter for a new line";
+    ? t.chat.input.shortcutRunning
+    : t.chat.input.shortcutIdle;
 
   return (
     <div
@@ -150,7 +152,7 @@ export function ChatInput({
       <div className="pointer-events-auto mx-auto max-w-[820px]">
         {retryInfo ? (
           <InlineStatus tone="warning">
-            Retrying {retryInfo.attempt}/{retryInfo.maxAttempts}
+            {t.chat.input.retrying} {retryInfo.attempt}/{retryInfo.maxAttempts}
             {retryInfo.errorMessage ? ` · ${retryInfo.errorMessage}` : ""}
           </InlineStatus>
         ) : null}
@@ -161,7 +163,7 @@ export function ChatInput({
           <div className="mb-2 flex items-center gap-2 rounded-lg border border-destructive/25 bg-card px-3 py-2 text-xs text-destructive shadow-sm">
             <span className="min-w-0 flex-1">{actionError}</span>
             <Button
-              aria-label="Dismiss error"
+              aria-label={t.chat.input.dismissError}
               className="size-6"
               onClick={() => setActionError("")}
               size="icon-sm"
@@ -207,7 +209,7 @@ export function ChatInput({
                     src={image.previewUrl}
                   />
                   <Button
-                    aria-label={`Remove ${image.name}`}
+                    aria-label={`${t.chat.input.removeImage} ${image.name}`}
                     className="absolute top-1 right-1 size-5 rounded-full bg-[var(--text)]/70 p-0 text-[var(--bg-panel)] hover:bg-[var(--text)]/85"
                     onClick={() => removeImage(image.id)}
                     size="icon-sm"
@@ -223,7 +225,7 @@ export function ChatInput({
 
           <Textarea
             aria-describedby="composer-shortcut"
-            aria-label="Message"
+            aria-label={t.chat.input.messageLabel}
             className="min-h-[72px] max-h-[220px] resize-none overflow-y-auto rounded-none border-0 bg-transparent px-4 pt-4 pb-2 text-[15px] leading-[1.6] shadow-none placeholder:text-dim focus-visible:border-0 focus-visible:ring-0"
             onChange={(event) => {
               setDraft(event.target.value);
@@ -233,8 +235,8 @@ export function ChatInput({
             onPaste={handlePaste}
             placeholder={
               running
-                ? "Adjust the current task or queue what comes next..."
-                : "Ask Pi to build, explain, or fix something..."
+                ? t.chat.input.placeholderRunning
+                : t.chat.input.placeholderIdle
             }
             ref={textareaRef}
             rows={1}
@@ -254,7 +256,7 @@ export function ChatInput({
               type="file"
             />
             <IconButton
-              label="Attach images"
+              label={t.chat.input.attachImages}
               onClick={() => fileInputRef.current?.click()}
             >
               <Paperclip />
@@ -266,12 +268,12 @@ export function ChatInput({
               value={modelKey}
             >
               <SelectTrigger
-                aria-label="Model"
+                aria-label={t.chat.input.model}
                 className="h-9 max-w-52 border-0 bg-transparent px-2 shadow-none hover:bg-hover max-[480px]:max-w-36"
               >
                 <Cpu className="size-3.5 opacity-60" />
                 <span className="truncate">
-                  {currentModel?.name ?? "Choose model"}
+                  {currentModel?.name ?? t.chat.input.chooseModel}
                 </span>
               </SelectTrigger>
               <SelectContent side="top">
@@ -295,31 +297,39 @@ export function ChatInput({
                   disabled={!canSubmit}
                   onClick={() => void submit("follow_up")}
                   size="sm"
-                  title="Queue this message after the current run"
+                  title={t.chat.input.queueTitle}
                   type="button"
                   variant="outline"
                 >
                   <Clock3 />
-                  <span className="max-[520px]:sr-only">Queue</span>
+                  <span className="max-[520px]:sr-only">
+                    {t.chat.input.queue}
+                  </span>
                 </Button>
                 <Button
                   className="h-9 px-3 text-xs"
                   disabled={!canSubmit}
                   onClick={() => void submit("steer")}
                   size="sm"
-                  title="Interrupt and steer the current run"
+                  title={t.chat.input.steerTitle}
                   type="button"
                 >
                   <Send />
-                  <span className="max-[420px]:sr-only">Steer</span>
+                  <span className="max-[420px]:sr-only">
+                    {t.chat.input.steer}
+                  </span>
                 </Button>
                 <Button
-                  aria-label={stopping ? "Stopping agent" : "Stop agent"}
+                  aria-label={
+                    stopping
+                      ? t.chat.input.stoppingAgent
+                      : t.chat.input.stopAgent
+                  }
                   className="size-9 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
                   disabled={stopping}
                   onClick={() => void stop()}
                   size="icon"
-                  title={stopping ? "Stopping..." : "Stop"}
+                  title={stopping ? t.chat.input.stopping : t.chat.input.stop}
                   type="button"
                   variant="outline"
                 >
@@ -328,7 +338,7 @@ export function ChatInput({
               </>
             ) : (
               <Button
-                aria-label="Send message"
+                aria-label={t.chat.input.sendMessage}
                 className="h-9 min-w-24 rounded-lg px-4 text-xs max-[480px]:min-w-9 max-[480px]:px-0"
                 disabled={!canSubmit}
                 onClick={() => void submit()}
@@ -336,7 +346,9 @@ export function ChatInput({
                 type="button"
               >
                 <Send />
-                <span className="max-[480px]:sr-only">Send</span>
+                <span className="max-[480px]:sr-only">
+                  {t.chat.input.send}
+                </span>
               </Button>
             )}
           </div>
@@ -345,7 +357,7 @@ export function ChatInput({
             <div className="flex items-center gap-1 max-[700px]:hidden">
               <CompactSelect
                 icon={<Brain />}
-                label="Thinking"
+                label={t.chat.input.thinking}
                 onValueChange={(value) =>
                   void changeThinking(value as ThinkingLevel)
                 }
@@ -357,7 +369,7 @@ export function ChatInput({
               />
               <CompactSelect
                 icon={<Wrench />}
-                label="Tools"
+                label={t.chat.input.tools}
                 onValueChange={(value) =>
                   void changeTools(value as ToolPreset)
                 }
@@ -373,16 +385,22 @@ export function ChatInput({
                 disabled={running}
                 onClick={() => void compact()}
                 size="sm"
-                title="Compact the current context"
+                title={t.chat.input.compactContext}
                 type="button"
                 variant="ghost"
               >
                 <Minimize2 className="size-3.5" />
-                {isCompacting ? "Abort compact" : "Compact"}
+                {isCompacting
+                  ? t.chat.input.abortCompact
+                  : t.chat.input.compact}
               </Button>
               <IconButton
                 className="size-7"
-                label={soundEnabled ? "Disable sound" : "Enable sound"}
+                label={
+                  soundEnabled
+                    ? t.chat.input.disableSound
+                    : t.chat.input.enableSound
+                }
                 onClick={toggleSound}
                 pressed={soundEnabled}
               >
@@ -414,7 +432,7 @@ export function ChatInput({
           </div>
         </div>
         <p className="mt-2 text-center text-[11px] leading-5 text-dim">
-          AI can make mistakes. Please verify important information.
+          {t.chat.input.disclaimer}
         </p>
       </div>
     </div>
@@ -500,26 +518,28 @@ function SettingsMenu({
   onSoundChange: () => void;
   onCompact: () => Promise<void>;
 }) {
+  const { t } = useI18n();
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          aria-label="Agent settings"
+          aria-label={t.chat.input.agentSettings}
           className="h-7 px-2 text-[11px]"
           size="sm"
           type="button"
           variant="ghost"
         >
           <Settings2 className="size-3.5" />
-          Settings
+          {t.chat.input.settings}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" side="top">
-        <DropdownMenuLabel>Agent settings</DropdownMenuLabel>
+        <DropdownMenuLabel>{t.chat.input.agentSettings}</DropdownMenuLabel>
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
             <Brain className="size-3.5" />
-            Thinking: {thinkingLevel}
+            {t.chat.input.thinking}: {thinkingLevel}
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent>
             <DropdownMenuRadioGroup
@@ -539,7 +559,7 @@ function SettingsMenu({
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
             <Wrench className="size-3.5" />
-            Tools: {toolPreset}
+            {t.chat.input.tools}: {toolPreset}
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent>
             <DropdownMenuRadioGroup
@@ -561,14 +581,16 @@ function SettingsMenu({
           checked={soundEnabled}
           onCheckedChange={onSoundChange}
         >
-          Completion sound
+          {t.chat.input.completionSound}
         </DropdownMenuCheckboxItem>
         <DropdownMenuItem
           disabled={running}
           onSelect={() => void onCompact()}
         >
           <Minimize2 className="size-3.5" />
-          {isCompacting ? "Abort compact" : "Compact context"}
+          {isCompacting
+            ? t.chat.input.abortCompact
+            : t.chat.input.compactContext}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

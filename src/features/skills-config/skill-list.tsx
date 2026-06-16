@@ -1,4 +1,5 @@
 import { Check, CircleSlash2 } from "lucide-react";
+import { useI18n } from "@/i18n/use-i18n";
 import { groupSkills } from "./skill-state";
 import type { SkillInfo } from "./types";
 
@@ -11,9 +12,11 @@ export function SkillList({
   selectedSkillId: string | null;
   onSelect: (skillId: string) => void;
 }) {
+  const { t } = useI18n();
+
   return (
     <div
-      aria-label="Installed skills"
+      aria-label={t.skills.title}
       className="min-h-0 flex-1 overflow-y-auto p-2"
       role="listbox"
     >

@@ -4,6 +4,7 @@ import type {
   OAuthProvider,
   Selection,
 } from "./types";
+import { useI18n } from "@/i18n/use-i18n";
 import { ProviderIcon } from "./provider-icon";
 
 interface Props {
@@ -26,6 +27,7 @@ export function ModelsConfigSidebar({
   onOpenPicker,
 }: Props) {
   const providers = Object.entries(config.providers ?? {});
+  const { t } = useI18n();
   return (
     <aside className="flex w-[210px] shrink-0 flex-col border-r border-line bg-panel">
       <div className="flex-1 overflow-y-auto px-1.5 py-2">
@@ -105,7 +107,7 @@ export function ModelsConfigSidebar({
                 }
               >
                 <span className="truncate text-[11px] text-muted">
-                  {model.id || "new model"}
+                  {model.id || t.models.newModel}
                 </span>
                 {model.reasoning && (
                   <span className="ml-auto text-[9px] text-accent">T</span>
@@ -128,7 +130,7 @@ export function ModelsConfigSidebar({
           onClick={onOpenPicker}
           className="w-full rounded-[5px] border border-dashed border-line bg-transparent py-1.5 text-[12px] text-muted hover:border-accent hover:text-accent"
         >
-          + Add provider
+          + {t.models.addProvider}
         </button>
       </div>
     </aside>

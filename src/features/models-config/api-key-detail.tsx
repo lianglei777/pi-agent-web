@@ -5,6 +5,7 @@ import { removeApiKey, saveApiKey } from "./api";
 import {
   type ApiKeyProvider,
 } from "./types";
+import { useI18n } from "@/i18n/use-i18n";
 import { SectionTitle, inputStyle } from "./shared";
 
 interface Props {
@@ -18,6 +19,7 @@ export default function ApiKeyDetail({ provider, onRefresh }: Props) {
   const [removing, setRemoving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedOk, setSavedOk] = useState(false);
+  const { t } = useI18n();
 
   async function handleSave() {
     if (!apiKey.trim() || saving) return;
@@ -30,7 +32,7 @@ export default function ApiKeyDetail({ provider, onRefresh }: Props) {
       setTimeout(() => setSavedOk(false), 2000);
       await onRefresh();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Failed to save");
+      setError(caught instanceof Error ? caught.message : t.models.failedToSave);
     } finally {
       setSaving(false);
     }
@@ -43,7 +45,7 @@ export default function ApiKeyDetail({ provider, onRefresh }: Props) {
       await removeApiKey(provider.id);
       await onRefresh();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Failed to remove");
+      setError(caught instanceof Error ? caught.message : t.models.failedToRemove);
     } finally {
       setRemoving(false);
     }
@@ -53,7 +55,7 @@ export default function ApiKeyDetail({ provider, onRefresh }: Props) {
     <div className="flex flex-col gap-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <SectionTitle>API Key</SectionTitle>
+        <SectionTitle>{t.models.apiKey}</SectionTitle>
         <div className="flex items-center gap-1.5">
           <span
             className="h-[7px] w-[7px] rounded-full"
@@ -71,7 +73,7 @@ export default function ApiKeyDetail({ provider, onRefresh }: Props) {
                 : "var(--text-dim)",
             }}
           >
-            {provider.configured ? "configured" : "not configured"}
+            {provider.configured ? t.models.configured : t.models.notConfigured}
           </span>
         </div>
       </div>
@@ -79,8 +81,12 @@ export default function ApiKeyDetail({ provider, onRefresh }: Props) {
       {/* Description */}
       <p className="text-[13px] text-muted">
         {provider.configured
-          ? "API key is stored. Enter a new key below to replace it, or disconnect to remove it."
-          : `Enter your ${provider.name} API key to enable ${provider.modelCount} model${provider.modelCount === 1 ? "" : "s"}.`}
+          ? t.models.apiKeyStored
+          : `${t.models.enterApiKeyPrefix} ${provider.name} ${t.models.enterApiKeyMiddle} ${provider.modelCount} ${
+              provider.modelCount === 1
+                ? t.models.modelSingular
+                : t.models.modelPlural
+            }`}
       </p>
 
       {/* Input + Save */}
@@ -93,7 +99,7 @@ export default function ApiKeyDetail({ provider, onRefresh }: Props) {
           }}
           placeholder={
             provider.configured
-              ? "Enter new key to replace..."
+              ? t.models.enterNewKey
               : "sk-..."
           }
           style={{ flex: 1 }}
@@ -120,7 +126,7 @@ export default function ApiKeyDetail({ provider, onRefresh }: Props) {
           type="button"
         >
           {savedOk && <CheckIcon />}
-          {savedOk ? "Saved" : saving ? "Saving..." : "Save"}
+          {savedOk ? t.common.saved : saving ? t.common.saving : t.common.save}
         </button>
       </div>
 
@@ -144,7 +150,7 @@ export default function ApiKeyDetail({ provider, onRefresh }: Props) {
           }}
           type="button"
         >
-          {removing ? "Removing..." : "Disconnect"}
+          {removing ? t.models.removing : t.models.disconnect}
         </button>
       )}
     </div>

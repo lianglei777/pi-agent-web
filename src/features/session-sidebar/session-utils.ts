@@ -1,4 +1,5 @@
 import type { SessionInfo, SessionTreeNode } from "./types";
+import type { Locale } from "@/i18n/locales";
 
 export function getSessionTitle(session: SessionInfo) {
   return (
@@ -40,16 +41,30 @@ export function shortenCwd(cwd: string, home = "") {
   return display;
 }
 
-export function formatRelativeTime(value: string, now = Date.now()) {
+export function formatRelativeTime(
+  value: string,
+  now = Date.now(),
+  locale: Locale = "en",
+) {
   const elapsed = Math.max(0, now - new Date(value).getTime());
   const minutes = Math.floor(elapsed / 60_000);
+  if (locale === "zh") {
+    if (minutes < 1) return "刚刚";
+    if (minutes < 60) return `${minutes}分钟前`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}小时前`;
+    const days = Math.floor(hours / 24);
+    if (days <= 7) return `${days}天前`;
+    return new Date(value).toLocaleDateString("zh-CN");
+  }
+
   if (minutes < 1) return "just now";
   if (minutes < 60) return `${minutes}m ago`;
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours}h ago`;
   const days = Math.floor(hours / 24);
   if (days <= 7) return `${days}d ago`;
-  return new Date(value).toLocaleDateString();
+  return new Date(value).toLocaleDateString("en");
 }
 
 export function buildSessionTree(sessions: SessionInfo[]): SessionTreeNode[] {

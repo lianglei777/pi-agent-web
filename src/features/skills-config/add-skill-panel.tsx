@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/i18n/use-i18n";
 import { installSkill, searchSkills } from "./api";
 import type { InstallSkillResult, SkillSearchResult } from "./types";
 
@@ -27,6 +28,7 @@ export function AddSkillPanel({
   const [success, setSuccess] = useState<string | null>(null);
   const searchRequest = useRef<AbortController | null>(null);
   const installRequest = useRef<AbortController | null>(null);
+  const { t } = useI18n();
 
   useEffect(() => {
     return () => {
@@ -47,7 +49,9 @@ export function AddSkillPanel({
       try {
         setResults(await searchSkills(normalized, controller.signal));
       } catch (nextError) {
-        if (!controller.signal.aborted) setError(errorMessage(nextError));
+        if (!controller.signal.aborted) {
+          setError(errorMessage(nextError, t.skills.somethingWentWrong));
+        }
       } finally {
         if (!controller.signal.aborted) setSearching(false);
       }
@@ -56,7 +60,7 @@ export function AddSkillPanel({
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [query]);
+  }, [query, t.skills.somethingWentWrong]);
 
   async function handleInstall(skill: SkillSearchResult) {
     if (installing) return;
@@ -71,10 +75,14 @@ export function AddSkillPanel({
         controller.signal,
       );
       const paths = result.skills.map((item) => item.displayPath).join(", ");
-      setSuccess(`Installed ${skill.name}${paths ? ` at ${paths}` : ""}.`);
+      setSuccess(
+        `${t.skills.installed} ${skill.name}${paths ? ` ${t.skills.at} ${paths}` : ""}.`,
+      );
       onInstalled(result);
     } catch (nextError) {
-      if (!controller.signal.aborted) setError(errorMessage(nextError));
+      if (!controller.signal.aborted) {
+        setError(errorMessage(nextError, t.skills.somethingWentWrong));
+      }
     } finally {
       if (!controller.signal.aborted) setInstalling(null);
     }
@@ -83,16 +91,15 @@ export function AddSkillPanel({
   return (
     <div className="min-h-0 flex-1 overflow-y-auto p-5">
       <div className="mx-auto max-w-2xl">
-        <h2 className="text-[15px] font-semibold">Add skill</h2>
+        <h2 className="text-[15px] font-semibold">{t.skills.addSkill}</h2>
         <p className="mt-1 text-[13px] text-muted">
-          Search the skills market, then install through the project&apos;s
-          verified ResourceLoader workflow.
+          {t.skills.searchMarketDescription}
         </p>
 
         <div className="relative mt-5">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-dim" />
           <input
-            aria-label="Search skills market"
+            aria-label={t.skills.searchSkillsMarket}
             autoFocus
             className="h-10 w-full rounded-lg border border-line bg-panel pl-9 pr-9 outline-none focus:border-muted focus:ring-2 focus:ring-ring/20"
             onChange={(event) => {
@@ -104,7 +111,7 @@ export function AddSkillPanel({
                 setError(null);
               }
             }}
-            placeholder="Search skills..."
+            placeholder={t.skills.searchSkills}
             value={query}
           />
           {searching ? (
@@ -113,7 +120,7 @@ export function AddSkillPanel({
         </div>
 
         <div
-          aria-label="Installation scope"
+          aria-label={t.skills.installationScope}
           className="mt-3 inline-flex rounded-lg border border-line bg-panel p-1"
           role="radiogroup"
         >
@@ -128,7 +135,7 @@ export function AddSkillPanel({
               role="radio"
               type="button"
             >
-              {value === "project" ? "Project" : "Global"}
+              {value === "project" ? t.common.project : t.common.global}
             </button>
           ))}
         </div>
@@ -148,7 +155,7 @@ export function AddSkillPanel({
         <div className="mt-4 space-y-2">
           {!searching && query.trim() && results.length === 0 && !error ? (
             <p className="rounded-lg border border-dashed border-line p-8 text-center text-sm text-muted">
-              No matching skills found.
+              {t.skills.noMatchingSkills}
             </p>
           ) : null}
           {results.map((skill) => (
@@ -166,12 +173,12 @@ export function AddSkillPanel({
                 ) : null}
                 {skill.installs !== undefined ? (
                   <p className="mt-2 text-xs text-dim">
-                    {skill.installs.toLocaleString()} installs
+                    {skill.installs.toLocaleString()} {t.skills.installs}
                   </p>
                 ) : null}
               </div>
               <Button
-                aria-label={`Install ${skill.name}`}
+                aria-label={`${t.skills.install} ${skill.name}`}
                 disabled={installing !== null}
                 onClick={() => void handleInstall(skill)}
                 size="sm"
@@ -183,7 +190,7 @@ export function AddSkillPanel({
                 ) : (
                   <Download />
                 )}
-                Install
+                {t.skills.install}
               </Button>
             </article>
           ))}
@@ -193,6 +200,6 @@ export function AddSkillPanel({
   );
 }
 
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : "Something went wrong.";
+function errorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
 }

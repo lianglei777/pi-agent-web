@@ -10,6 +10,7 @@ import {
 } from "react";
 import { ImagePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/i18n/use-i18n";
 import { ChatInput } from "./chat-input";
 import { createChatMinimapEntries } from "./minimap/chat-minimap-adapter";
 import { ChatMinimap } from "./minimap/chat-minimap";
@@ -60,6 +61,7 @@ export function ChatCenter({
     onSessionStatsChange,
     onContextUsageChange,
   });
+  const { t } = useI18n();
   const [dragActive, setDragActive] = useState(false);
   const [scrollerNode, setScrollerNode] = useState<HTMLDivElement | null>(null);
   const [contentNode, setContentNode] = useState<HTMLDivElement | null>(null);
@@ -155,13 +157,13 @@ export function ChatCenter({
         <div className="pointer-events-none absolute inset-3 z-40 grid place-items-center rounded-lg border-2 border-dashed border-line bg-hover">
           <div className="flex flex-col items-center gap-2 text-sm font-semibold text-muted">
             <ImagePlus className="size-8 text-muted" />
-            Drop images to attach
+            {t.chat.dragDropImages}
           </div>
         </div>
       ) : null}
 
       {controller.loading ? (
-        <CenteredState>Loading session...</CenteredState>
+        <CenteredState>{t.chat.loadingSession}</CenteredState>
       ) : controller.error ? (
         <CenteredState error>{controller.error}</CenteredState>
       ) : (
@@ -234,18 +236,19 @@ export function ChatCenter({
   );
 }
 
-const STARTER_PROMPTS = [
-  "Explain the architecture of this project",
-  "Find and fix a bug in the current workspace",
-  "Add a focused test for an important workflow",
-  "Review the latest changes for regressions",
-];
-
 function Welcome({
   onSelectPrompt,
 }: {
   onSelectPrompt: (prompt: string) => void;
 }) {
+  const { t } = useI18n();
+  const starterPrompts = [
+    t.chat.starterPrompts.architecture,
+    t.chat.starterPrompts.fixBug,
+    t.chat.starterPrompts.addTest,
+    t.chat.starterPrompts.reviewChanges,
+  ];
+
   return (
     <section className="grid min-h-[calc(100dvh-280px)] place-items-center px-3 py-12">
       <div className="w-full max-w-xl text-center">
@@ -253,13 +256,13 @@ function Welcome({
           Pi Agent Web
         </div>
         <h1 className="mt-4 text-3xl font-semibold tracking-[-0.03em] text-primary max-[640px]:text-2xl">
-          What should we work on?
+          {t.chat.welcome.title}
         </h1>
         <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted">
-          Ask a question, attach a screenshot, or choose a starting point.
+          {t.chat.welcome.description}
         </p>
         <div className="mt-7 grid grid-cols-2 gap-2 text-left max-[560px]:grid-cols-1">
-          {STARTER_PROMPTS.map((prompt) => (
+          {starterPrompts.map((prompt) => (
             <Button
               className="h-auto min-h-12 justify-start whitespace-normal rounded-lg px-3 py-2.5 text-left text-xs leading-5"
               key={prompt}
