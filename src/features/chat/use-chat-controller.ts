@@ -19,6 +19,11 @@ import {
   sendCommand,
 } from "./agent-api";
 import {
+  resolveLoadedModelState,
+  resolveSubmitTarget,
+  type SubmitMode,
+} from "./chat-controller-state";
+import {
   phaseLabel,
   presetFromTools,
   createUserContent,
@@ -26,6 +31,7 @@ import {
   streamReducer,
   TOOL_PRESETS,
 } from "./chat-logic";
+import { useI18n } from "@/i18n/use-i18n";
 import type {
   AgentEvent,
   AgentMessage,
@@ -101,6 +107,7 @@ export function useChatController(options: ChatControllerOptions) {
     isStreaming: false,
     streamingMessage: null,
   });
+  const { t } = useI18n();
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -332,14 +339,9 @@ export function useChatController(options: ChatControllerOptions) {
       try {
         const modelData = await loadModels();
         setModels(modelData.models);
-        if (!modelKey) {
-          const defaultKey = modelData.defaultModel
-            ? `${modelData.defaultModel.provider}:${modelData.defaultModel.modelId}`
-            : modelData.models[0]
-              ? `${modelData.models[0].provider}:${modelData.models[0].id}`
-              : "";
-          setModelKey(defaultKey);
-        }
+        setModelKey(
+          (current) => resolveLoadedModelState(current, modelData).modelKey,
+        );
       } catch (cause) {
         setActionError(
           cause instanceof Error ? cause.message : "Unable to load models",
@@ -347,7 +349,7 @@ export function useChatController(options: ChatControllerOptions) {
       }
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [modelKey]);
+  }, []);
 
   useEffect(() => {
     if (!session) return;
@@ -525,9 +527,19 @@ export function useChatController(options: ChatControllerOptions) {
     if (textareaRef.current) textareaRef.current.style.height = "auto";
   }
 
-  async function submit(mode: "prompt" | "steer" | "follow_up" = "prompt") {
+  async function submit(mode: SubmitMode = "prompt") {
     const text = draft.trim();
     if (!text && images.length === 0) return;
+    const target = resolveSubmitTarget({
+      isNew,
+      mode,
+      newSessionCwd,
+      sessionId: sessionIdRef.current,
+    });
+    if (target.type === "blocked") {
+      setActionError(t.chat.input.selectProjectBeforeStart);
+      return;
+    }
     const imageInputs: ImageInput[] = images.map(({ data, mimeType }) => ({
       type: "image",
       data,
@@ -548,13 +560,13 @@ export function useChatController(options: ChatControllerOptions) {
     setActionError("");
 
     try {
-      if (isNew && mode === "prompt" && newSessionCwd) {
+      if (target.type === "new") {
         setRunning(true);
         runningRef.current = true;
         dispatchStream({ type: "start" });
         const selected = currentModel;
         const created = await createAgent({
-          cwd: newSessionCwd,
+          cwd: target.cwd,
           message: text,
           images: imageInputs.length ? imageInputs : undefined,
           provider: selected?.provider,
@@ -567,15 +579,13 @@ export function useChatController(options: ChatControllerOptions) {
         connectSse(created.sessionId);
         onSessionCreated?.(created.sessionId);
       } else {
-        const id = sessionIdRef.current;
-        if (!id) throw new Error("No active session");
         if (mode === "prompt") {
           setRunning(true);
           runningRef.current = true;
           dispatchStream({ type: "start" });
-          connectSse(id);
+          connectSse(target.sessionId);
         }
-        await sendCommand(id, {
+        await sendCommand(target.sessionId, {
           type: mode,
           message: text,
           images: imageInputs.length ? imageInputs : undefined,

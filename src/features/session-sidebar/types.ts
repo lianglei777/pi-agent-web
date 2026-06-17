@@ -8,6 +8,7 @@ export interface SessionInfo {
   messageCount: number;
   firstMessage: string;
   parentSessionId?: string;
+  draft?: boolean;
 }
 
 export interface FileEntry {

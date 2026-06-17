@@ -86,9 +86,6 @@ export default function ProviderDetail({
           placeholder={t.models.apiKeyPlaceholder}
           mono
         />
-        <span className="mt-0.5 text-[10px] text-dim">
-          {t.models.apiKeyHelp}
-        </span>
       </Field>
 
       {/* API */}

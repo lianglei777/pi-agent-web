@@ -51,6 +51,12 @@ import {
   type PanelWidths,
 } from "./panel-sizing";
 
+type DraftSession = {
+  id: string;
+  cwd: string;
+  created: string;
+};
+
 export function AgentWorkspace({
   hasActiveSession = false,
 }: {
@@ -68,6 +74,7 @@ export function AgentWorkspace({
   );
   const [activeCwd, setActiveCwd] = useState<string | null>(null);
   const [newSessionCwd, setNewSessionCwd] = useState<string | null>(null);
+  const [draftSession, setDraftSession] = useState<DraftSession | null>(null);
   const [chatInstanceKey, setChatInstanceKey] = useState(0);
   const [openFile, setOpenFile] = useState<OpenFile | null>(null);
   const [initialSessionId, setInitialSessionId] = useState<
@@ -183,31 +190,43 @@ export function AgentWorkspace({
     setActiveCwd(cwd);
     setOpenFile(null);
     if (selectedSession?.cwd !== cwd) setSelectedSession(null);
-    if (newSessionCwd !== cwd) setNewSessionCwd(null);
+    setNewSessionCwd(cwd);
+    setDraftSession(null);
     updateSessionUrl(null);
     resetChat();
-  }, [newSessionCwd, resetChat, selectedSession, updateSessionUrl]);
+  }, [resetChat, selectedSession, updateSessionUrl]);
 
   const handleSelectSession = useCallback((session: SessionInfo, isRestore = false) => {
     setActiveCwd(session.cwd);
     setSelectedSession(session);
     setNewSessionCwd(null);
+    setDraftSession(null);
     setSessionStarted(true);
     if (!isRestore) updateSessionUrl(session.id);
     setChatInstanceKey((current) => current + 1);
   }, [updateSessionUrl]);
 
-  const handleNewSession = useCallback((_temporaryId: string, cwd: string) => {
+  const handleNewSession = useCallback((temporaryId: string, cwd: string) => {
+    resetChat();
     setSelectedSession(null);
     setNewSessionCwd(cwd);
+    setDraftSession({
+      id: temporaryId,
+      cwd,
+      created: new Date().toISOString(),
+    });
     updateSessionUrl(null);
-    resetChat();
   }, [resetChat, updateSessionUrl]);
 
   const handleSessionDeleted = useCallback((session: SessionInfo) => {
     if (selectedSession?.id !== session.id) return;
     setSelectedSession(null);
     setNewSessionCwd(session.cwd);
+    setDraftSession({
+      id: crypto.randomUUID(),
+      cwd: session.cwd,
+      created: new Date().toISOString(),
+    });
     updateSessionUrl(null);
     resetChat();
   }, [resetChat, selectedSession, updateSessionUrl]);
@@ -246,6 +265,7 @@ export function AgentWorkspace({
   const handleSessionCreated = useCallback(
     (sessionId: string) => {
       setNewSessionCwd(null);
+      setDraftSession(null);
       setSessionStarted(true);
       void selectSessionById(sessionId);
     },
@@ -313,8 +333,11 @@ export function AgentWorkspace({
                 }}
                 onSelectSession={handleSelectSession}
                 onSessionDeleted={handleSessionDeleted}
+                draftSession={draftSession}
                 selectedCwd={activeCwd}
-                selectedSessionId={selectedSession?.id ?? null}
+                selectedSessionId={
+                  selectedSession?.id ?? draftSession?.id ?? null
+                }
                 refreshKey={sessionRefreshKey}
               />
               <Separator />

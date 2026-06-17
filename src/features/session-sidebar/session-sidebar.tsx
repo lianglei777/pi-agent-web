@@ -12,9 +12,10 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useI18n } from "@/i18n/use-i18n";
-import { loadHome, loadSessions } from "./api";
+import { loadDefaultCwd, loadHome, loadSessions } from "./api";
 import { CwdPicker } from "./cwd-picker";
 import { FileExplorer } from "./file-explorer";
+import { createDraftSession } from "./session-draft";
 import {
   buildSessionTree,
   getRecentCwds,
@@ -28,6 +29,7 @@ export type SessionSidebarProps = {
   initialSessionId?: string | null;
   refreshKey?: number;
   explorerRefreshKey?: number;
+  draftSession?: { id: string; cwd: string; created: string } | null;
   onSelectSession: (session: SessionInfo, isRestore?: boolean) => void;
   onNewSession: (temporaryId: string, cwd: string) => void;
   onSessionDeleted: (session: SessionInfo) => void;
@@ -43,6 +45,7 @@ export function SessionSidebar({
   initialSessionId,
   refreshKey = 0,
   explorerRefreshKey = 0,
+  draftSession,
   onSelectSession,
   onNewSession,
   onSessionDeleted,
@@ -106,10 +109,19 @@ export function SessionSidebar({
   }, []);
 
   const recentCwds = useMemo(() => getRecentCwds(sessions), [sessions]);
-  const visibleSessions = useMemo(
-    () => sessions.filter((session) => session.cwd === selectedCwd),
-    [selectedCwd, sessions],
-  );
+  const visibleSessions = useMemo(() => {
+    const matching = sessions.filter((session) => session.cwd === selectedCwd);
+    if (!selectedCwd || draftSession?.cwd !== selectedCwd) return matching;
+    return [
+      ...matching,
+      createDraftSession({
+        temporaryId: draftSession.id,
+        cwd: draftSession.cwd,
+        label: t.sessions.draft,
+        now: draftSession.created,
+      }),
+    ];
+  }, [draftSession, selectedCwd, sessions, t.sessions.draft]);
   const tree = useMemo(
     () => buildSessionTree(visibleSessions),
     [visibleSessions],
@@ -133,7 +145,15 @@ export function SessionSidebar({
       }
       onInitialRestoreDone?.();
     }
-    if (!selectedCwd && recentCwds[0]) onCwdChange(recentCwds[0]);
+    if (!selectedCwd && recentCwds[0]) {
+      onCwdChange(recentCwds[0]);
+      return;
+    }
+    if (!selectedCwd) {
+      void loadDefaultCwd()
+        .then(({ cwd }) => onCwdChange(cwd))
+        .catch(() => undefined);
+    }
   }, [
     initialSessionId,
     loading,
@@ -234,7 +254,10 @@ export function SessionSidebar({
               nodes={tree}
               onChanged={refresh}
               onDeleted={onSessionDeleted}
-              onSelect={onSelectSession}
+              onSelect={(session) => {
+                if (session.draft) onNewSession(session.id, session.cwd);
+                else onSelectSession(session);
+              }}
               selectedSessionId={selectedSessionId}
             />
           </div>

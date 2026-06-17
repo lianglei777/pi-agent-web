@@ -119,6 +119,7 @@ function SessionRow({
   const inputRef = useRef<HTMLInputElement>(null);
   const title = getSessionTitle(session);
   const { locale, t } = useI18n();
+  const isDraft = Boolean(session.draft);
 
   useEffect(() => {
     if (editing) inputRef.current?.select();
@@ -251,43 +252,46 @@ function SessionRow({
       <div className="min-w-0 flex-1">
         <div className="truncate text-xs font-medium text-primary">{title}</div>
         <div className="mt-0.5 truncate text-[10px] text-dim">
-          {formatRelativeTime(session.modified, undefined, locale)} /{" "}
-          {session.messageCount} {t.sessions.msgs}
+          {isDraft
+            ? t.sessions.draftHint
+            : `${formatRelativeTime(session.modified, undefined, locale)} / ${session.messageCount} ${t.sessions.msgs}`}
         </div>
         {error ? (
           <div className="truncate text-[9px] text-destructive">{error}</div>
         ) : null}
       </div>
-      <div className="hidden items-center group-hover:flex group-focus-within:flex">
-        <Button
-          aria-label={`${t.sessions.rename} ${title}`}
-          className="size-7 hover:text-accent"
-          onClick={(event) => {
-            event.stopPropagation();
-            setEditing(true);
-            setError("");
-          }}
-          size="icon-sm"
-          type="button"
-          variant="ghost"
-        >
-          <Pencil className="size-3.5" />
-        </Button>
-        <Button
-          aria-label={`${t.common.delete} ${title}`}
-          className="size-7 hover:text-destructive"
-          onClick={(event) => {
-            event.stopPropagation();
-            setConfirming(true);
-            setError("");
-          }}
-          size="icon-sm"
-          type="button"
-          variant="ghost"
-        >
-          <Trash2 className="size-3.5" />
-        </Button>
-      </div>
+      {isDraft ? null : (
+        <div className="hidden items-center group-hover:flex group-focus-within:flex">
+          <Button
+            aria-label={`${t.sessions.rename} ${title}`}
+            className="size-7 hover:text-accent"
+            onClick={(event) => {
+              event.stopPropagation();
+              setEditing(true);
+              setError("");
+            }}
+            size="icon-sm"
+            type="button"
+            variant="ghost"
+          >
+            <Pencil className="size-3.5" />
+          </Button>
+          <Button
+            aria-label={`${t.common.delete} ${title}`}
+            className="size-7 hover:text-destructive"
+            onClick={(event) => {
+              event.stopPropagation();
+              setConfirming(true);
+              setError("");
+            }}
+            size="icon-sm"
+            type="button"
+            variant="ghost"
+          >
+            <Trash2 className="size-3.5" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
