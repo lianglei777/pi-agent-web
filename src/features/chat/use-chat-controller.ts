@@ -101,7 +101,6 @@ export function useChatController(options: ChatControllerOptions) {
   const [thinkingLevel, setThinkingLevel] = useState<ThinkingLevel>("auto");
   const [toolPreset, setToolPreset] =
     useState<keyof typeof TOOL_PRESETS>("default");
-  const [soundEnabled, setSoundEnabled] = useState(true);
   const [forkingEntryId, setForkingEntryId] = useState<string | null>(null);
   const [stream, dispatchStream] = useReducer(streamReducer, {
     isStreaming: false,
@@ -183,34 +182,6 @@ export function useChatController(options: ChatControllerOptions) {
     }
   }, []);
 
-  const playDoneSound = useCallback(() => {
-    if (!soundEnabled) return;
-    try {
-      const AudioContextClass =
-        window.AudioContext ??
-        (window as typeof window & { webkitAudioContext?: typeof AudioContext })
-          .webkitAudioContext;
-      if (!AudioContextClass) return;
-      const context = new AudioContextClass();
-      [523.25, 659.25].forEach((frequency, index) => {
-        const oscillator = context.createOscillator();
-        const gain = context.createGain();
-        oscillator.frequency.value = frequency;
-        gain.gain.setValueAtTime(0.05, context.currentTime + index * 0.18);
-        gain.gain.exponentialRampToValueAtTime(
-          0.001,
-          context.currentTime + index * 0.18 + 0.16,
-        );
-        oscillator.connect(gain).connect(context.destination);
-        oscillator.start(context.currentTime + index * 0.18);
-        oscillator.stop(context.currentTime + index * 0.18 + 0.17);
-      });
-      window.setTimeout(() => void context.close(), 600);
-    } catch {
-      // Audio feedback is optional.
-    }
-  }, [soundEnabled]);
-
   const handleAgentEnd = useCallback(async () => {
     setRunning(false);
     runningRef.current = false;
@@ -231,12 +202,10 @@ export function useChatController(options: ChatControllerOptions) {
         cause instanceof Error ? cause.message : "Unable to refresh history",
       );
     }
-    playDoneSound();
     onAgentEnd?.();
   }, [
     closeSource,
     onAgentEnd,
-    playDoneSound,
     reloadHistory,
     syncRuntimeState,
   ]);
@@ -419,15 +388,6 @@ export function useChatController(options: ChatControllerOptions) {
   useEffect(() => {
     onBranchDataChange?.(tree, activeLeafId, changeLeaf);
   }, [activeLeafId, changeLeaf, onBranchDataChange, tree]);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setSoundEnabled(
-        window.localStorage.getItem("pi-sound-enabled") !== "false",
-      );
-    }, 0);
-    return () => window.clearTimeout(timer);
-  }, []);
 
   useEffect(() => {
     return () => {
@@ -727,14 +687,6 @@ export function useChatController(options: ChatControllerOptions) {
     if (files.some((file) => file.type.startsWith("image/"))) void addFiles(files);
   }
 
-  function toggleSound() {
-    setSoundEnabled((current) => {
-      const next = !current;
-      window.localStorage.setItem("pi-sound-enabled", String(next));
-      return next;
-    });
-  }
-
   return {
     messages,
     entryIds,
@@ -757,7 +709,6 @@ export function useChatController(options: ChatControllerOptions) {
     currentModel,
     thinkingLevel,
     toolPreset,
-    soundEnabled,
     forkingEntryId,
     textareaRef,
     scrollerRef,
@@ -785,7 +736,6 @@ export function useChatController(options: ChatControllerOptions) {
     editFromHere,
     handleKeyDown,
     handlePaste,
-    toggleSound,
   };
 }
 

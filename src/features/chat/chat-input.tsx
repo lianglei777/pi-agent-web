@@ -16,21 +16,17 @@ import {
   Send,
   Settings2,
   Square,
-  Volume2,
-  VolumeX,
   Wrench,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
-  DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -64,7 +60,6 @@ export function ChatInput({
   currentModel,
   thinkingLevel,
   toolPreset,
-  soundEnabled,
   isCompacting,
   compactError,
   actionError,
@@ -82,7 +77,6 @@ export function ChatInput({
   changeThinking,
   changeTools,
   compact,
-  toggleSound,
   handleKeyDown,
   handlePaste,
   setActionError,
@@ -98,7 +92,6 @@ export function ChatInput({
   currentModel?: ModelInfo;
   thinkingLevel: ThinkingLevel;
   toolPreset: ToolPreset;
-  soundEnabled: boolean;
   isCompacting: boolean;
   compactError: string;
   actionError: string;
@@ -120,7 +113,6 @@ export function ChatInput({
   changeThinking: (value: ThinkingLevel) => Promise<void>;
   changeTools: (value: ToolPreset) => Promise<void>;
   compact: () => Promise<void>;
-  toggleSound: () => void;
   handleKeyDown: KeyboardEventHandler<HTMLTextAreaElement>;
   handlePaste: ClipboardEventHandler<HTMLTextAreaElement>;
   setActionError: (value: string) => void;
@@ -394,29 +386,15 @@ export function ChatInput({
                   ? t.chat.input.abortCompact
                   : t.chat.input.compact}
               </Button>
-              <IconButton
-                className="size-7"
-                label={
-                  soundEnabled
-                    ? t.chat.input.disableSound
-                    : t.chat.input.enableSound
-                }
-                onClick={toggleSound}
-                pressed={soundEnabled}
-              >
-                {soundEnabled ? <Volume2 /> : <VolumeX />}
-              </IconButton>
             </div>
 
             <div className="min-[701px]:hidden">
               <SettingsMenu
                 isCompacting={isCompacting}
                 onCompact={compact}
-                onSoundChange={toggleSound}
                 onThinkingChange={changeThinking}
                 onToolsChange={changeTools}
                 running={running}
-                soundEnabled={soundEnabled}
                 thinkingLevel={thinkingLevel}
                 thinkingOptions={thinkingOptions}
                 toolPreset={toolPreset}
@@ -499,23 +477,19 @@ function SettingsMenu({
   thinkingLevel,
   thinkingOptions,
   toolPreset,
-  soundEnabled,
   isCompacting,
   running,
   onThinkingChange,
   onToolsChange,
-  onSoundChange,
   onCompact,
 }: {
   thinkingLevel: ThinkingLevel;
   thinkingOptions: ThinkingLevel[];
   toolPreset: ToolPreset;
-  soundEnabled: boolean;
   isCompacting: boolean;
   running: boolean;
   onThinkingChange: (value: ThinkingLevel) => Promise<void>;
   onToolsChange: (value: ToolPreset) => Promise<void>;
-  onSoundChange: () => void;
   onCompact: () => Promise<void>;
 }) {
   const { t } = useI18n();
@@ -576,13 +550,6 @@ function SettingsMenu({
             </DropdownMenuRadioGroup>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
-        <DropdownMenuSeparator />
-        <DropdownMenuCheckboxItem
-          checked={soundEnabled}
-          onCheckedChange={onSoundChange}
-        >
-          {t.chat.input.completionSound}
-        </DropdownMenuCheckboxItem>
         <DropdownMenuItem
           disabled={running}
           onSelect={() => void onCompact()}
