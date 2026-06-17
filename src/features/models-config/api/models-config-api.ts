@@ -4,7 +4,7 @@ import type {
   ModelsJson,
   ModelTestResult,
   OAuthProvider,
-} from "./types";
+} from "../types";
 
 interface ApiErrorResponse {
   error?: {

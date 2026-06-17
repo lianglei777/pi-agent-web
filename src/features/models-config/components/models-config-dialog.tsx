@@ -2,13 +2,13 @@
 
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/i18n/use-i18n";
-import ApiKeyDetail from "./api-key-detail";
+import ApiKeyDetail from "../details/api-key-detail";
 import { ModalOverlay } from "./modal-overlay";
-import ModelDetail from "./model-detail";
-import { ModelsConfigSidebar } from "./models-config-sidebar";
-import OAuthDetail from "./oauth-detail";
-import ProviderDetail from "./provider-detail";
-import { useModelsConfig } from "./use-models-config";
+import ModelDetail from "../details/model-detail";
+import { ModelsConfigSidebar } from "../sidebar/models-config-sidebar";
+import OAuthDetail from "../details/oauth-detail";
+import ProviderDetail from "../details/provider-detail";
+import { useModelsConfig } from "../hooks/use-models-config";
 
 export function ModelsConfigDialog({ onClose }: { onClose: () => void }) {
   const modelConfig = useModelsConfig();

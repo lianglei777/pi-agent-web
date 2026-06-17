@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { removeApiKey, saveApiKey } from "./api";
+import { removeApiKey, saveApiKey } from "../api/models-config-api";
 import {
   type ApiKeyProvider,
-} from "./types";
+} from "../types";
 import { useI18n } from "@/i18n/use-i18n";
-import { SectionTitle, inputStyle } from "./shared";
+import { SectionTitle, inputStyle } from "../shared/form-ui";
 
 interface Props {
   provider: ApiKeyProvider;

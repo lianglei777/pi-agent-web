@@ -5,7 +5,7 @@ import {
   loadApiKeyProvider,
   loadModelsConfigData,
   saveModelsConfig,
-} from "./api";
+} from "../api/models-config-api";
 import { useI18n } from "@/i18n/use-i18n";
 import type {
   ApiKeyProvider,
@@ -14,7 +14,7 @@ import type {
   OAuthProvider,
   ProviderEntry,
   Selection,
-} from "./types";
+} from "../types";
 
 const EMPTY_CONFIG: ModelsJson = { providers: {} };
 

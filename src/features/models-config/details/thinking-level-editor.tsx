@@ -4,7 +4,7 @@ import { useCallback, useMemo } from "react";
 import {
   THINKING_LEVELS,
   type ThinkingLevel,
-} from "./types";
+} from "../types";
 
 const LEVEL_COLORS: Record<ThinkingLevel, string> = {
   off: "var(--text-dim)",

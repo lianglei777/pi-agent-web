@@ -123,6 +123,8 @@ export const en = {
     selectProviderOrModel: "Select a provider or model",
     addProvider: "Add provider",
     addModelProvider: "Add model provider",
+    expandProvider: "Expand provider",
+    collapseProvider: "Collapse provider",
     custom: "Custom",
     compatibleProvider: "OpenAI / Anthropic compatible",
     customEndpointFormat: "Custom endpoint format",

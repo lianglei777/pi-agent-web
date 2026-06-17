@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { logoutOAuth, submitOAuthInput } from "./api";
+import { logoutOAuth, submitOAuthInput } from "../api/models-config-api";
 import { useI18n } from "@/i18n/use-i18n";
-import { SectionTitle } from "./shared";
+import { SectionTitle } from "../shared/form-ui";
 import type {
   OAuthLoginState,
   OAuthProvider,
   OAuthServerEvent,
-} from "./types";
+} from "../types";
 
 export default function OAuthDetail({
   provider,

@@ -32,7 +32,7 @@ import {
   FilePanel,
   type OpenFile,
 } from "@/features/file-panel/file-panel";
-import { ModelsConfigDialog } from "@/features/models-config/models-config-dialog";
+import { ModelsConfigDialog } from "@/features/models-config";
 import { SessionSidebar } from "@/features/session-sidebar/session-sidebar";
 import { loadSessions } from "@/features/session-sidebar/api";
 import type { SessionInfo } from "@/features/session-sidebar/types";

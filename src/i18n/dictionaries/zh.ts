@@ -125,6 +125,8 @@ export const zh = {
     selectProviderOrModel: "选择一个提供商或模型",
     addProvider: "添加提供商",
     addModelProvider: "添加模型提供商",
+    expandProvider: "展开提供商",
+    collapseProvider: "收起提供商",
     custom: "自定义",
     compatibleProvider: "OpenAI / Anthropic 兼容",
     customEndpointFormat: "自定义端点格式",

@@ -1,15 +1,15 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { testModelConfig } from "./api";
+import { testModelConfig } from "../api/models-config-api";
 import {
   API_OPTIONS,
   type ModelEntry,
   type ModelsJson,
   type ModelTestState,
-} from "./types";
+} from "../types";
 import { useI18n } from "@/i18n/use-i18n";
-import { SectionTitle, Field, inputStyle } from "./shared";
+import { SectionTitle, Field, inputStyle } from "../shared/form-ui";
 import ThinkingLevelMapEditor from "./thinking-level-editor";
 
 const DEEPSEEK_COMPAT = {

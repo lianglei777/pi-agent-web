@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { loadModelsConfigData, normalizeModelsConfig } from "./api";
+import { loadModelsConfigData, normalizeModelsConfig } from "./models-config-api";
 
 afterEach(() => vi.unstubAllGlobals());
 

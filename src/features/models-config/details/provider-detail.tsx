@@ -4,9 +4,9 @@ import { useState } from "react";
 import {
   API_OPTIONS,
   type ProviderEntry,
-} from "./types";
+} from "../types";
 import { useI18n } from "@/i18n/use-i18n";
-import { SectionTitle, Field, inputStyle } from "./shared";
+import { SectionTitle, Field, inputStyle } from "../shared/form-ui";
 
 interface Props {
   name: string;

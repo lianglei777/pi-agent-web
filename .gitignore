@@ -47,6 +47,8 @@ skills-lock.json*
 
 
 # Impeccable
+.agents/
+.codex/
 .impeccable/critique/*
 .impeccable/live/annotations/*
 .impeccable/live/sessions/*
