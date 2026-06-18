@@ -1,6 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useI18n } from "@/i18n/use-i18n";
 import ApiKeyDetail from "../details/api-key-detail";
 import { ModalOverlay } from "./modal-overlay";
@@ -9,6 +18,7 @@ import { ModelsConfigSidebar } from "../sidebar/models-config-sidebar";
 import OAuthDetail from "../details/oauth-detail";
 import ProviderDetail from "../details/provider-detail";
 import { useModelsConfig } from "../hooks/use-models-config";
+import { resolveDialogClose } from "../dialog-safety";
 
 export function ModelsConfigDialog({
   onClose,
@@ -19,6 +29,16 @@ export function ModelsConfigDialog({
 }) {
   const modelConfig = useModelsConfig(onSaved);
   const { t } = useI18n();
+  const [confirmingDiscard, setConfirmingDiscard] = useState(false);
+
+  function requestClose() {
+    const decision = resolveDialogClose({
+      source: "explicit",
+      dirty: modelConfig.dirty,
+    });
+    if (decision === "close") onClose();
+    if (decision === "confirm-discard") setConfirmingDiscard(true);
+  }
 
   return (
     <>
@@ -35,7 +55,7 @@ export function ModelsConfigDialog({
             </div>
             <button
               type="button"
-              onClick={onClose}
+              onClick={requestClose}
               aria-label={t.models.closeConfiguration}
               className="px-1.5 py-0.5 text-[20px] leading-none text-muted"
             >
@@ -77,7 +97,7 @@ export function ModelsConfigDialog({
             )}
             <Button
               type="button"
-              onClick={onClose}
+              onClick={requestClose}
               variant="outline"
               size="sm"
               className="text-[13px]"
@@ -106,6 +126,33 @@ export function ModelsConfigDialog({
           </footer>
         </div>
       </ModalOverlay>
+      <Dialog open={confirmingDiscard}>
+        <DialogContent
+          className="z-[1201] sm:max-w-[420px]"
+          closeLabel={t.common.close}
+          overlayClassName="z-[1200]"
+        >
+          <DialogHeader>
+            <DialogTitle>{t.models.discardChangesTitle}</DialogTitle>
+            <DialogDescription>
+              {t.models.discardChangesDescription}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              autoFocus
+              onClick={() => setConfirmingDiscard(false)}
+              type="button"
+              variant="outline"
+            >
+              {t.models.continueEditing}
+            </Button>
+            <Button onClick={onClose} type="button" variant="destructive">
+              {t.models.discardChanges}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

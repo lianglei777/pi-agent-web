@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { resolveDialogClose } from "./dialog-safety";
+import { isDialogDirty, resolveDialogClose } from "./dialog-safety";
 
 describe("resolveDialogClose", () => {
   test("ignores backdrop and escape close attempts", () => {
@@ -21,5 +21,15 @@ describe("resolveDialogClose", () => {
     expect(resolveDialogClose({ source: "explicit", dirty: true })).toBe(
       "confirm-discard",
     );
+  });
+});
+
+describe("isDialogDirty", () => {
+  test("ignores object key order", () => {
+    expect(isDialogDirty({ a: 1, b: 2 }, { b: 2, a: 1 })).toBe(false);
+  });
+
+  test("detects persisted value changes", () => {
+    expect(isDialogDirty({ a: 1 }, { a: 2 })).toBe(true);
   });
 });

@@ -255,6 +255,10 @@ export const zh = {
     realRequestCostNotice: "将发送一次低 token 的真实模型请求，可能产生少量费用。",
     removeModelTitle: "移除模型？",
     removeModelDescription: "确定从当前提供商中移除“{model}”吗？保存配置后此修改才会生效。",
+    discardChangesTitle: "放弃未保存的更改？",
+    discardChangesDescription: "模型配置的修改尚未保存。放弃后无法恢复。",
+    continueEditing: "继续编辑",
+    discardChanges: "放弃更改",
   },
   skills: {
     title: "技能",

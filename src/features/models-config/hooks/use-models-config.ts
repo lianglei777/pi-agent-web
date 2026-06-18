@@ -9,6 +9,7 @@ import {
 } from "../api/models-config-api";
 import { useI18n } from "@/i18n/use-i18n";
 import { mergeDiscoveredModels } from "./model-discovery-merge";
+import { isDialogDirty } from "../dialog-safety";
 import type {
   ApiKeyProvider,
   ModelDiscoveryResult,
@@ -30,6 +31,7 @@ type DiscoveryState =
 export function useModelsConfig(onSaved?: () => void) {
   const { t } = useI18n();
   const [config, setConfig] = useState<ModelsJson>(EMPTY_CONFIG);
+  const [baselineConfig, setBaselineConfig] = useState<ModelsJson | null>(null);
   const [oauthProviders, setOauthProviders] = useState<OAuthProvider[]>([]);
   const [apiKeyProviders, setApiKeyProviders] = useState<ApiKeyProvider[]>([]);
   const [selection, setSelection] = useState<Selection | null>(null);
@@ -46,6 +48,7 @@ export function useModelsConfig(onSaved?: () => void) {
       .then((data) => {
         if (!active) return;
         setConfig(data.config);
+        setBaselineConfig(data.config);
         setOauthProviders(data.oauthProviders);
         setApiKeyProviders(data.apiKeyProviders);
         const firstProvider = Object.keys(data.config.providers ?? {})[0];
@@ -241,6 +244,7 @@ export function useModelsConfig(onSaved?: () => void) {
     setSaveError(null);
     try {
       await saveModelsConfig(config);
+      setBaselineConfig(config);
       onSaved?.();
       setSavedOk(true);
       window.setTimeout(() => setSavedOk(false), 2_000);
@@ -269,6 +273,7 @@ export function useModelsConfig(onSaved?: () => void) {
 
   return {
     config,
+    dirty: baselineConfig ? isDialogDirty(baselineConfig, config) : false,
     oauthProviders,
     apiKeyProviders,
     selection,

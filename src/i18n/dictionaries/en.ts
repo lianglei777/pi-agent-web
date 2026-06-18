@@ -253,6 +253,10 @@ export const en = {
     realRequestCostNotice: "Runs a real, low-token model request and may incur a small charge.",
     removeModelTitle: "Remove model?",
     removeModelDescription: "Remove “{model}” from this provider? This change is applied when you save the configuration.",
+    discardChangesTitle: "Discard unsaved changes?",
+    discardChangesDescription: "Your model configuration changes have not been saved. Discarding them cannot be undone.",
+    continueEditing: "Continue editing",
+    discardChanges: "Discard changes",
   },
   skills: {
     title: "Skills",
