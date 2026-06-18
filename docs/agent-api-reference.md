@@ -133,6 +133,7 @@ Content-Type: text/event-stream; charset=utf-8
 | `GET` | `/api/models-config` | 读取原始模型配置 |
 | `GET` | `/api/models-config/bootstrap` | 获取模型配置弹窗初始化数据 |
 | `PUT` | `/api/models-config` | 覆盖原始模型配置 |
+| `POST` | `/api/models-config/discover` | 根据 Provider 草稿发现并补齐模型建议 |
 | `POST` | `/api/models-config/test` | 隔离测试模型配置 |
 
 ### 2.5 Auth
@@ -1085,7 +1086,81 @@ Content-Type: application/json
 - 写入采用临时文件加 Rename。
 - 具体 Config Schema 由当前 Pi SDK 版本决定。
 
-### 7.5 测试模型配置
+### 7.5 发现模型配置建议
+
+```http
+POST /api/models-config/discover
+Content-Type: application/json
+```
+
+请求：
+
+```json
+{
+  "providerName": "new-api",
+  "provider": {
+    "api": "openai-completions",
+    "baseUrl": "https://example.com/v1",
+    "apiKey": "sk-...",
+    "headers": {
+      "X-Custom": "value"
+    }
+  }
+}
+```
+
+字段：
+
+| 字段 | 必需 | 说明 |
+| --- | --- | --- |
+| `providerName` | 是 | Provider ID，用于匹配 Pi 内置模型目录 |
+| `provider` | 是 | Provider 草稿配置 |
+| `provider.api` | 否 | API 类型；`openai-completions` 和 `openai-responses` 会尝试远程 `/models` |
+| `provider.baseUrl` | 否 | 远程模型发现的基础 URL |
+| `provider.apiKey` | 否 | 仅用于本次远程发现，不会写入响应 |
+| `provider.headers` | 否 | 远程发现请求附加 Header，值必须是字符串 |
+
+响应：
+
+```json
+{
+  "models": [
+    {
+      "source": "inferred",
+      "confidence": "medium",
+      "model": {
+        "id": "gpt-4.1",
+        "name": "GPT 4.1",
+        "api": "openai-completions",
+        "reasoning": false,
+        "input": ["text", "image"],
+        "contextWindow": 1047576,
+        "maxTokens": 32768,
+        "cost": {
+          "input": 2,
+          "output": 8,
+          "cacheRead": 0.5,
+          "cacheWrite": 1
+        }
+      }
+    }
+  ],
+  "remoteError": "Model discovery failed (401)"
+}
+```
+
+`source` 可能是：
+
+| source | 说明 |
+| --- | --- |
+| `catalog` | 直接来自 Pi SDK 内置模型目录 |
+| `remote` | 来自远程发现，未使用目录补齐 |
+| `inferred` | 远程发现模型 ID 后，用内置目录补齐参数 |
+| `defaulted` | 远程发现模型 ID 后，使用保守默认参数 |
+
+`remoteError` 只表示远程发现失败；如果内置目录仍能给出建议，响应仍可包含 `models`。
+
+### 7.6 测试模型配置
 
 ```http
 POST /api/models-config/test
@@ -1891,12 +1966,13 @@ GET /api/agent/019e.../events
 5. 无业务返回值的 Agent Command 统一返回 `{ "success": true }`。
 6. Model Test 会执行真实模型请求，可能产生费用。
 7. Models Config PUT 是完整覆盖，不是增量更新。
-8. 当前 Agent Runtime 没有公开资源热重载命令，Skill 设置在新建、恢复或已有
+8. Models Config Discovery 只能可靠发现模型 ID；上下文窗口、输出 token、价格、图片输入和推理能力会优先从内置目录补齐，否则使用保守默认值。
+9. 当前 Agent Runtime 没有公开资源热重载命令，Skill 设置在新建、恢复或已有
    reload 能力的 Session 中生效。
-9. File API 仅过滤 `.git`、`.next`、`node_modules`，没有读取 `.gitignore`。
-10. 文本读取固定使用 UTF-8，没有编码探测。
-11. Range 只支持一个显式区间，不支持多 Range 和标准后缀区间语义。
-12. 当前默认模型是可用模型列表第一项，不是持久化的用户默认选择。
+10. File API 仅过滤 `.git`、`.next`、`node_modules`，没有读取 `.gitignore`。
+11. 文本读取固定使用 UTF-8，没有编码探测。
+12. Range 只支持一个显式区间，不支持多 Range 和标准后缀区间语义。
+13. 当前默认模型是可用模型列表第一项，不是持久化的用户默认选择。
 
 ## 14. 实现位置
 

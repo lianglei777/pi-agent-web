@@ -4,18 +4,20 @@ import { useState, useCallback } from "react";
 import { testModelConfig } from "../api/models-config-api";
 import {
   API_OPTIONS,
+  type ConfiguredThinkingLevel,
   type ModelEntry,
+  type ModelDiscoverySource,
   type ModelsJson,
   type ModelTestState,
 } from "../types";
 import { useI18n } from "@/i18n/use-i18n";
 import { SectionTitle, Field, inputStyle } from "../shared/form-ui";
-import ThinkingLevelMapEditor from "./thinking-level-editor";
-
-const DEEPSEEK_COMPAT = {
-  thinkingFormat: "deepseek",
-  requiresReasoningContentOnAssistantMessages: true,
-} as const;
+import {
+  getDefaultThinkingOnLevel,
+  getSourceTone,
+  getSupportedConfiguredThinkingLevels,
+  shouldDisplaySourceBadge,
+} from "./model-detail-state";
 
 interface Props {
   providerName: string;
@@ -34,10 +36,16 @@ export default function ModelDetail({
 }: Props) {
   const [testState, setTestState] = useState<ModelTestState>({ phase: "idle" });
   const [testedConfig, setTestedConfig] = useState("");
+  const [copied, setCopied] = useState(false);
   const { t } = useI18n();
   const currentConfig = JSON.stringify({ providerName, config, model });
   const visibleTestState: ModelTestState =
     testedConfig === currentConfig ? testState : { phase: "idle" };
+  const source = model.provenance?.source;
+  const hasImageInput = model.input?.includes("image") ?? false;
+  const sourceIsKnown = source === "catalog" || source === "inferred";
+  const supportedThinkingLevels = getSupportedConfiguredThinkingLevels(model);
+  const defaultThinkingLevel = getDefaultThinkingOnLevel(model);
 
   const handleTest = useCallback(async () => {
     if (!model.id.trim() || visibleTestState.phase === "testing") return;
@@ -79,36 +87,33 @@ export default function ModelDetail({
     t.models.unknownError,
   ]);
 
+  const copyModelId = useCallback(async () => {
+    if (!model.id) return;
+    await navigator.clipboard?.writeText(model.id);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1200);
+  }, [model.id]);
+
   let testSummary: string | null = null;
   let testBorderColor = "var(--border)";
-  let testBgColor = "#e5e7eb";
+  let testBgColor = "var(--bg-panel)";
 
   if (visibleTestState.phase === "testing") {
     testSummary = t.models.testingConnection;
-    testBorderColor = "var(--border)";
-    testBgColor = "#e5e7eb";
   } else if (visibleTestState.phase === "success") {
     testSummary = `${t.models.connected} | ${visibleTestState.latencyMs ?? "?"}ms${
       visibleTestState.responseText ? ` | ${visibleTestState.responseText}` : ""
     }`;
-    testBorderColor = "#bbf7d0";
-    testBgColor = "#dcfce7";
+    testBorderColor = "rgba(22,163,74,0.25)";
+    testBgColor = "rgba(22,163,74,0.08)";
   } else if (visibleTestState.phase === "error") {
     testSummary = `${t.models.failed} | ${visibleTestState.latencyMs ?? "?"}ms | ${visibleTestState.message}`;
-    testBorderColor = "#fecaca";
-    testBgColor = "#fee2e2";
+    testBorderColor = "rgba(220,38,38,0.25)";
+    testBgColor = "rgba(220,38,38,0.08)";
   }
-
-  const hasImageInput =
-    model.input?.includes("image") ?? false;
-
-  const isDeepSeekCompat =
-    model.compat?.thinkingFormat === "deepseek" &&
-    model.compat?.requiresReasoningContentOnAssistantMessages === true;
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <SectionTitle>{t.models.model}</SectionTitle>
         <div className="flex items-center gap-2">
@@ -119,7 +124,7 @@ export default function ModelDetail({
               style={{
                 borderColor: testBorderColor,
                 background: testBgColor,
-                color: "#111827",
+                color: "var(--text)",
                 boxSizing: "border-box",
               }}
             >
@@ -132,10 +137,10 @@ export default function ModelDetail({
             className="flex items-center gap-1 rounded px-2 py-[3px] text-[11px]"
             style={{
               background:
-                visibleTestState.phase === "success" ? "#16a34a" : "none",
+                visibleTestState.phase === "success" ? "var(--success)" : "none",
               border:
                 visibleTestState.phase === "success"
-                  ? "1px solid #16a34a"
+                  ? "1px solid var(--success)"
                   : "1px solid var(--border)",
               color:
                 visibleTestState.phase === "success"
@@ -161,8 +166,8 @@ export default function ModelDetail({
             onClick={onDelete}
             className="cursor-pointer rounded border px-2 py-[3px] text-[11px]"
             style={{
-              borderColor: "rgba(239,68,68,0.3)",
-              color: "#ef4444",
+              borderColor: "color-mix(in srgb, var(--destructive) 30%, transparent)",
+              color: "var(--destructive)",
               background: "none",
             }}
             type="button"
@@ -172,15 +177,29 @@ export default function ModelDetail({
         </div>
       </div>
 
-      {/* Row 1: ID + Name */}
-      <div className="grid grid-cols-2 gap-2.5">
+      <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2.5">
         <Field label={t.models.id}>
-          <input
-            value={model.id}
-            onChange={(e) => onChange({ ...model, id: e.target.value })}
-            className="font-ui-mono"
-            style={{ ...inputStyle }}
-          />
+          <div
+            className="flex min-h-8 items-center gap-2 rounded border px-2.5 text-[12px]"
+            style={{
+              background: "var(--bg-subtle)",
+              borderColor: "var(--border)",
+              color: "var(--text)",
+            }}
+          >
+            <span className="min-w-0 flex-1 truncate font-ui-mono">
+              {model.id}
+            </span>
+            <SourceBadge source={source} />
+            <button
+              className="rounded px-1.5 py-0.5 text-[11px] text-muted hover:bg-hover hover:text-primary"
+              disabled={!model.id}
+              onClick={() => void copyModelId()}
+              type="button"
+            >
+              {copied ? t.models.copied : t.models.copyId}
+            </button>
+          </div>
         </Field>
         <Field label={t.models.name}>
           <input
@@ -196,227 +215,172 @@ export default function ModelDetail({
         </Field>
       </div>
 
-      {/* API override */}
-      <Field label={t.models.apiOverride}>
-        <select
-          value={model.api ?? ""}
-          onChange={(e) =>
-            onChange({
-              ...model,
-              api: e.target.value || undefined,
-            })
-          }
-          style={{
-            ...inputStyle,
-            color: model.api ? "var(--text)" : "var(--text-dim)",
-          }}
-        >
-          <option value="">{t.models.inheritNone}</option>
-          {API_OPTIONS.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
-            </option>
-          ))}
-        </select>
-      </Field>
-
-      {/* Checkboxes */}
-      <div className="flex gap-6">
-        <label className="flex cursor-pointer items-center gap-1.5 text-[12px] text-muted">
-          <input
-            type="checkbox"
-            checked={!!model.reasoning}
-            onChange={(e) =>
-              onChange({
-                ...model,
-                reasoning: e.target.checked || undefined,
-              })
-            }
-            className="h-[13px] w-[13px] accent-accent"
-          />
-          {t.models.reasoningThinking}
-        </label>
-        <label className="flex cursor-pointer items-center gap-1.5 text-[12px] text-muted">
-          <input
-            type="checkbox"
+      <section className="flex flex-col gap-2">
+        <SectionTitle>{t.models.capabilities}</SectionTitle>
+        <div className="grid grid-cols-2 gap-2.5">
+          <CapabilityToggle
             checked={hasImageInput}
-            onChange={(e) =>
+            disabled={sourceIsKnown}
+            label={t.models.imageInput}
+            onChange={(checked) =>
               onChange({
                 ...model,
-                input: e.target.checked
-                  ? ["text", "image"]
+                input: checked ? ["text", "image"] : ["text"],
+              })
+            }
+            source={source}
+            status={hasImageInput ? t.models.supported : t.models.unsupported}
+          />
+          <CapabilityToggle
+            checked={!!model.reasoning}
+            disabled={sourceIsKnown}
+            label={t.models.reasoningThinking}
+            onChange={(checked) =>
+              onChange({
+                ...model,
+                reasoning: checked || undefined,
+                thinkingDefaultLevel: checked
+                  ? (model.thinkingDefaultLevel ??
+                    defaultThinkingLevel ??
+                    "high")
                   : undefined,
               })
             }
-            className="h-[13px] w-[13px] accent-accent"
+            source={source}
+            status={model.reasoning ? t.models.supported : t.models.unsupported}
           />
-          {t.models.imageInput}
-        </label>
-      </div>
-
-      {/* DeepSeek compat (only when reasoning) */}
-      {model.reasoning && (
-        <label className="flex cursor-pointer items-center gap-1.5 text-[12px] text-muted">
-          <input
-            type="checkbox"
-            checked={isDeepSeekCompat}
-            onChange={(e) => {
-              const next = { ...model };
-              if (e.target.checked) {
-                next.compat = { ...next.compat, ...DEEPSEEK_COMPAT };
-              } else if (next.compat) {
-                next.compat = Object.fromEntries(
-                  Object.entries(next.compat).filter(
-                    ([k]) =>
-                      k !== "thinkingFormat" &&
-                      k !== "requiresReasoningContentOnAssistantMessages",
-                  ),
-                );
-                if (Object.keys(next.compat).length === 0) {
-                  next.compat = undefined;
-                }
-              }
-              onChange(next);
-            }}
-            className="h-[13px] w-[13px] accent-accent"
-          />
-          {t.models.deepSeekCompat}
-        </label>
-      )}
-
-      {/* Thinking level map (only when reasoning) */}
-      {model.reasoning && (
-        <ThinkingLevelMapEditor
-          value={model.thinkingLevelMap}
-          onChange={(v) =>
-            onChange({
-              ...model,
-              thinkingLevelMap: v,
-            })
-          }
-        />
-      )}
-
-      {/* Row 4: Context window + Max output tokens */}
-      <div className="grid grid-cols-2 gap-2.5">
-        <Field label={t.models.contextWindow}>
-          <input
-            type="number"
-            value={model.contextWindow ?? ""}
-            onChange={(e) =>
-              onChange({
-                ...model,
-                contextWindow: e.target.value
-                  ? Number(e.target.value)
-                  : undefined,
-              })
-            }
-            placeholder="128000"
-            style={{ ...inputStyle }}
-          />
-        </Field>
-        <Field label={t.models.maxOutputTokens}>
-          <input
-            type="number"
-            value={model.maxTokens ?? ""}
-            onChange={(e) =>
-              onChange({
-                ...model,
-                maxTokens: e.target.value
-                  ? Number(e.target.value)
-                  : undefined,
-              })
-            }
-            placeholder="16384"
-            style={{ ...inputStyle }}
-          />
-        </Field>
-      </div>
-
-      {/* Cost */}
-      <div>
-        <SectionTitle>{t.models.costPerMillionTokens}</SectionTitle>
-        <div className="mt-2 grid grid-cols-4 gap-2">
-          <Field label={t.models.input}>
-            <input
-              type="number"
-              step="0.01"
-              value={model.cost?.input ?? ""}
-              onChange={(e) =>
-                onChange({
-                  ...model,
-                  cost: {
-                    ...model.cost,
-                    input: e.target.value
-                      ? Number(e.target.value)
-                      : undefined,
-                  },
-                })
-              }
-              style={{ ...inputStyle }}
-            />
-          </Field>
-          <Field label={t.models.output}>
-            <input
-              type="number"
-              step="0.01"
-              value={model.cost?.output ?? ""}
-              onChange={(e) =>
-                onChange({
-                  ...model,
-                  cost: {
-                    ...model.cost,
-                    output: e.target.value
-                      ? Number(e.target.value)
-                      : undefined,
-                  },
-                })
-              }
-              style={{ ...inputStyle }}
-            />
-          </Field>
-          <Field label={t.models.cacheRead}>
-            <input
-              type="number"
-              step="0.01"
-              value={model.cost?.cacheRead ?? ""}
-              onChange={(e) =>
-                onChange({
-                  ...model,
-                  cost: {
-                    ...model.cost,
-                    cacheRead: e.target.value
-                      ? Number(e.target.value)
-                      : undefined,
-                  },
-                })
-              }
-              style={{ ...inputStyle }}
-            />
-          </Field>
-          <Field label={t.models.cacheWrite}>
-            <input
-              type="number"
-              step="0.01"
-              value={model.cost?.cacheWrite ?? ""}
-              onChange={(e) =>
-                onChange({
-                  ...model,
-                  cost: {
-                    ...model.cost,
-                    cacheWrite: e.target.value
-                      ? Number(e.target.value)
-                      : undefined,
-                  },
-                })
-              }
-              style={{ ...inputStyle }}
-            />
-          </Field>
         </div>
-      </div>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <SectionTitle>{t.models.advanced}</SectionTitle>
+        <Field label={t.models.apiProtocol}>
+          <select
+            value={model.api ?? ""}
+            onChange={(e) =>
+              onChange({
+                ...model,
+                api: e.target.value || undefined,
+              })
+            }
+            style={{
+              ...inputStyle,
+              color: model.api ? "var(--text)" : "var(--text-dim)",
+            }}
+          >
+            <option value="">{t.models.inheritNone}</option>
+            {API_OPTIONS.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </select>
+          <p className="text-[11px] leading-4 text-dim">
+            {t.models.apiProtocolDescription}
+          </p>
+        </Field>
+
+        {model.reasoning && supportedThinkingLevels.length > 0 && (
+          <Field label={t.models.thinkingOnDefault}>
+            <select
+              value={model.thinkingDefaultLevel ?? defaultThinkingLevel ?? "high"}
+              onChange={(event) =>
+                onChange({
+                  ...model,
+                  thinkingDefaultLevel: event.target
+                    .value as ConfiguredThinkingLevel,
+                })
+              }
+              style={{ ...inputStyle }}
+            >
+              {supportedThinkingLevels.map((level) => (
+                <option key={level} value={level}>
+                  {level}
+                </option>
+              ))}
+            </select>
+            <p className="text-[11px] leading-4 text-dim">
+              {t.models.thinkingOnDefaultDescription}
+            </p>
+          </Field>
+        )}
+      </section>
     </div>
   );
+}
+
+function CapabilityToggle({
+  checked,
+  disabled,
+  label,
+  onChange,
+  source,
+  status,
+}: {
+  checked: boolean;
+  disabled: boolean;
+  label: string;
+  onChange: (checked: boolean) => void;
+  source?: ModelDiscoverySource;
+  status: string;
+}) {
+  return (
+    <label className="flex min-h-12 items-center gap-2 rounded border border-line bg-[var(--bg-subtle)] px-3 py-2 text-[12px] text-muted">
+      <input
+        checked={checked}
+        className="h-[13px] w-[13px] accent-accent"
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.checked)}
+        type="checkbox"
+      />
+      <span className="min-w-0 flex-1">
+        <span className="block text-primary">{label}</span>
+        <span className="block text-[11px] text-dim">{status}</span>
+      </span>
+      <SourceBadge source={source} />
+    </label>
+  );
+}
+
+function SourceBadge({
+  source,
+}: {
+  source?: ModelDiscoverySource;
+}) {
+  const { t } = useI18n();
+  if (!shouldDisplaySourceBadge(source)) return null;
+  const label = sourceLabel(t.models, source);
+  const tone = getSourceTone(source);
+  return (
+    <span
+      className="shrink-0 rounded-full border px-1.5 py-0.5 text-[10px]"
+      style={{
+        borderColor:
+          tone === "known"
+            ? "rgba(22,163,74,0.25)"
+            : tone === "partial"
+              ? "rgba(113,113,122,0.28)"
+              : "var(--border)",
+        color: tone === "known" ? "var(--success)" : "var(--text-dim)",
+        background:
+          tone === "known" ? "rgba(22,163,74,0.08)" : "var(--bg-panel)",
+      }}
+      title={label}
+    >
+      {label}
+    </span>
+  );
+}
+
+function sourceLabel(
+  models: ReturnType<typeof useI18n>["t"]["models"],
+  source?: ModelDiscoverySource,
+) {
+  if (source === "catalog") return models.sourceCatalog;
+  if (source === "inferred") return models.sourceInferred;
+  if (source === "remote") return models.sourceRemote;
+  if (source === "defaulted") return models.sourceDefaulted;
+  return "";
 }
 
 function CheckIcon() {

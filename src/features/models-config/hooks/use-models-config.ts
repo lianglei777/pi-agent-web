@@ -2,13 +2,16 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
+  discoverModelsConfig,
   loadApiKeyProvider,
   loadModelsConfigData,
   saveModelsConfig,
 } from "../api/models-config-api";
 import { useI18n } from "@/i18n/use-i18n";
+import { mergeDiscoveredModels } from "./model-discovery-merge";
 import type {
   ApiKeyProvider,
+  ModelDiscoveryResult,
   ModelEntry,
   ModelsJson,
   OAuthProvider,
@@ -17,6 +20,11 @@ import type {
 } from "../types";
 
 const EMPTY_CONFIG: ModelsJson = { providers: {} };
+type DiscoveryState =
+  | { phase: "idle" }
+  | { phase: "discovering"; providerName: string }
+  | (ModelDiscoveryResult & { phase: "result"; providerName: string })
+  | { phase: "error"; providerName: string; message: string };
 
 export function useModelsConfig() {
   const { t } = useI18n();
@@ -29,6 +37,7 @@ export function useModelsConfig() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [savedOk, setSavedOk] = useState(false);
+  const [discovery, setDiscovery] = useState<DiscoveryState>({ phase: "idle" });
 
   useEffect(() => {
     let active = true;
@@ -65,6 +74,7 @@ export function useModelsConfig() {
       },
     }));
     setSelection({ type: "provider", name });
+    setDiscovery({ phase: "idle" });
   }, [config.providers]);
 
   const renameProvider = useCallback(
@@ -121,6 +131,48 @@ export function useModelsConfig() {
     [],
   );
 
+  const discoverProviderModels = useCallback(
+    async (providerName: string) => {
+      const provider = config.providers?.[providerName];
+      if (!provider) return;
+      setDiscovery({ phase: "discovering", providerName });
+      try {
+        const result = await discoverModelsConfig({ providerName, provider });
+        setDiscovery({ phase: "result", providerName, ...result });
+      } catch (error) {
+        setDiscovery({
+          phase: "error",
+          providerName,
+          message: toMessage(error, t.models.failedToDiscoverModels),
+        });
+      }
+    },
+    [config.providers, t.models.failedToDiscoverModels],
+  );
+
+  const acceptDiscoveredModels = useCallback(
+    (providerName: string) => {
+      if (
+        discovery.phase !== "result" ||
+        discovery.providerName !== providerName
+      ) {
+        return;
+      }
+      const result = mergeDiscoveredModels(
+        config,
+        providerName,
+        discovery.models,
+      );
+      setConfig(result.config);
+      setSelection(result.selection);
+      setDiscovery({
+        ...discovery,
+        models: discovery.models,
+      });
+    },
+    [config, discovery],
+  );
+
   const addModel = useCallback(
     (providerName: string) => {
       const index = config.providers?.[providerName]?.models?.length ?? 0;
@@ -139,6 +191,7 @@ export function useModelsConfig() {
         };
       });
       setSelection({ type: "model", providerName, index });
+      setDiscovery({ phase: "idle" });
     },
     [config.providers],
   );
@@ -223,10 +276,13 @@ export function useModelsConfig() {
     saving,
     saveError,
     savedOk,
+    discovery,
     addCustomProvider,
     renameProvider,
     deleteProvider,
     updateProvider,
+    discoverProviderModels,
+    acceptDiscoveredModels,
     addModel,
     updateModel,
     removeModel,

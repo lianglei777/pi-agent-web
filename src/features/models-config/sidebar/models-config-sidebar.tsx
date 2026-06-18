@@ -20,6 +20,7 @@ interface Props {
   selection: Selection | null;
   onSelect: (selection: Selection) => void;
   onAddProvider: () => void;
+  onAddModel: (providerName: string) => void;
 }
 
 export function ModelsConfigSidebar({
@@ -28,6 +29,7 @@ export function ModelsConfigSidebar({
   selection,
   onSelect,
   onAddProvider,
+  onAddModel,
 }: Props) {
   const providers = Object.entries(config.providers ?? {});
   const [collapsedProviderNames, setCollapsedProviderNames] = useState(
@@ -146,13 +148,13 @@ export function ModelsConfigSidebar({
                     )}
                   </NavButton>
                 ))}
-            {/* <button
+            <button
               className="w-full rounded-[5px] py-1 pr-2 pl-[26px] text-left text-[11px] text-dim hover:bg-hover"
               type="button"
               onClick={() => onAddModel(providerName)}
             >
-              + model
-            </button> */}
+              + {t.models.newModel}
+            </button>
             </div>
           );
         })}

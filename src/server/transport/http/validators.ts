@@ -7,7 +7,10 @@ import {
 import { AppError } from "@/server/domain/app-error";
 import type { CreateAgentRequest } from "@/server/application/agent-service";
 import type { InstallSkillInput } from "@/server/domain/skill";
-import type { TestModelInput } from "@/server/domain/model";
+import type {
+  DiscoverModelsInput,
+  TestModelInput,
+} from "@/server/domain/model";
 
 type JsonObject = Record<string, unknown>;
 
@@ -130,6 +133,20 @@ export function parseModelTest(value: unknown): TestModelInput {
   };
 }
 
+export function parseModelDiscovery(value: unknown): DiscoverModelsInput {
+  const object = asObject(value);
+  const provider = asObject(object.provider, "provider");
+  return {
+    providerName: requiredString(object, "providerName"),
+    provider: {
+      api: optionalString(provider, "api"),
+      baseUrl: optionalString(provider, "baseUrl"),
+      apiKey: optionalString(provider, "apiKey"),
+      headers: parseStringRecord(provider.headers, "headers"),
+    },
+  };
+}
+
 export function parseSkillInstall(value: unknown): InstallSkillInput {
   const object = asObject(value);
   const scope = requiredString(object, "scope");
@@ -189,6 +206,26 @@ function parseStringArray(
     invalid(`${key} must be an array of strings`);
   }
   return value;
+}
+
+function parseStringRecord(
+  value: unknown,
+  key: string,
+): Record<string, string> | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    invalid(`${key} must be an object`);
+  }
+  const entries = Object.entries(value);
+  if (
+    !entries.every(
+      ([entryKey, entryValue]) =>
+        typeof entryKey === "string" && typeof entryValue === "string",
+    )
+  ) {
+    invalid(`${key} must contain only string values`);
+  }
+  return Object.fromEntries(entries) as Record<string, string>;
 }
 
 function invalid(message: string): never {

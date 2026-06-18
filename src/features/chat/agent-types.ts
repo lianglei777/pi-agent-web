@@ -111,7 +111,9 @@ export type ModelInfo = {
   id: string;
   name: string;
   provider: string;
+  input?: string[];
   thinkingLevels: ThinkingLevel[];
+  thinkingDefaultLevel?: Exclude<ThinkingLevel, "auto" | "off">;
   thinkingLevelMap?: Record<string, string | null>;
 };
 

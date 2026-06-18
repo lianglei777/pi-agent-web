@@ -19,8 +19,12 @@ import {
   sendCommand,
 } from "./agent-api";
 import {
+  canAttachImagesToModel,
   resolveLoadedModelState,
+  resolveThinkingLevelForMode,
   resolveSubmitTarget,
+  thinkingModeFromLevel,
+  type ThinkingMode,
   type SubmitMode,
 } from "./chat-controller-state";
 import {
@@ -126,6 +130,11 @@ export function useChatController(options: ChatControllerOptions) {
   const currentModel = useMemo(
     () => models.find((model) => `${model.provider}:${model.id}` === modelKey),
     [modelKey, models],
+  );
+  const canAttachImages = canAttachImagesToModel(currentModel);
+  const thinkingMode = useMemo(
+    () => thinkingModeFromLevel(thinkingLevel),
+    [thinkingLevel],
   );
   const stats = useMemo(() => sessionStats(messages), [messages]);
   const agentPhase = phaseLabel(runningTools, running);
@@ -456,6 +465,10 @@ export function useChatController(options: ChatControllerOptions) {
   }
 
   async function addFiles(files: File[]) {
+    if (!canAttachImages) {
+      setActionError(t.chat.input.imageUnsupported);
+      return;
+    }
     const imageFiles = files.filter((file) => file.type.startsWith("image/"));
     const settled = await Promise.allSettled(imageFiles.map(readImage));
     const next = settled
@@ -593,17 +606,39 @@ export function useChatController(options: ChatControllerOptions) {
   async function changeModel(value: string) {
     setModelKey(value);
     const [provider, modelId] = value.split(":");
+    const nextModel = models.find((model) => `${model.provider}:${model.id}` === value);
+    const nextThinkingLevel = resolveThinkingLevelForMode(
+      nextModel?.thinkingLevels ?? [],
+      thinkingMode,
+      nextModel?.thinkingDefaultLevel,
+    );
+    if (nextThinkingLevel) setThinkingLevel(nextThinkingLevel);
     const id = sessionIdRef.current;
     if (!isNew && id && provider && modelId) {
       try {
         await sendCommand(id, { type: "set_model", provider, modelId });
+        if (nextThinkingLevel && nextThinkingLevel !== "auto") {
+          await sendCommand(id, {
+            type: "set_thinking_level",
+            level: nextThinkingLevel,
+          });
+        }
       } catch (cause) {
         setActionError(cause instanceof Error ? cause.message : "Model change failed");
       }
     }
   }
 
-  async function changeThinking(level: ThinkingLevel) {
+  async function changeThinkingMode(mode: ThinkingMode) {
+    const level = resolveThinkingLevelForMode(
+      currentModel?.thinkingLevels ?? [],
+      mode,
+      currentModel?.thinkingDefaultLevel,
+    );
+    if (!level) {
+      setActionError(t.chat.input.thinkingUnsupported);
+      return;
+    }
     setThinkingLevel(level);
     const id = sessionIdRef.current;
     if (!isNew && id && level !== "auto") {
@@ -707,7 +742,9 @@ export function useChatController(options: ChatControllerOptions) {
     models,
     modelKey,
     currentModel,
+    canAttachImages,
     thinkingLevel,
+    thinkingMode,
     toolPreset,
     forkingEntryId,
     textareaRef,
@@ -729,7 +766,7 @@ export function useChatController(options: ChatControllerOptions) {
     submit,
     stop,
     changeModel,
-    changeThinking,
+    changeThinkingMode,
     changeTools,
     compact,
     fork,

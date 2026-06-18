@@ -1,7 +1,9 @@
 import type {
   ApiKeyProvider,
   ApiKeyProviderInfo,
+  ModelDiscoveryResult,
   ModelsJson,
+  ProviderEntry,
   ModelTestResult,
   OAuthProvider,
 } from "../types";
@@ -79,6 +81,17 @@ export function saveModelsConfig(config: ModelsJson) {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(config),
+  });
+}
+
+export function discoverModelsConfig(input: {
+  providerName: string;
+  provider: ProviderEntry;
+}) {
+  return requestJson<ModelDiscoveryResult>("/api/models-config/discover", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
   });
 }
 

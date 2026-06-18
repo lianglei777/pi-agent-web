@@ -16,6 +16,7 @@ export const THINKING_LEVELS = [
 
 export type ApiOption = (typeof API_OPTIONS)[number];
 export type ThinkingLevel = (typeof THINKING_LEVELS)[number];
+export type ConfiguredThinkingLevel = Exclude<ThinkingLevel, "off">;
 
 export interface OAuthProvider {
   id: string;
@@ -45,6 +46,7 @@ export interface ModelEntry {
   name?: string;
   api?: string;
   reasoning?: boolean;
+  thinkingDefaultLevel?: ConfiguredThinkingLevel;
   thinkingLevelMap?: Record<string, string | null>;
   input?: string[];
   contextWindow?: number;
@@ -56,6 +58,10 @@ export interface ModelEntry {
     cacheWrite?: number;
   };
   compat?: Record<string, unknown>;
+  provenance?: {
+    source?: ModelDiscoverySource;
+    confidence?: ModelDiscoveryConfidence;
+  };
 }
 
 export interface ProviderEntry {
@@ -70,6 +76,25 @@ export interface ProviderEntry {
 
 export interface ModelsJson {
   providers?: Record<string, ProviderEntry>;
+}
+
+export type ModelDiscoverySource =
+  | "catalog"
+  | "remote"
+  | "inferred"
+  | "defaulted";
+
+export type ModelDiscoveryConfidence = "high" | "medium" | "low";
+
+export interface ModelDiscoverySuggestion {
+  source: ModelDiscoverySource;
+  confidence: ModelDiscoveryConfidence;
+  model: ModelEntry;
+}
+
+export interface ModelDiscoveryResult {
+  models: ModelDiscoverySuggestion[];
+  remoteError?: string;
 }
 
 export type OAuthLoginState =

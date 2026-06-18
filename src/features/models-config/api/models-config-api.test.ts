@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { loadModelsConfigData, normalizeModelsConfig } from "./models-config-api";
+import {
+  discoverModelsConfig,
+  loadModelsConfigData,
+  normalizeModelsConfig,
+} from "./models-config-api";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -54,5 +58,49 @@ describe("models config client contract", () => {
       ],
     });
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("requests model discovery for a provider draft", async () => {
+    const fetchMock = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      expect(String(input)).toBe("/api/models-config/discover");
+      expect(init?.method).toBe("POST");
+      expect(init?.body).toBe(
+        JSON.stringify({
+          providerName: "custom",
+          provider: {
+            api: "openai-completions",
+            baseUrl: "https://api.example.com/v1",
+          },
+        }),
+      );
+      return Response.json({
+        models: [
+          {
+            source: "defaulted",
+            confidence: "low",
+            model: { id: "remote-model" },
+          },
+        ],
+      });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      discoverModelsConfig({
+        providerName: "custom",
+        provider: {
+          api: "openai-completions",
+          baseUrl: "https://api.example.com/v1",
+        },
+      }),
+    ).resolves.toEqual({
+      models: [
+        {
+          source: "defaulted",
+          confidence: "low",
+          model: { id: "remote-model" },
+        },
+      ],
+    });
   });
 });

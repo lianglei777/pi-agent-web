@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  canAttachImagesToModel,
   resolveLoadedModelState,
+  resolveThinkingLevelForMode,
+  thinkingModeFromLevel,
   resolveSubmitTarget,
 } from "./chat-controller-state";
 import type { ModelInfo } from "./agent-types";
@@ -65,5 +68,62 @@ describe("resolveSubmitTarget", () => {
         sessionId: "session-1",
       }),
     ).toEqual({ type: "existing", sessionId: "session-1" });
+  });
+});
+
+describe("thinking mode mapping", () => {
+  it("maps On to high when the model supports it", () => {
+    expect(
+      resolveThinkingLevelForMode(["auto", "off", "low", "medium", "high"], "on"),
+    ).toBe("high");
+  });
+
+  it("uses the configured Thinking On default when supported", () => {
+    expect(
+      resolveThinkingLevelForMode(
+        ["auto", "off", "low", "medium", "high"],
+        "on",
+        "medium",
+      ),
+    ).toBe("medium");
+  });
+
+  it("does not treat auto or off as enabling thinking", () => {
+    expect(resolveThinkingLevelForMode(["auto", "off"], "on")).toBeNull();
+  });
+
+  it("keeps Auto and Off as explicit modes", () => {
+    expect(resolveThinkingLevelForMode(["off", "medium"], "auto")).toBe("auto");
+    expect(resolveThinkingLevelForMode(["off", "medium"], "off")).toBe("off");
+  });
+
+  it("derives the user-facing mode from the concrete level", () => {
+    expect(thinkingModeFromLevel("auto")).toBe("auto");
+    expect(thinkingModeFromLevel("off")).toBe("off");
+    expect(thinkingModeFromLevel("high")).toBe("on");
+  });
+});
+
+describe("image input support", () => {
+  it("allows attachments only for models that declare image input", () => {
+    expect(
+      canAttachImagesToModel({
+        provider: "openai",
+        id: "vision",
+        name: "Vision",
+        thinkingLevels: [],
+        input: ["text", "image"],
+      }),
+    ).toBe(true);
+    expect(
+      canAttachImagesToModel({
+        provider: "openai",
+        id: "text",
+        name: "Text",
+        thinkingLevels: [],
+        input: ["text"],
+      }),
+    ).toBe(false);
+    expect(canAttachImagesToModel(undefined)).toBe(false);
   });
 });

@@ -137,7 +137,7 @@ export function ChatCenter({
     <main
       className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-canvas"
       onDragEnter={(event) => {
-        if (!hasImages(event)) return;
+        if (!hasImages(event) || !controller.canAttachImages) return;
         event.preventDefault();
         dragCounter.current += 1;
         setDragActive(true);

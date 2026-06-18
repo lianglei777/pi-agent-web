@@ -49,6 +49,7 @@ export function ModelsConfigDialog({ onClose }: { onClose: () => void }) {
                 selection={modelConfig.selection}
                 onSelect={modelConfig.setSelection}
                 onAddProvider={modelConfig.addCustomProvider}
+                onAddModel={modelConfig.addModel}
               />
               <main className="flex-1 overflow-y-auto p-5">
                 {modelConfig.loadError ? (
@@ -129,6 +130,9 @@ function ModelsConfigDetail({
         }
         onRename={modelConfig.renameProvider}
         onDelete={modelConfig.deleteProvider}
+        discovery={modelConfig.discovery}
+        onDiscoverModels={modelConfig.discoverProviderModels}
+        onAcceptDiscoveredModels={modelConfig.acceptDiscoveredModels}
       />
     ) : null;
   }

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import {
   API_OPTIONS,
+  type ModelDiscoverySuggestion,
   type ProviderEntry,
 } from "../types";
 import { useI18n } from "@/i18n/use-i18n";
@@ -14,7 +15,21 @@ interface Props {
   onChange: (p: ProviderEntry) => void;
   onRename: (oldName: string, newName: string) => void;
   onDelete: (name: string) => void;
+  discovery: DiscoveryState;
+  onDiscoverModels: (providerName: string) => void;
+  onAcceptDiscoveredModels: (providerName: string) => void;
 }
+
+type DiscoveryState =
+  | { phase: "idle" }
+  | { phase: "discovering"; providerName: string }
+  | {
+      phase: "result";
+      providerName: string;
+      models: ModelDiscoverySuggestion[];
+      remoteError?: string;
+    }
+  | { phase: "error"; providerName: string; message: string };
 
 export default function ProviderDetail({
   name,
@@ -22,6 +37,9 @@ export default function ProviderDetail({
   onChange,
   onRename,
   onDelete,
+  discovery,
+  onDiscoverModels,
+  onAcceptDiscoveredModels,
 }: Props) {
   const [editingName, setEditingName] = useState(name);
   const { t } = useI18n();
@@ -37,8 +55,8 @@ export default function ProviderDetail({
           onClick={() => onDelete(name)}
           className="cursor-pointer rounded border px-2 py-[3px] text-[11px]"
           style={{
-            borderColor: "rgba(239,68,68,0.3)",
-            color: "#ef4444",
+            borderColor: "color-mix(in srgb, var(--destructive) 30%, transparent)",
+            color: "var(--destructive)",
             background: "none",
           }}
           type="button"
@@ -88,7 +106,7 @@ export default function ProviderDetail({
         />
       </Field>
 
-      {/* API */}
+      {/* AI API 协议 */}
       <Field label={t.models.api}>
         <select
           value={provider.api ?? ""}
@@ -106,8 +124,125 @@ export default function ProviderDetail({
           ))}
         </select>
       </Field>
+
+      <ModelDiscoveryPanel
+        providerName={name}
+        provider={provider}
+        discovery={discovery}
+        onDiscoverModels={onDiscoverModels}
+        onAcceptDiscoveredModels={onAcceptDiscoveredModels}
+      />
     </div>
   );
+}
+
+function ModelDiscoveryPanel({
+  providerName,
+  provider,
+  discovery,
+  onDiscoverModels,
+  onAcceptDiscoveredModels,
+}: {
+  providerName: string;
+  provider: ProviderEntry;
+  discovery: DiscoveryState;
+  onDiscoverModels: (providerName: string) => void;
+  onAcceptDiscoveredModels: (providerName: string) => void;
+}) {
+  const { t } = useI18n();
+  const relevant =
+    discovery.phase !== "idle" && discovery.providerName === providerName
+      ? discovery
+      : null;
+  const discovering = relevant?.phase === "discovering";
+  const suggestions = relevant?.phase === "result" ? relevant.models : [];
+  const existingIds = new Set((provider.models ?? []).map((model) => model.id));
+  const newCount = suggestions.filter(
+    (suggestion) => !existingIds.has(suggestion.model.id),
+  ).length;
+
+  return (
+    <section className="rounded-[8px] border border-line bg-panel p-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <SectionTitle>{t.models.discoverModels}</SectionTitle>
+          <p className="mt-1 text-[12px] leading-5 text-muted">
+            {t.models.discoverModelsDescription}
+          </p>
+        </div>
+        <button
+          type="button"
+          disabled={discovering}
+          onClick={() => onDiscoverModels(providerName)}
+          className="shrink-0 rounded border border-line px-2.5 py-[5px] text-[11px] text-muted hover:bg-hover disabled:cursor-not-allowed disabled:text-dim"
+        >
+          {discovering ? t.models.discoveringModels : t.models.discoverModels}
+        </button>
+      </div>
+
+      {relevant?.phase === "error" && (
+        <p className="mt-2 text-[12px] text-destructive">{relevant.message}</p>
+      )}
+
+      {relevant?.phase === "result" && (
+        <div className="mt-3 space-y-2">
+          {relevant.remoteError && (
+            <p className="text-[12px] text-dim">
+              {t.models.remoteDiscoveryFailed}: {relevant.remoteError}
+            </p>
+          )}
+          {suggestions.length === 0 ? (
+            <p className="text-[12px] text-dim">
+              {t.models.noDiscoveredModels}
+            </p>
+          ) : (
+            <>
+              <div className="max-h-[168px] overflow-y-auto rounded border border-line">
+                {suggestions.slice(0, 6).map((suggestion) => (
+                  <div
+                    key={suggestion.model.id}
+                    className="flex items-center gap-2 border-b border-line px-2.5 py-2 last:border-b-0"
+                  >
+                    <span className="min-w-0 flex-1 truncate font-ui-mono text-[11px] text-primary">
+                      {suggestion.model.id}
+                    </span>
+                    <span className="rounded-full border border-line px-1.5 py-0.5 text-[10px] text-dim">
+                      {sourceLabel(suggestion, t)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-[12px] text-dim">
+                  {newCount === 0
+                    ? t.models.allDiscoveredModelsExist
+                    : `${newCount} ${t.models.newModelsDiscovered}`}
+                </span>
+                <button
+                  type="button"
+                  disabled={newCount === 0}
+                  onClick={() => onAcceptDiscoveredModels(providerName)}
+                  className="rounded border border-line px-2.5 py-[5px] text-[11px] text-muted hover:bg-hover disabled:cursor-not-allowed disabled:text-dim"
+                >
+                  {t.models.addDiscovered}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function sourceLabel(
+  suggestion: ModelDiscoverySuggestion,
+  t: ReturnType<typeof useI18n>["t"],
+) {
+  if (suggestion.source === "catalog") return t.models.sourceCatalog;
+  if (suggestion.source === "inferred") return t.models.sourceInferred;
+  if (suggestion.source === "remote") return t.models.sourceRemote;
+  return t.models.sourceDefaulted;
 }
 
 function SecretTextInput({

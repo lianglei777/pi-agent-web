@@ -43,8 +43,11 @@ import { useI18n } from "@/i18n/use-i18n";
 import type {
   AttachedImage,
   ModelInfo,
-  ThinkingLevel,
 } from "./agent-types";
+import {
+  resolveThinkingLevelForMode,
+  type ThinkingMode,
+} from "./chat-controller-state";
 import { TOOL_PRESETS } from "./chat-logic";
 
 type ToolPreset = keyof typeof TOOL_PRESETS;
@@ -58,7 +61,8 @@ export function ChatInput({
   models,
   modelKey,
   currentModel,
-  thinkingLevel,
+  canAttachImages,
+  thinkingMode,
   toolPreset,
   isCompacting,
   compactError,
@@ -74,7 +78,7 @@ export function ChatInput({
   submit,
   stop,
   changeModel,
-  changeThinking,
+  changeThinkingMode,
   changeTools,
   compact,
   handleKeyDown,
@@ -90,7 +94,8 @@ export function ChatInput({
   models: ModelInfo[];
   modelKey: string;
   currentModel?: ModelInfo;
-  thinkingLevel: ThinkingLevel;
+  canAttachImages: boolean;
+  thinkingMode: ThinkingMode;
   toolPreset: ToolPreset;
   isCompacting: boolean;
   compactError: string;
@@ -110,7 +115,7 @@ export function ChatInput({
   submit: (mode?: "prompt" | "steer" | "follow_up") => Promise<void>;
   stop: () => Promise<void>;
   changeModel: (value: string) => Promise<void>;
-  changeThinking: (value: ThinkingLevel) => Promise<void>;
+  changeThinkingMode: (value: ThinkingMode) => Promise<void>;
   changeTools: (value: ToolPreset) => Promise<void>;
   compact: () => Promise<void>;
   handleKeyDown: KeyboardEventHandler<HTMLTextAreaElement>;
@@ -119,19 +124,21 @@ export function ChatInput({
   rootRef?: Ref<HTMLDivElement>;
 }) {
   const { t } = useI18n();
-  const thinkingOptions = [
-    "auto",
-    ...(currentModel?.thinkingLevels ?? [
-      "off",
-      "minimal",
-      "low",
-      "medium",
-      "high",
-      "xhigh",
-    ]),
-  ].filter(
-    (value, index, array) => array.indexOf(value) === index,
-  ) as ThinkingLevel[];
+  const canTurnThinkingOn = Boolean(
+    resolveThinkingLevelForMode(
+      currentModel?.thinkingLevels ?? [],
+      "on",
+      currentModel?.thinkingDefaultLevel,
+    ),
+  );
+  const thinkingOptions: Array<{ label: string; value: ThinkingMode }> = [
+    { label: t.chat.input.thinkingAuto, value: "auto" },
+    { label: t.chat.input.thinkingOff, value: "off" },
+    ...(canTurnThinkingOn
+      ? [{ label: t.chat.input.thinkingOn, value: "on" as const }]
+      : []),
+  ];
+
   const shortcut = running
     ? t.chat.input.shortcutRunning
     : t.chat.input.shortcutIdle;
@@ -142,15 +149,18 @@ export function ChatInput({
       ref={rootRef}
     >
       <div className="pointer-events-auto mx-auto max-w-[820px]">
+
         {retryInfo ? (
           <InlineStatus tone="warning">
             {t.chat.input.retrying} {retryInfo.attempt}/{retryInfo.maxAttempts}
             {retryInfo.errorMessage ? ` · ${retryInfo.errorMessage}` : ""}
           </InlineStatus>
         ) : null}
+
         {compactError ? (
           <InlineStatus tone="error">{compactError}</InlineStatus>
         ) : null}
+
         {actionError ? (
           <div className="mb-2 flex items-center gap-2 rounded-lg border border-destructive/25 bg-card px-3 py-2 text-xs text-destructive shadow-sm">
             <span className="min-w-0 flex-1">{actionError}</span>
@@ -215,6 +225,7 @@ export function ChatInput({
             </div>
           ) : null}
 
+          {/* 文字输入 textarea */}
           <Textarea
             aria-describedby="composer-shortcut"
             aria-label={t.chat.input.messageLabel}
@@ -247,13 +258,20 @@ export function ChatInput({
               ref={fileInputRef}
               type="file"
             />
+            {/* attachment */}
             <IconButton
-              label={t.chat.input.attachImages}
+              disabled={!canAttachImages}
+              label={
+                canAttachImages
+                  ? t.chat.input.attachImages
+                  : t.chat.input.imageUnsupported
+              }
               onClick={() => fileInputRef.current?.click()}
             >
               <Paperclip />
             </IconButton>
 
+            {/*  models select */}
             <Select
               disabled={running}
               onValueChange={(value) => void changeModel(value)}
@@ -284,6 +302,7 @@ export function ChatInput({
 
             {running ? (
               <>
+                {/* queue button */}
                 <Button
                   className="h-9 px-2.5 text-xs max-[520px]:px-2"
                   disabled={!canSubmit}
@@ -298,6 +317,8 @@ export function ChatInput({
                     {t.chat.input.queue}
                   </span>
                 </Button>
+
+                {/* steer button */}
                 <Button
                   className="h-9 px-3 text-xs"
                   disabled={!canSubmit}
@@ -311,6 +332,7 @@ export function ChatInput({
                     {t.chat.input.steer}
                   </span>
                 </Button>
+                {/* stop send */}
                 <Button
                   aria-label={
                     stopping
@@ -329,6 +351,7 @@ export function ChatInput({
                 </Button>
               </>
             ) : (
+              // send button
               <Button
                 aria-label={t.chat.input.sendMessage}
                 className="h-9 min-w-24 rounded-lg px-4 text-xs max-[480px]:min-w-9 max-[480px]:px-0"
@@ -347,18 +370,18 @@ export function ChatInput({
 
           <div className="flex min-h-9 items-center gap-1 border-t border-line/55 bg-[var(--bg-subtle)] px-2.5 text-[11px] text-muted">
             <div className="flex items-center gap-1 max-[700px]:hidden">
+              {/* thinking */}
               <CompactSelect
                 icon={<Brain />}
                 label={t.chat.input.thinking}
                 onValueChange={(value) =>
-                  void changeThinking(value as ThinkingLevel)
+                  void changeThinkingMode(value as ThinkingMode)
                 }
-                options={thinkingOptions.map((level) => ({
-                  label: level,
-                  value: level,
-                }))}
-                value={thinkingLevel}
+                options={thinkingOptions}
+                value={thinkingMode}
               />
+
+              {/* tools */}
               <CompactSelect
                 icon={<Wrench />}
                 label={t.chat.input.tools}
@@ -372,6 +395,8 @@ export function ChatInput({
                 ]}
                 value={toolPreset}
               />
+
+              {/* compact */}
               <Button
                 className="h-7 gap-1.5 px-2 text-[11px]"
                 disabled={running}
@@ -388,14 +413,15 @@ export function ChatInput({
               </Button>
             </div>
 
+            {/* mobile 模式下 展示 settings 按钮 */}
             <div className="min-[701px]:hidden">
               <SettingsMenu
                 isCompacting={isCompacting}
                 onCompact={compact}
-                onThinkingChange={changeThinking}
+                onThinkingChange={changeThinkingMode}
                 onToolsChange={changeTools}
                 running={running}
-                thinkingLevel={thinkingLevel}
+                thinkingMode={thinkingMode}
                 thinkingOptions={thinkingOptions}
                 toolPreset={toolPreset}
               />
@@ -451,6 +477,9 @@ function CompactSelect({
   options: Array<{ label: string; value: string }>;
   onValueChange: (value: string) => void;
 }) {
+  const selectedLabel =
+    options.find((option) => option.value === value)?.label ?? value;
+
   return (
     <Select onValueChange={onValueChange} value={value}>
       <SelectTrigger
@@ -459,7 +488,7 @@ function CompactSelect({
       >
         {icon}
         <span className="truncate">
-          {label}: {value}
+          {label}: {selectedLabel}
         </span>
       </SelectTrigger>
       <SelectContent side="top">
@@ -474,7 +503,7 @@ function CompactSelect({
 }
 
 function SettingsMenu({
-  thinkingLevel,
+  thinkingMode,
   thinkingOptions,
   toolPreset,
   isCompacting,
@@ -483,12 +512,12 @@ function SettingsMenu({
   onToolsChange,
   onCompact,
 }: {
-  thinkingLevel: ThinkingLevel;
-  thinkingOptions: ThinkingLevel[];
+  thinkingMode: ThinkingMode;
+  thinkingOptions: Array<{ label: string; value: ThinkingMode }>;
   toolPreset: ToolPreset;
   isCompacting: boolean;
   running: boolean;
-  onThinkingChange: (value: ThinkingLevel) => Promise<void>;
+  onThinkingChange: (value: ThinkingMode) => Promise<void>;
   onToolsChange: (value: ToolPreset) => Promise<void>;
   onCompact: () => Promise<void>;
 }) {
@@ -508,28 +537,35 @@ function SettingsMenu({
           {t.chat.input.settings}
         </Button>
       </DropdownMenuTrigger>
+
       <DropdownMenuContent align="start" side="top">
         <DropdownMenuLabel>{t.chat.input.agentSettings}</DropdownMenuLabel>
+
+        {/* thinking */}
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
             <Brain className="size-3.5" />
-            {t.chat.input.thinking}: {thinkingLevel}
+            {t.chat.input.thinking}:{" "}
+            {thinkingOptions.find((option) => option.value === thinkingMode)
+              ?.label ?? thinkingMode}
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent>
             <DropdownMenuRadioGroup
               onValueChange={(value) =>
-                void onThinkingChange(value as ThinkingLevel)
+                void onThinkingChange(value as ThinkingMode)
               }
-              value={thinkingLevel}
+              value={thinkingMode}
             >
-              {thinkingOptions.map((level) => (
-                <DropdownMenuRadioItem key={level} value={level}>
-                  {level}
+              {thinkingOptions.map((option) => (
+                <DropdownMenuRadioItem key={option.value} value={option.value}>
+                  {option.label}
                 </DropdownMenuRadioItem>
               ))}
             </DropdownMenuRadioGroup>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
+
+        {/* tools */}
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
             <Wrench className="size-3.5" />
@@ -550,6 +586,8 @@ function SettingsMenu({
             </DropdownMenuRadioGroup>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
+
+        {/* prompt compact */}
         <DropdownMenuItem
           disabled={running}
           onSelect={() => void onCompact()}
@@ -569,12 +607,14 @@ function IconButton({
   label,
   onClick,
   pressed,
+  disabled,
   className = "size-9",
 }: {
   children: React.ReactNode;
   label: string;
   onClick: () => void;
   pressed?: boolean;
+  disabled?: boolean;
   className?: string;
 }) {
   return (
@@ -582,6 +622,7 @@ function IconButton({
       aria-label={label}
       aria-pressed={pressed}
       className={className}
+      disabled={disabled}
       onClick={onClick}
       size="icon-sm"
       title={label}
