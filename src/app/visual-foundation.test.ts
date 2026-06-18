@@ -21,6 +21,10 @@ const topBar = readFileSync(
   `${root}/src/layouts/agent-workspace/workspace-top-bar.tsx`,
   "utf8",
 );
+const agentWorkspace = readFileSync(
+  `${root}/src/layouts/agent-workspace/agent-workspace.tsx`,
+  "utf8",
+);
 
 describe("visual foundation contract", () => {
   test("defines the approved light and dark semantic tokens", () => {
@@ -55,5 +59,12 @@ describe("visual foundation contract", () => {
     expect(chatInput).not.toContain("linear-gradient");
     expect(chatInput).toContain("rounded-lg");
     expect(messageView).toContain("border-line-subtle");
+  });
+
+  test("uses one continuous canvas with locally elevated controls", () => {
+    expect(agentWorkspace).toContain("border-line-subtle bg-canvas");
+    expect(topBar).toContain("border-line-subtle bg-canvas");
+    expect(chatInput).toContain("rounded-[14px]");
+    expect(chatInput).toContain("shadow-[var(--shadow-composer)]");
   });
 });
