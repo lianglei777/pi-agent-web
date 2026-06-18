@@ -179,6 +179,7 @@ function UserMessageView({
   onFork: () => void;
 }) {
   const [copied, setCopied] = useState(false);
+  const { t } = useI18n();
   const blocks =
     typeof message.content === "string"
       ? [{ type: "text" as const, text: message.content }]
@@ -194,7 +195,7 @@ function UserMessageView({
             .map((block, index) => (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                alt="Attached image"
+                alt={t.chat.message.attachedImage}
                 className="max-h-60 max-w-60 rounded-lg object-contain"
                 key={index}
                 src={
@@ -218,12 +219,12 @@ function UserMessageView({
 
       <div className="mt-1 flex min-h-7 items-center gap-1 opacity-100 transition-opacity min-[641px]:opacity-0 min-[641px]:group-hover:opacity-100 min-[641px]:group-focus-within:opacity-100">
         {message.status === "failed" ? (
-          <Badge variant="destructive">Failed</Badge>
+          <Badge variant="destructive">{t.chat.message.failed}</Badge>
         ) : null}
 
         <div className="hidden items-center gap-1 min-[641px]:flex">
           <SmallAction
-            label={copied ? "Copied" : "Copy"}
+            label={copied ? t.chat.message.copied : t.chat.message.copy}
             onClick={() => void copyText(messageText(message)).then(() => {
               setCopied(true);
               window.setTimeout(() => setCopied(false), 1500);
@@ -232,14 +233,14 @@ function UserMessageView({
             {copied ? <Check /> : <Copy />}
           </SmallAction>
           {canEdit && !running ? (
-            <SmallAction label="Edit from here" onClick={onEdit}>
+            <SmallAction label={t.chat.message.editFromHere} onClick={onEdit}>
               <PencilLine />
             </SmallAction>
           ) : null}
           {canFork && entryId && !running ? (
             <SmallAction
               disabled={forking}
-              label={forking ? "Creating..." : "New session"}
+              label={forking ? t.chat.message.creating : t.chat.message.newSession}
               onClick={onFork}
             >
               <GitFork />
@@ -365,7 +366,7 @@ function AssistantMessageView({
           return (
             <Accordion className="my-1.5" collapsible key={index} type="single">
               <AccordionItem value="thinking">
-                <AccordionTrigger>Thinking</AccordionTrigger>
+                <AccordionTrigger>{t.chat.message.thinking}</AccordionTrigger>
                 <AccordionContent>{block.thinking}</AccordionContent>
               </AccordionItem>
             </Accordion>
@@ -377,7 +378,7 @@ function AssistantMessageView({
           return (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              alt="Assistant image"
+              alt={t.chat.message.assistantImage}
               className="my-2 max-h-80 max-w-full rounded-lg object-contain"
               key={index}
               src={
@@ -405,13 +406,13 @@ function AssistantMessageView({
                   className="ml-auto"
                   variant={result?.isError ? "destructive" : result ? "success" : "outline"}
                 >
-                  {result?.isError ? "Error" : result ? "Done" : "Running"}
+                  {result?.isError ? t.chat.message.toolError : result ? t.chat.message.toolDone : t.chat.message.toolRunning}
                 </Badge>
               </AccordionTrigger>
               <AccordionContent className="max-h-[400px] overflow-auto">
                 {JSON.stringify(block.input, null, 2)}
                 {"\n\n"}
-                {result ? resultText(result) : "(waiting for output)"}
+                {result ? resultText(result, t) : t.chat.message.waitingForOutput}
               </AccordionContent>
             </AccordionItem>
           </Accordion>
@@ -423,14 +424,14 @@ function AssistantMessageView({
           
           {message.usage ? (
             <span>
-              in {message.usage.input} / out {message.usage.output} / cache{" "}
+              {t.chat.message.usageIn} {message.usage.input} / {t.chat.message.usageOut} {message.usage.output} / {t.chat.message.usageCache}{" "}
               {message.usage.cacheRead} / ${message.usage.cost.total.toFixed(4)}
             </span>
           ) : null}
 
           {text ? (
             <SmallAction
-              label={copied ? "Copied" : "Copy"}
+              label={copied ? t.chat.message.copied : t.chat.message.copy}
               onClick={() => void copyText(text).then(() => {
                 setCopied(true);
                 window.setTimeout(() => setCopied(false), 1500);
@@ -499,6 +500,7 @@ function Markdown({ text }: { text: string }) {
 
 function CodeBlock({ code, language }: { code: string; language: string }) {
   const [copied, setCopied] = useState(false);
+  const { t } = useI18n();
   const dark =
     typeof document !== "undefined" &&
     document.documentElement.classList.contains("dark");
@@ -515,7 +517,7 @@ function CodeBlock({ code, language }: { code: string; language: string }) {
           size="sm"
           variant="ghost"
         >
-          {copied ? "Copied" : "Copy"}
+          {copied ? t.chat.message.copied : t.chat.message.copy}
         </Button>
       </div>
       <SyntaxHighlighter
@@ -531,6 +533,7 @@ function CodeBlock({ code, language }: { code: string; language: string }) {
 }
 
 function StreamingSpeed({ message }: { message: AssistantMessage }) {
+  const { t } = useI18n();
   const startedAt = useRef<number | null>(null);
   const [elapsed, setElapsed] = useState(0.3);
   useEffect(() => {
@@ -549,7 +552,7 @@ function StreamingSpeed({ message }: { message: AssistantMessage }) {
   const speed = tokens / elapsed;
   return (
     <span className="ml-2 text-dim">
-      ~{tokens} tokens / {speed.toFixed(1)} tok/s
+      ~{tokens} {t.chat.message.tokens} / {speed.toFixed(1)} {t.chat.message.tokensPerSecond}
     </span>
   );
 }
@@ -573,11 +576,12 @@ function MessageActionMenu({
   onEdit: () => void;
   onFork: () => void;
 }) {
+  const { t } = useI18n();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          aria-label="Message actions"
+          aria-label={t.chat.message.messageActions}
           className="size-7"
           size="icon-sm"
           type="button"
@@ -593,18 +597,18 @@ function MessageActionMenu({
           }
         >
           {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-          {copied ? "Copied" : "Copy"}
+          {copied ? t.chat.message.copied : t.chat.message.copy}
         </DropdownMenuItem>
         {canEdit ? (
           <DropdownMenuItem onSelect={onEdit}>
             <PencilLine className="size-3.5" />
-            Edit from here
+            {t.chat.message.editFromHere}
           </DropdownMenuItem>
         ) : null}
         {canFork ? (
           <DropdownMenuItem disabled={forking} onSelect={onFork}>
             <GitFork className="size-3.5" />
-            {forking ? "Creating..." : "New session"}
+            {forking ? t.chat.message.creating : t.chat.message.newSession}
           </DropdownMenuItem>
         ) : null}
       </DropdownMenuContent>
@@ -666,12 +670,17 @@ function messageText(message: UserMessage) {
         .join("\n");
 }
 
-function resultText(message: ToolResultMessage) {
+function resultText(
+  message: ToolResultMessage,
+  t: ReturnType<typeof useI18n>["t"],
+) {
   const text = message.content
     .filter((block) => block.type === "text")
     .map((block) => block.text)
     .join("\n");
-  return text.trim() && text !== "(no output)" ? text : "(no output)";
+  return text.trim() && text !== t.chat.message.noOutput
+    ? text
+    : t.chat.message.noOutput;
 }
 
 function toolSummary(input: Record<string, unknown>) {

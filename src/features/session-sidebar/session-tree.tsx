@@ -251,13 +251,13 @@ function SessionRow({
       )}
       <div className="min-w-0 flex-1">
         <div className="truncate text-xs font-medium text-primary">{title}</div>
-        <div className="mt-0.5 truncate text-[10px] text-dim">
+        <div className="mt-0.5 truncate text-[11px] text-dim">
           {isDraft
             ? t.sessions.draftHint
             : `${formatRelativeTime(session.modified, undefined, locale)} / ${session.messageCount} ${t.sessions.msgs}`}
         </div>
         {error ? (
-          <div className="truncate text-[9px] text-destructive">{error}</div>
+          <div className="truncate text-[11px] text-destructive">{error}</div>
         ) : null}
       </div>
       {isDraft ? null : (

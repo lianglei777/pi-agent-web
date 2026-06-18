@@ -401,13 +401,6 @@ export function AgentWorkspace({
             onToggleTheme={toggleTheme}
             onToggleTopPanel={toggleTopPanel}
             sessionIsActive={sessionIsActive}
-            sessionTitle={
-              selectedSession
-                ? getSessionTitle(selectedSession)
-                : draftSession
-                  ? t.sessions.draft
-                  : null
-            }
             sidebarOpen={sidebarOpen}
             stats={sessionStats}
             systemPrompt={systemPrompt}

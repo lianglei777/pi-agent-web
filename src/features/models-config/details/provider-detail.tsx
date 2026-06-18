@@ -123,14 +123,14 @@ export default function ProviderDetail({
           style={{ ...inputStyle }}
         />
         {canRename && (
-          <button
+          <Button
+            className="mt-1 self-start"
             onClick={() => onRename(name, editingName.trim())}
-            className="mt-1 cursor-pointer self-start rounded border-none px-2.5 py-[3px] text-[11px] text-primary-foreground"
-            style={{ background: "var(--accent)" }}
-          type="button"
+            size="sm"
+            type="button"
           >
             {t.models.rename}
-          </button>
+          </Button>
         )}
       </Field>
 
@@ -269,14 +269,16 @@ function ModelDiscoveryPanel({
             {t.models.discoverModelsDescription}
           </p>
         </div>
-        <button
-          type="button"
+        <Button
+          className="shrink-0 text-muted"
           disabled={discovering}
           onClick={() => onDiscoverModels(providerName)}
-          className="shrink-0 rounded border border-line px-2.5 py-[5px] text-[11px] text-muted hover:bg-hover disabled:cursor-not-allowed disabled:text-dim"
+          size="sm"
+          type="button"
+          variant="outline"
         >
           {discovering ? t.models.discoveringModels : t.models.discoverModels}
-        </button>
+        </Button>
       </div>
 
       {relevant?.phase === "error" && (
@@ -303,15 +305,17 @@ function ModelDiscoveryPanel({
                   {t.models.selectedCount} {selectedSuggestions.length} /{" "}
                   {newSuggestions.length}
                 </span>
-                <button
-                  type="button"
+                <Button
+                  className="text-muted"
                   onClick={toggleAll}
-                  className="cursor-pointer rounded border border-line px-2 py-[3px] text-[11px] text-muted hover:bg-hover"
+                  size="sm"
+                  type="button"
+                  variant="outline"
                 >
                   {allSelected
                     ? t.models.clearSelection
                     : t.models.selectDiscovered}
-                </button>
+                </Button>
               </div>
               <div className="max-h-[168px] overflow-y-auto rounded border border-line">
                 {newSuggestions.map((suggestion) => {
@@ -349,17 +353,19 @@ function ModelDiscoveryPanel({
                 </p>
               )}
               <div className="flex items-center justify-end gap-3">
-                <button
-                  type="button"
+                <Button
+                  className="text-muted"
                   disabled={selectedSuggestions.length === 0}
                   onClick={() => {
                     onAcceptDiscoveredModels(providerName, selectedSuggestions);
                     setSelectedIds(new Set());
                   }}
-                  className="rounded border border-line px-2.5 py-[5px] text-[11px] text-muted hover:bg-hover disabled:cursor-not-allowed disabled:text-dim"
+                  size="sm"
+                  type="button"
+                  variant="outline"
                 >
                   {t.models.addSelected} ({selectedSuggestions.length})
-                </button>
+                </Button>
               </div>
             </>
           )}
@@ -392,6 +398,7 @@ function SecretTextInput({
 }) {
   const [userVisible, setUserVisible] = useState(false);
   const visible = userVisible && value !== "";
+  const { t } = useI18n();
 
   return (
     <div className="relative w-full">
@@ -405,14 +412,16 @@ function SecretTextInput({
         className={mono ? "font-ui-mono" : undefined}
         style={{ ...inputStyle, paddingRight: 34 }}
       />
-      <button
+      <Button
+        aria-label={visible ? t.models.hideApiKey : t.models.showApiKey}
+        className="absolute top-1/2 right-[5px] size-6 -translate-y-1/2 text-dim"
         onClick={() => setUserVisible((v) => !v)}
-        className="absolute top-1/2 right-[5px] flex h-6 w-6 -translate-y-1/2 cursor-pointer items-center justify-center border-none bg-transparent p-0"
-        style={{ color: "var(--text-dim)" }}
+        size="icon-sm"
         type="button"
+        variant="ghost"
       >
         {visible ? <EyeOffIcon /> : <EyeIcon />}
-      </button>
+      </Button>
     </div>
   );
 }

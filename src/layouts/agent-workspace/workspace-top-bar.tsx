@@ -24,7 +24,6 @@ export type TopPanel = "branches" | "system" | null;
 type WorkspaceTopBarProps = {
   dark: boolean;
   sessionIsActive: boolean;
-  sessionTitle: string | null;
   sidebarOpen: boolean;
   topPanel: TopPanel;
   onToggleSidebar: () => void;
@@ -41,7 +40,6 @@ type WorkspaceTopBarProps = {
 export function WorkspaceTopBar({
   dark,
   sessionIsActive,
-  sessionTitle,
   sidebarOpen,
   topPanel,
   onToggleSidebar,
@@ -51,15 +49,13 @@ export function WorkspaceTopBar({
   activeLeafId,
   onLeafChange,
   systemPrompt,
-  stats,
-  contextUsage,
 }: WorkspaceTopBarProps) {
   const { locale, setLocale, t } = useI18n();
   const nextLocale = locale === "zh" ? "en" : "zh";
 
   return (
     <>
-      <header className="flex h-9 flex-none items-stretch border-b border-line-subtle bg-canvas pr-12">
+      <header className="flex h-9 flex-none items-stretch border-b border-line-strong bg-canvas pr-12">
 
         {/* Left session sidebar toggle */}
         <TopBarIconButton
@@ -97,11 +93,6 @@ export function WorkspaceTopBar({
           <span className="sr-only">{t.common.language}</span>
         </TopBarIconButton>
 
-        {sessionTitle ? (
-          <div className="text-display flex min-w-0 items-center truncate border-l border-line-subtle px-3 text-xl text-primary">
-            {sessionTitle}
-          </div>
-        ) : null}
 
         {/* {sessionIsActive ? (
           <>
@@ -122,21 +113,6 @@ export function WorkspaceTopBar({
           </>
         ) : null} */}
         <div className="flex-1" />
-
-        {/* input + output token / cost */}
-        {stats ? (
-          <div className="flex items-center px-2 font-ui-mono text-xs text-dim">
-            {stats.input + stats.output} tokens / ${stats.cost.toFixed(4)}
-          </div>
-        ) : null}
-        {contextUsage ? (
-          <div className="flex items-center px-2 font-ui-mono text-xs text-dim">
-            {t.workspace.context}{" "}
-            {contextUsage.percent === null
-              ? "n/a"
-              : `${contextUsage.percent.toFixed(0)}%`}
-          </div>
-        ) : null}
       </header>
 
       {topPanel ? (

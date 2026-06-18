@@ -64,7 +64,7 @@ describe("visual foundation contract", () => {
   test("uses one continuous canvas with locally elevated controls", () => {
     expect(agentWorkspace).toContain("border-line-subtle bg-canvas");
     expect(topBar).toContain("border-line-subtle bg-canvas");
-    expect(chatInput).toContain("rounded-[14px]");
-    expect(chatInput).toContain("shadow-[var(--shadow-composer)]");
+    expect(chatInput).not.toContain("rounded-[14px]");
+    expect(chatInput).not.toContain("shadow-[var(--shadow-composer)]");
   });
 });

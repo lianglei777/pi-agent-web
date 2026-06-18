@@ -14,6 +14,7 @@ function Separator({
     <SeparatorPrimitive.Root
       className={mergeClasses(
         "shrink-0 bg-border",
+        "bg-line-strong",
         orientation === "horizontal" ? "h-px w-full" : "h-full w-px",
         className,
       )}

@@ -158,7 +158,7 @@ export function CwdPicker({
             </>
           )}
           {error ? (
-            <p className="m-1 text-[10px] text-destructive">{error}</p>
+            <p className="m-1 text-[11px] text-destructive">{error}</p>
           ) : null}
         </div>
       ) : null}
