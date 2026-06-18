@@ -191,21 +191,27 @@ export function SessionSidebar({
 
       <Separator />
 
-      <div className="flex items-center gap-1.5 px-2.5 pt-2 pb-1.5">
+      <div className="flex items-center gap-1 px-2.5 pt-2 pb-1.5 border-b border-line-subtle">
         <span className="flex-1 text-xs font-semibold text-muted">
           {t.sessions.title}
         </span>
-        <Button
-          disabled={!selectedCwd}
-          onClick={() =>
-            selectedCwd && onNewSession(crypto.randomUUID(), selectedCwd)
-          }
-          size="sm"
-          type="button"
-        >
-          <Plus />
-          {t.sessions.new}
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              aria-label={t.sessions.new}
+              disabled={!selectedCwd}
+              onClick={() =>
+                selectedCwd && onNewSession(crypto.randomUUID(), selectedCwd)
+              }
+              size="icon-sm"
+              type="button"
+              variant="ghost"
+            >
+              <Plus />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{t.sessions.new}</TooltipContent>
+        </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
@@ -213,7 +219,7 @@ export function SessionSidebar({
               onClick={manualRefresh}
               size="icon-sm"
               type="button"
-              variant="outline"
+              variant="ghost"
             >
               {refreshed ? (
                 <Check className="text-success" />

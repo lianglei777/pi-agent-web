@@ -59,7 +59,7 @@ function SessionTreeItem({
 }) {
   const [collapsed, setCollapsed] = useState(false);
   return (
-    <div>
+    <div className="py-px">
       <SessionRow
         collapsed={collapsed}
         depth={depth}
@@ -72,7 +72,7 @@ function SessionTreeItem({
         session={node.session}
       />
       {!collapsed && node.children.length ? (
-        <div className="ml-3 border-l border-line-subtle">
+        <div className="ml-4 mt-1 mb-1 border-l border-line-subtle pl-1.5">
           {node.children.map((child) => (
             <SessionTreeItem
               depth={depth + 1}
@@ -159,10 +159,10 @@ function SessionRow({
 
   if (editing) {
     return (
-      <div className="flex h-[54px] items-center gap-1 px-2">
+      <div className="flex h-[44px] items-center gap-1 px-2">
         <Input
           aria-label={`${t.sessions.rename} ${title}`}
-          className="h-8 text-xs"
+          className="h-7 text-xs"
           disabled={busy}
           onBlur={submitRename}
           onChange={(event) => setValue(event.target.value)}
@@ -184,7 +184,7 @@ function SessionRow({
   if (confirming) {
     return (
       <div
-        className={`mx-1 flex h-[54px] items-center gap-1 rounded-md border border-destructive/35 bg-destructive/8 px-2 ${
+        className={`mx-1 flex h-[44px] items-center gap-1 rounded-md border border-destructive/35 bg-destructive/8 px-2 ${
           busy ? "opacity-50" : ""
         }`}
       >
@@ -215,15 +215,23 @@ function SessionRow({
 
   return (
     <div
-      className={`group mx-1 flex h-[54px] cursor-pointer items-center rounded-md border pr-1 transition-colors duration-[var(--motion-fast)] ${
+      className={`group relative mx-1 flex h-[44px] cursor-pointer items-center rounded-md border pr-1 transition-colors duration-[var(--motion-fast)] ${
         selected
           ? "border-line-strong bg-selected"
-          : "border-transparent hover:border-line-subtle hover:bg-hover"
+          : hasChildren && !collapsed
+            ? "border-transparent hover:border-line-subtle hover:bg-hover"
+            : "border-transparent border-b border-b-line-subtle/60 hover:border-line-subtle hover:border-b-line-subtle hover:bg-hover"
       }`}
       onClick={() => onSelect(session)}
       style={{ paddingLeft: `${4 + depth * 12}px` }}
       title={title}
     >
+      {selected ? (
+        <span
+          aria-hidden
+          className="absolute top-1 bottom-1 left-0 w-[3px] rounded-full bg-accent"
+        />
+      ) : null}
       {hasChildren ? (
         <Button
           aria-label={
@@ -250,11 +258,15 @@ function SessionRow({
         <span className="w-6 flex-none" />
       )}
       <div className="min-w-0 flex-1">
-        <div className="truncate text-xs font-medium text-primary">{title}</div>
-        <div className="mt-0.5 truncate text-[11px] text-dim">
+        <div
+          className={`truncate text-xs ${selected ? "font-semibold text-primary" : "font-medium text-primary"}`}
+        >
+          {title}
+        </div>
+        <div className="mt-0.5 truncate text-[11px] tabular-nums text-dim">
           {isDraft
             ? t.sessions.draftHint
-            : `${formatRelativeTime(session.modified, undefined, locale)} / ${session.messageCount} ${t.sessions.msgs}`}
+            : `${formatRelativeTime(session.modified, undefined, locale)} · ${session.messageCount} ${t.sessions.msgs}`}
         </div>
         {error ? (
           <div className="truncate text-[11px] text-destructive">{error}</div>
