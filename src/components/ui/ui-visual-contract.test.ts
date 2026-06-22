@@ -24,4 +24,15 @@ describe("shared UI visual contract", () => {
     expect(read("button")).toContain("duration-[var(--motion-fast)]");
     expect(read("accordion")).toContain("duration-[var(--motion-standard)]");
   });
+
+  test("keeps resize handles quiet by default and explicit on focus", () => {
+    const resizeHandle = read("resize-handle");
+    expect(resizeHandle).toContain("before:h-[9px]");
+    expect(resizeHandle).toContain("before:w-[9px]");
+    expect(resizeHandle).toContain("focus-visible:ring-2");
+    expect(resizeHandle).toContain("focus-visible:ring-ring");
+    expect(resizeHandle).toContain(
+      "data-[dragging=true]:bg-line-emphasis",
+    );
+  });
 });
