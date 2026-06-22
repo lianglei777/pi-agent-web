@@ -5,6 +5,10 @@ import { describe, expect, test } from "vitest";
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const css = readFileSync(`${root}/src/app/globals.css`, "utf8");
 const layout = readFileSync(`${root}/src/app/layout.tsx`, "utf8");
+const designSidecar = readFileSync(
+  `${root}/.impeccable/design.json`,
+  "utf8",
+);
 const chatCenter = readFileSync(
   `${root}/src/features/chat/chat-center.tsx`,
   "utf8",
@@ -81,5 +85,14 @@ describe("visual foundation contract", () => {
     expect(topBar).toContain("border-line-subtle bg-panel");
     expect(chatInput).not.toContain("rounded-[14px]");
     expect(chatInput).not.toContain("shadow-[var(--shadow-composer)]");
+  });
+
+  test("keeps the design sidecar synchronized with the approved themes", () => {
+    expect(designSidecar).toContain('"canonical": "#f1f3f2"');
+    expect(designSidecar).toContain('"canonical": "#17624b"');
+    expect(designSidecar).toContain("Adaptive Workbench");
+    expect(designSidecar).toContain("Deep Focus");
+    expect(designSidecar).not.toContain("rounded-20px");
+    expect(designSidecar).not.toContain("Warm Paper");
   });
 });
