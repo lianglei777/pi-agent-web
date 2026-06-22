@@ -1107,6 +1107,7 @@ Content-Type: application/json
 
 - 这是完整替换，不是 Merge。
 - 写入采用临时文件加 Rename。
+- 写入成功后，仅当前模型命中变更 Provider 或 model 的已加载 session 会被标记为过期，并在下一次 prompt 前重新加载；无法可靠判断影响范围时保守刷新全部 session，正在进行的模型调用不会被中断。
 - 具体 Config Schema 由当前 Pi SDK 版本决定。
 
 ### 7.5 发现模型配置建议

@@ -12,6 +12,7 @@ import type {
   AgentRuntime,
   AgentRuntimeFactory,
   CreateRuntimeInput,
+  ModelConfigInvalidation,
 } from "@/server/ports/agent-runtime";
 import { mapPiMessage } from "./message-mapper";
 
@@ -35,6 +36,8 @@ export class PiAgentRuntimeFactory implements AgentRuntimeFactory {
 
 export class PiAgentRuntime implements AgentRuntime {
   private alive = true;
+  private modelConfigRevision = 0;
+  private appliedModelConfigRevision = 0;
 
   constructor(private readonly session: AgentSession) {}
 
@@ -50,11 +53,17 @@ export class PiAgentRuntime implements AgentRuntime {
     return this.alive;
   }
 
+  invalidateModelConfig(invalidation: ModelConfigInvalidation): void {
+    if (!matchesCurrentModel(this.session, invalidation)) return;
+    this.modelConfigRevision += 1;
+  }
+
   async execute<T = unknown>(command: AgentCommand): Promise<T> {
     this.assertAlive();
 
     switch (command.type) {
       case "prompt":
+        await this.refreshModelConfigIfNeeded();
         await this.session.prompt(command.message, {
           images: mapImages(command.images),
         });
@@ -185,6 +194,43 @@ export class PiAgentRuntime implements AgentRuntime {
       );
     }
   }
+
+  private async refreshModelConfigIfNeeded(): Promise<void> {
+    if (this.appliedModelConfigRevision === this.modelConfigRevision) return;
+
+    const targetRevision = this.modelConfigRevision;
+    const currentModel = this.session.model;
+    this.session.modelRegistry.refresh();
+    if (currentModel) {
+      const refreshedModel = this.session.modelRegistry.find(
+        currentModel.provider,
+        currentModel.id,
+      );
+      if (!refreshedModel) {
+        throw new AppError(
+          "MODEL_NOT_FOUND",
+          `Model ${currentModel.provider}/${currentModel.id} was not found after refreshing model config`,
+          404,
+        );
+      }
+      await this.session.setModel(refreshedModel);
+    }
+    this.appliedModelConfigRevision = targetRevision;
+  }
+}
+
+function matchesCurrentModel(
+  session: AgentSession,
+  invalidation: ModelConfigInvalidation,
+): boolean {
+  if (invalidation.scope === "all") return true;
+  const model = session.model;
+  if (!model) return false;
+  return invalidation.targets.some(
+    (target) =>
+      target.provider === model.provider &&
+      (target.modelId === undefined || target.modelId === model.id),
+  );
 }
 
 function mapImages(images?: ImageInput[]) {

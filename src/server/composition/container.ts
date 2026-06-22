@@ -36,7 +36,7 @@ function createContainer() {
       runtimeFactory,
       roots,
     ),
-    modelService: new ModelService(models),
+    modelService: new ModelService(models, runtimes),
     authService: new AuthService(credentials, pendingInputs),
     fileService: new FileService(fileSystem, roots),
     skillService: new SkillService(skills, roots),

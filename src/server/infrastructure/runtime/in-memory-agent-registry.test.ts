@@ -24,9 +24,34 @@ describe("InMemoryAgentRegistry", () => {
     expect(factory).toHaveBeenCalledTimes(1);
     registry.destroy("session-1");
   });
+
+  it("propagates model config impact to every loaded runtime", () => {
+    const registry = new InMemoryAgentRegistry();
+    const firstInvalidation = vi.fn();
+    const secondInvalidation = vi.fn();
+    const first = createRuntime("session-1", firstInvalidation);
+    const second = createRuntime("session-2", secondInvalidation);
+
+    registry.register(first.sessionId, first);
+    registry.register(second.sessionId, second);
+
+    const invalidation = {
+      scope: "targets" as const,
+      targets: [{ provider: "custom", modelId: "model-a" }],
+    };
+    registry.invalidateModelConfig(invalidation);
+
+    expect(firstInvalidation).toHaveBeenCalledWith(invalidation);
+    expect(secondInvalidation).toHaveBeenCalledWith(invalidation);
+    registry.destroy(first.sessionId);
+    registry.destroy(second.sessionId);
+  });
 });
 
-function createRuntime(sessionId: string): AgentRuntime {
+function createRuntime(
+  sessionId: string,
+  invalidateModelConfig: (invalidation: unknown) => void = () => {},
+): AgentRuntime {
   return {
     sessionId,
     sessionFile: `${sessionId}.jsonl`,
@@ -44,6 +69,7 @@ function createRuntime(sessionId: string): AgentRuntime {
       thinkingLevel: "off",
     }),
     subscribe: () => () => {},
+    invalidateModelConfig,
     destroy: () => {},
   };
 }

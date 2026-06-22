@@ -60,6 +60,7 @@ describe("AgentService", () => {
         thinkingLevel: "off",
       }),
       subscribe: () => () => {},
+      invalidateModelConfig: () => {},
       destroy,
     };
     const registry = new InMemoryAgentRegistry();
@@ -93,6 +94,7 @@ function runtimeStub(
     sessionId: "created",
     sessionFile: "created.jsonl",
     isAlive: () => true,
+    invalidateModelConfig: () => {},
     execute: async <T,>() => undefined as T,
     getState: async () => ({
       sessionId: "created",

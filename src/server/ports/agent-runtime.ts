@@ -2,6 +2,15 @@ import type { AgentCommand } from "@/server/domain/agent-command";
 import type { AgentEvent } from "@/server/domain/agent-event";
 import type { AgentRuntimeState } from "@/server/domain/agent-state";
 
+export interface ModelConfigTarget {
+  provider: string;
+  modelId?: string;
+}
+
+export type ModelConfigInvalidation =
+  | { scope: "all" }
+  | { scope: "targets"; targets: ModelConfigTarget[] };
+
 /**
  * Agent 运行时端口，表示一个存活的 Agent 会话实例。
  *
@@ -15,6 +24,8 @@ export interface AgentRuntime {
   readonly sessionFile: string;
   /** 判断运行时实例是否仍然存活。 */
   isAlive(): boolean;
+  /** 标记模型配置已更新，在下一次请求模型前重新加载。 */
+  invalidateModelConfig(invalidation: ModelConfigInvalidation): void;
   /** 向 Agent 发送命令并等待返回结果。 */
   execute<T = unknown>(command: AgentCommand): Promise<T>;
   /** 获取 Agent 当前运行时状态。 */
@@ -72,4 +83,6 @@ export interface AgentRuntimeRegistry {
   destroy(sessionId: string): void;
   /** 更新指定会话的最近访问时间，用于空闲回收等策略。 */
   touch(sessionId: string): void;
+  /** 通知所有已加载运行时模型配置已更新。 */
+  invalidateModelConfig(invalidation: ModelConfigInvalidation): void;
 }

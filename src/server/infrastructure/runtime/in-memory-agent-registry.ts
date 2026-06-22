@@ -1,6 +1,7 @@
 import type {
   AgentRuntime,
   AgentRuntimeRegistry,
+  ModelConfigInvalidation,
 } from "@/server/ports/agent-runtime";
 
 type RuntimeEntry = {
@@ -75,6 +76,12 @@ export class InMemoryAgentRegistry implements AgentRuntimeRegistry {
     if (!entry) return;
     clearTimeout(entry.idleTimer);
     entry.idleTimer = this.createTimer(sessionId);
+  }
+
+  invalidateModelConfig(invalidation: ModelConfigInvalidation): void {
+    for (const { runtime } of this.runtimes.values()) {
+      runtime.invalidateModelConfig(invalidation);
+    }
   }
 
   private createTimer(sessionId: string): ReturnType<typeof setTimeout> {
