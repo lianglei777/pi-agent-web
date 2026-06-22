@@ -215,7 +215,7 @@ function SessionRow({
 
   return (
     <div
-      className={`group relative mx-1 flex h-[44px] cursor-pointer items-center rounded-md border pr-1 transition-colors duration-[var(--motion-fast)] ${
+      className={`group relative mx-1 flex h-[44px] cursor-pointer items-center rounded-md border pr-1 transition-colors duration-[var(--motion-fast)] focus-within:border-line-strong focus-within:bg-selected ${
         selected
           ? "border-line-strong bg-selected"
           : hasChildren && !collapsed
@@ -229,7 +229,7 @@ function SessionRow({
       {selected ? (
         <span
           aria-hidden
-          className="absolute top-1 bottom-1 left-0 w-[3px] rounded-full bg-accent"
+          className="ml-1 size-1.5 flex-none rounded-full bg-accent text-accent"
         />
       ) : null}
       {hasChildren ? (

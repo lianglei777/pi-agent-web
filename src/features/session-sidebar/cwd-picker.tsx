@@ -69,7 +69,7 @@ export function CwdPicker({
     <div className="relative mx-2.5 my-2" ref={rootRef}>
       <Button
         aria-expanded={open}
-        className="w-full justify-start px-2.5 font-ui-mono text-[11px]"
+        className="h-9 w-full justify-start border-line-strong bg-elevated px-2.5 font-ui-mono text-[11px]"
         onClick={() => setOpen((current) => !current)}
         title={cwd ?? t.sessions.selectProject}
         type="button"

@@ -18,6 +18,10 @@ const cwdPickerSource = readFileSync(
   fileURLToPath(new URL("./cwd-picker.tsx", import.meta.url)),
   "utf8",
 );
+const sessionTreeSource = readFileSync(
+  fileURLToPath(new URL("./session-tree.tsx", import.meta.url)),
+  "utf8",
+);
 
 describe("session panel layout", () => {
   it("initializes the session panel to 60 percent within valid bounds", () => {
@@ -54,5 +58,16 @@ describe("session panel layout", () => {
     expect(cwdPickerSource).toContain(
       'className="relative mx-2.5 my-2"',
     );
+  });
+
+  it("uses a quiet section hierarchy and semantic selected rows", () => {
+    expect(sidebarSource).toContain("bg-panel");
+    expect(sidebarSource).toContain("text-[11px] font-medium text-muted");
+    expect(fileExplorerSource).toContain("focus-within:bg-selected");
+    expect(fileExplorerSource).not.toContain("uppercase");
+    expect(cwdPickerSource).toContain("border-line-strong");
+    expect(sessionTreeSource).toContain("focus-within:border-line-strong");
+    expect(sessionTreeSource).toContain("bg-selected");
+    expect(sessionTreeSource).toContain("text-accent");
   });
 });

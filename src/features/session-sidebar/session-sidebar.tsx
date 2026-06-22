@@ -223,7 +223,7 @@ export function SessionSidebar({
     : { flex: 1 };
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-panel">
       <CwdPicker
         cwd={selectedCwd}
         home={home}
@@ -235,8 +235,8 @@ export function SessionSidebar({
 
       <div className="flex min-h-0 flex-1 flex-col" ref={flexRegionRef}>
         <div className="flex min-h-0 flex-col" style={sessionRegionStyle}>
-          <div className="flex items-center gap-1 px-2.5 pt-2 pb-1.5 border-b border-line-subtle">
-            <span className="flex-1 text-xs font-semibold text-muted">
+          <div className="flex h-9 items-center gap-1 border-b border-line-subtle px-2.5 text-[11px] font-medium text-muted">
+            <span className="flex-1">
               {t.sessions.title}
             </span>
             <Tooltip>

@@ -95,7 +95,7 @@ export function FileExplorer({
       >
         <Button
           aria-expanded={open}
-          className="min-w-0 flex-1 justify-start px-1.5 text-[11px] font-semibold uppercase"
+          className="min-w-0 flex-1 justify-start px-1.5 text-[11px] font-medium text-muted"
           onClick={() => onOpenChange(!open)}
           size="sm"
           type="button"
@@ -197,7 +197,7 @@ function FileNodes({
     return (
       <div key={path}>
         <div
-          className="group flex h-6 cursor-pointer items-center rounded-sm px-1 text-[11px] hover:bg-hover"
+          className="group flex h-6 cursor-pointer items-center rounded-sm px-1 text-[11px] hover:bg-hover focus-within:bg-selected focus-within:text-primary"
           onClick={() =>
             entry.isDir
               ? void onToggle(path)
