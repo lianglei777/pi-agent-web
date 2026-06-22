@@ -51,14 +51,14 @@ export const en = {
       copied: "Copied",
     },
     starterPrompts: {
-      architecture: "Explain the architecture of this project",
-      fixBug: "Find and fix a bug in the current workspace",
-      addTest: "Add a focused test for an important workflow",
-      reviewChanges: "Review the latest changes for regressions",
+      architecture: "Understand this codebase and its constraints",
+      fixBug: "Find, fix, and verify a bug in this workspace",
+      addTest: "Add a focused regression test",
+      reviewChanges: "Review the latest changes for risks",
     },
     welcome: {
       title: "What should we work on?",
-      description: "Ask a question, attach a screenshot, or choose a starting point.",
+      description: "Pi can inspect this workspace, explain code, make changes, and verify the result.",
     },
     input: {
       messageLabel: "Message",

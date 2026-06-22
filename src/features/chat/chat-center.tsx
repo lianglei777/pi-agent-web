@@ -261,13 +261,13 @@ function Welcome({
         <h1 className="text-display mt-4 text-3xl text-primary max-[640px]:text-2xl">
           {t.chat.welcome.title}
         </h1>
-        {/* <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted">
+        <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted">
           {t.chat.welcome.description}
         </p>
         <div className="mt-7 grid grid-cols-2 gap-2 text-left max-[560px]:grid-cols-1">
           {starterPrompts.map((prompt) => (
             <Button
-              className="h-auto min-h-12 justify-start whitespace-normal px-3 py-2.5 text-left text-xs leading-5"
+              className="h-auto min-h-12 justify-start whitespace-normal border-line-subtle bg-panel px-3 py-2.5 text-left text-xs leading-5 hover:border-line-strong hover:bg-selected"
               key={prompt}
               onClick={() => onSelectPrompt(prompt)}
               type="button"
@@ -276,7 +276,7 @@ function Welcome({
               {prompt}
             </Button>
           ))}
-        </div> */}
+        </div>
       </div>
     </section>
   );
