@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { FileText, PanelRightClose } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Tooltip,
   TooltipContent,
@@ -59,16 +58,12 @@ function EmptyFile() {
 
   return (
     <div className="grid flex-1 place-items-center p-6">
-      <Card className="border-0 bg-transparent text-center shadow-none">
-        <CardContent className="px-6 py-8">
-          <div className="mx-auto mb-3 grid size-10 place-items-center rounded-lg border border-line-subtle bg-card text-muted-foreground">
-            <FileText className="size-5" />
-          </div>
-          <p className="m-0 text-xs text-muted-foreground">
-            {t.files.noFileOpen}
-          </p>
-        </CardContent>
-      </Card>
+      <div className="text-center text-muted">
+        <div className="mx-auto mb-3 grid size-9 place-items-center rounded-md border border-line-subtle bg-elevated">
+          <FileText className="size-4" />
+        </div>
+        <p className="m-0 text-xs">{t.files.noFileOpen}</p>
+      </div>
     </div>
   );
 }

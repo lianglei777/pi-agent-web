@@ -178,7 +178,7 @@ export function ChatInput({
         ) : null}
 
         <div
-          className={`overflow-hidden rounded-lg border bg-panel transition-colors duration-[var(--motion-standard)] ${
+          className={`overflow-hidden rounded-md border bg-panel transition-[border-color,box-shadow] duration-[var(--motion-standard)] focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/20 ${
             running ? "border-warning" : "border-line-strong"
           }`}
         >
