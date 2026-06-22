@@ -35,4 +35,20 @@ describe("shared UI visual contract", () => {
       "data-[dragging=true]:bg-line-emphasis",
     );
   });
+
+  test("uses semantic accent and readable state tokens", () => {
+    const button = read("button");
+    const input = read("input");
+    const textarea = read("textarea");
+    const select = read("select");
+
+    expect(button).toContain("focus-visible:ring-ring/40");
+    expect(button).toContain("active:translate-y-px");
+    expect(button).toContain("disabled:border-transparent");
+    expect(input).toContain("hover:border-line-strong");
+    expect(input).toContain("placeholder:text-muted");
+    expect(textarea).toContain("hover:border-line-strong");
+    expect(textarea).toContain("placeholder:text-muted");
+    expect(select).toContain("focus-visible:ring-ring/40");
+  });
 });
