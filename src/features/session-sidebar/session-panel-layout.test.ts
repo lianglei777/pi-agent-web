@@ -10,6 +10,14 @@ const sidebarSource = readFileSync(
   fileURLToPath(new URL("./session-sidebar.tsx", import.meta.url)),
   "utf8",
 );
+const fileExplorerSource = readFileSync(
+  fileURLToPath(new URL("./file-explorer.tsx", import.meta.url)),
+  "utf8",
+);
+const cwdPickerSource = readFileSync(
+  fileURLToPath(new URL("./cwd-picker.tsx", import.meta.url)),
+  "utf8",
+);
 
 describe("session panel layout", () => {
   it("initializes the session panel to 60 percent within valid bounds", () => {
@@ -37,5 +45,14 @@ describe("session panel layout", () => {
     );
     expect(sidebarSource).not.toContain("localStorage");
     expect(sidebarSource).not.toContain("sessionStorage");
+  });
+
+  it("uses one expanded split boundary and keeps project-picker spacing", () => {
+    expect(fileExplorerSource).toContain(
+      'open ? "" : "border-t border-line-strong"',
+    );
+    expect(cwdPickerSource).toContain(
+      'className="relative mx-2.5 my-2"',
+    );
   });
 });

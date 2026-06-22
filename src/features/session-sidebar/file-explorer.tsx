@@ -20,15 +20,18 @@ import type { FileEntry } from "./types";
 export function FileExplorer({
   cwd,
   refreshKey,
+  open,
+  onOpenChange,
   onOpenFile,
   onAtMention,
 }: {
   cwd: string;
   refreshKey: number;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   onOpenFile?: (path: string, name: string) => void;
   onAtMention?: (path: string) => void;
 }) {
-  const [open, setOpen] = useState(true);
   const [entriesByPath, setEntriesByPath] = useState<Record<string, FileEntry[]>>(
     {},
   );
@@ -85,11 +88,15 @@ export function FileExplorer({
 
   return (
     <section className={`flex min-h-0 flex-col ${open ? "flex-1" : "flex-none"}`}>
-      <div className="flex h-8 flex-none items-center border-t border-line-strong px-2">
+      <div
+        className={`flex h-8 flex-none items-center px-2 ${
+          open ? "" : "border-t border-line-strong"
+        }`}
+      >
         <Button
           aria-expanded={open}
           className="min-w-0 flex-1 justify-start px-1.5 text-[11px] font-semibold uppercase"
-          onClick={() => setOpen((current) => !current)}
+          onClick={() => onOpenChange(!open)}
           size="sm"
           type="button"
           variant="ghost"
@@ -119,8 +126,8 @@ export function FileExplorer({
                 className="mt-2"
                 onClick={() => void load(cwd)}
                 size="sm"
-              variant="outline"
-            >
+                variant="outline"
+              >
                 {t.common.retry}
               </Button>
             </div>

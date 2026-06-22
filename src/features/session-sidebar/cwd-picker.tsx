@@ -66,12 +66,11 @@ export function CwdPicker({
   }
 
   return (
-    <div className="relative mx-2.5 mb-2" ref={rootRef}>
+    <div className="relative mx-2.5 my-2" ref={rootRef}>
       <Button
         aria-expanded={open}
         className="w-full justify-start px-2.5 font-ui-mono text-[11px]"
         onClick={() => setOpen((current) => !current)}
-        size="sm"
         title={cwd ?? t.sessions.selectProject}
         type="button"
         variant="outline"
