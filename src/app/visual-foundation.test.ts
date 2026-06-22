@@ -27,14 +27,28 @@ const agentWorkspace = readFileSync(
 );
 
 describe("visual foundation contract", () => {
-  test("defines the approved light and dark semantic tokens", () => {
-    expect(css).toContain("--bg: #f5f5f4");
-    expect(css).toContain("--bg-panel: #ffffff");
-    expect(css).toContain("--border-subtle: #d6d6d2");
-    expect(css).toContain("--border-strong: #8a8a84");
-    expect(css).toContain("--bg: #111111");
-    expect(css).toContain("--bg-panel: #181818");
-    expect(css).toContain("--border-strong: #5b5b58");
+  test("defines the approved Adaptive Workbench and Deep Focus tokens", () => {
+    expect(css).toContain("--bg: #f1f3f2");
+    expect(css).toContain("--bg-panel: #f8f9f8");
+    expect(css).toContain("--bg-elevated: #fbfcfb");
+    expect(css).toContain("--bg-selected: #e2e9e5");
+    expect(css).toContain("--text: #151816");
+    expect(css).toContain("--text-muted: #53605b");
+    expect(css).toContain("--border-subtle: #d8ddda");
+    expect(css).toContain("--border-strong: #aab3ae");
+    expect(css).toContain("--accent: #17624b");
+    expect(css).toContain("--primary-foreground: #ffffff");
+
+    expect(css).toContain("--bg: #121514");
+    expect(css).toContain("--bg-panel: #181b1a");
+    expect(css).toContain("--bg-elevated: #1f2421");
+    expect(css).toContain("--bg-selected: #26312c");
+    expect(css).toContain("--text: #eef1ed");
+    expect(css).toContain("--text-muted: #a8b0aa");
+    expect(css).toContain("--border-subtle: #2d332f");
+    expect(css).toContain("--border-strong: #57625c");
+    expect(css).toContain("--accent: #8bc7b0");
+    expect(css).toContain("--primary-foreground: #102019");
   });
 
   test("registers approved display fonts without replacing the UI font", () => {

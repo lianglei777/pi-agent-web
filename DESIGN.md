@@ -1,36 +1,40 @@
 ---
 name: Po Agent Web
-description: A precise, calm developer workspace built from softened monochrome tokens, restrained serif display type, and linear structure.
+description: A precise, calm developer workspace built from independently tuned cool-light and charcoal-dark themes, restrained accent color, and linear structure.
 colors:
   light:
-    canvas: "#f5f5f4"
-    panel: "#ffffff"
-    elevated: "#fcfcfb"
-    subtle: "#f0f0ee"
-    hover: "#ececea"
-    selected: "#e3e3e0"
-    text: "#171717"
-    muted: "#52524f"
-    dim: "#686864"
-    borderSubtle: "#d6d6d2"
-    borderStrong: "#8a8a84"
-    borderEmphasis: "#171717"
+    canvas: "#f1f3f2"
+    panel: "#f8f9f8"
+    elevated: "#fbfcfb"
+    subtle: "#edf0ee"
+    hover: "#e8ece9"
+    selected: "#e2e9e5"
+    text: "#151816"
+    muted: "#53605b"
+    dim: "#76817c"
+    borderSubtle: "#d8ddda"
+    borderStrong: "#aab3ae"
+    borderEmphasis: "#17624b"
+    accent: "#17624b"
+    accentForeground: "#ffffff"
     destructive: "#a63f38"
     success: "#346b4d"
     warning: "#815b18"
   dark:
-    canvas: "#111111"
-    panel: "#181818"
-    elevated: "#202020"
-    subtle: "#1d1d1d"
-    hover: "#252525"
-    selected: "#2c2c2c"
-    text: "#f2f2ef"
-    muted: "#b6b6b0"
-    dim: "#969690"
-    borderSubtle: "#343434"
-    borderStrong: "#5b5b58"
-    borderEmphasis: "#e8e8e4"
+    canvas: "#121514"
+    panel: "#181b1a"
+    elevated: "#1f2421"
+    subtle: "#242a27"
+    hover: "#29302c"
+    selected: "#26312c"
+    text: "#eef1ed"
+    muted: "#a8b0aa"
+    dim: "#747d77"
+    borderSubtle: "#2d332f"
+    borderStrong: "#57625c"
+    borderEmphasis: "#8bc7b0"
+    accent: "#8bc7b0"
+    accentForeground: "#102019"
     destructive: "#e07a73"
     success: "#78b28f"
     warning: "#d2a65a"
@@ -52,7 +56,7 @@ motion:
 
 ## Direction
 
-The interface is a focused developer tool, not a marketing surface. Preserve its dense three-panel workspace and established workflows. Visual character comes from softened black and white, a limited serif display role, and disciplined structural lines.
+The interface is a focused developer tool, not a marketing surface. Preserve its dense three-panel workspace and established workflows. The light theme is Adaptive Workbench: cool neutral surfaces with a restrained pine-green focus color. The dark theme is Deep Focus: charcoal surfaces with a mint focus color. The themes share semantic roles but are tuned independently rather than mechanically inverted.
 
 ## Token architecture
 
@@ -100,6 +104,10 @@ Every interactive component must account for default, hover, focus-visible, acti
 - Disabled state blocks interaction and uses disabled surface/text tokens.
 - Loading prevents duplicate submission and keeps labels understandable.
 - Error, success, and warning use semantic color plus text, icon, border, or shape.
+
+## Color usage
+
+Neutral first. Accent color is reserved for primary actions, focus, selection, and live agent state; it is never decorative.
 
 ## Dialog safety
 
