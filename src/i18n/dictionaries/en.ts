@@ -144,6 +144,7 @@ export const en = {
     expandForks: "Expand session forks",
     collapseForks: "Collapse session forks",
     msgs: "msgs",
+    resizeExplorer: "Resize session and file explorer",
   },
   files: {
     files: "Files",

@@ -146,6 +146,7 @@ export const zh = {
     expandForks: "展开会话分支",
     collapseForks: "折叠会话分支",
     msgs: "条消息",
+    resizeExplorer: "调整会话与文件浏览器高度",
   },
   files: {
     files: "文件",

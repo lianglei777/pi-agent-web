@@ -1,8 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import { Check, Plus, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ResizeHandle } from "@/components/ui/resize-handle";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,6 +24,10 @@ import { loadDefaultCwd, loadHome, loadSessions } from "./api";
 import { CwdPicker } from "./cwd-picker";
 import { FileExplorer } from "./file-explorer";
 import { createDraftSession } from "./session-draft";
+import {
+  getSessionPanelBounds,
+  resolveSessionPanelHeight,
+} from "./session-panel-layout";
 import {
   buildSessionTree,
   getRecentCwds,
@@ -62,6 +74,36 @@ export function SessionSidebar({
   const restoreAttempted = useRef(false);
   const feedbackTimer = useRef<number | null>(null);
   const { t } = useI18n();
+
+  // 会话区与文件浏览器之间可拖拽的纵向分隔。
+  const [fileExplorerOpen, setFileExplorerOpen] = useState(true);
+  const [sessionPanelHeight, setSessionPanelHeight] = useState<number | null>(
+    null,
+  );
+  const flexRegionRef = useRef<HTMLDivElement>(null);
+  const [flexRegionHeight, setFlexRegionHeight] = useState(0);
+
+  // 测量弹性区域高度，并将会话区高度约束在当前可用范围内。
+  useEffect(() => {
+    const el = flexRegionRef.current;
+    if (!el) return;
+    const sync = () => {
+      const height = el.clientHeight;
+      setFlexRegionHeight(height);
+      setSessionPanelHeight((current) =>
+        resolveSessionPanelHeight(current, height),
+      );
+    };
+    sync();
+    const observer = new ResizeObserver(sync);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const sessionBounds = useMemo(
+    () => getSessionPanelBounds(flexRegionHeight),
+    [flexRegionHeight],
+  );
 
   const refresh = useCallback(
     async (showLoading = false) => {
@@ -174,14 +216,14 @@ export function SessionSidebar({
     feedbackTimer.current = window.setTimeout(() => setRefreshed(false), 2000);
   }
 
+  const showSplitHandle =
+    Boolean(selectedCwd) && fileExplorerOpen && sessionPanelHeight !== null;
+  const sessionRegionStyle: CSSProperties = showSplitHandle
+    ? { height: sessionPanelHeight as number, flex: "none" }
+    : { flex: 1 };
+
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <div className="px-2.5 pt-3 pb-2">
-        <span className="font-ui-mono text-xs font-semibold tracking-[0.025em] text-dim">
-          Po Agent Web
-        </span>
-      </div>
-
       <CwdPicker
         cwd={selectedCwd}
         home={home}
@@ -191,104 +233,119 @@ export function SessionSidebar({
 
       <Separator />
 
-      <div className="flex items-center gap-1 px-2.5 pt-2 pb-1.5 border-b border-line-subtle">
-        <span className="flex-1 text-xs font-semibold text-muted">
-          {t.sessions.title}
-        </span>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              aria-label={t.sessions.new}
-              disabled={!selectedCwd}
-              onClick={() =>
-                selectedCwd && onNewSession(crypto.randomUUID(), selectedCwd)
-              }
-              size="icon-sm"
-              type="button"
-              variant="ghost"
-            >
-              <Plus />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>{t.sessions.new}</TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              aria-label={t.sessions.refreshSessions}
-              onClick={manualRefresh}
-              size="icon-sm"
-              type="button"
-              variant="ghost"
-            >
-              {refreshed ? (
-                <Check className="text-success" />
-              ) : (
-                <RefreshCw />
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>{t.sessions.refreshSessions}</TooltipContent>
-        </Tooltip>
+      <div className="flex min-h-0 flex-1 flex-col" ref={flexRegionRef}>
+        <div className="flex min-h-0 flex-col" style={sessionRegionStyle}>
+          <div className="flex items-center gap-1 px-2.5 pt-2 pb-1.5 border-b border-line-subtle">
+            <span className="flex-1 text-xs font-semibold text-muted">
+              {t.sessions.title}
+            </span>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  aria-label={t.sessions.new}
+                  disabled={!selectedCwd}
+                  onClick={() =>
+                    selectedCwd && onNewSession(crypto.randomUUID(), selectedCwd)
+                  }
+                  size="icon-sm"
+                  type="button"
+                  variant="ghost"
+                >
+                  <Plus />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{t.sessions.new}</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  aria-label={t.sessions.refreshSessions}
+                  onClick={manualRefresh}
+                  size="icon-sm"
+                  type="button"
+                  variant="ghost"
+                >
+                  {refreshed ? (
+                    <Check className="text-success" />
+                  ) : (
+                    <RefreshCw />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{t.sessions.refreshSessions}</TooltipContent>
+            </Tooltip>
+          </div>
+          <ScrollArea className="min-h-20 flex-1">
+            {loading ? (
+              <div
+                className="space-y-2 px-3 py-3.5"
+                aria-label={t.sessions.loadingSessions}
+              >
+                <Skeleton className="h-[54px] w-full" />
+                <Skeleton className="h-[54px] w-[88%]" />
+                <Skeleton className="h-[54px] w-[72%]" />
+              </div>
+            ) : error ? (
+              <div className="p-3 text-[11px] text-destructive">
+                <p>{error}</p>
+                <Button
+                  className="mt-2"
+                  onClick={() => void refresh(true)}
+                  size="sm"
+                  variant="outline"
+                >
+                  {t.common.retry}
+                </Button>
+              </div>
+            ) : !selectedCwd ? (
+              <div className="p-4 text-center text-[11px] text-dim">
+                {t.sessions.selectProjectToViewSessions}
+              </div>
+            ) : tree.length ? (
+              <div className="py-1">
+                <SessionTree
+                  nodes={tree}
+                  onChanged={refresh}
+                  onDeleted={onSessionDeleted}
+                  onSelect={(session) => {
+                    if (session.draft) onNewSession(session.id, session.cwd);
+                    else onSelectSession(session);
+                  }}
+                  selectedSessionId={selectedSessionId}
+                />
+              </div>
+            ) : (
+              <div className="p-4 text-center text-[11px] text-dim">
+                {t.sessions.noSessions}
+              </div>
+            )}
+          </ScrollArea>
+        </div>
+
+        {showSplitHandle ? (
+          <ResizeHandle
+            ariaLabel={t.sessions.resizeExplorer}
+            axis="y"
+            direction={1}
+            max={sessionBounds.max}
+            min={sessionBounds.min}
+            onResize={setSessionPanelHeight}
+            value={sessionPanelHeight ?? 0}
+          />
+        ) : null}
+
+        {selectedCwd ? (
+          <FileExplorer
+            cwd={selectedCwd}
+            key={selectedCwd}
+            onAtMention={onAtMention}
+            onOpenChange={setFileExplorerOpen}
+            onOpenFile={onOpenFile}
+            open={fileExplorerOpen}
+            refreshKey={explorerRefreshKey}
+          />
+        ) : null}
       </div>
-      <ScrollArea
-        className={selectedCwd ? "min-h-20 flex-1" : "min-h-20 flex-[1_1_100%]"}
-      >
-        {loading ? (
-          <div
-            className="space-y-2 px-3 py-3.5"
-            aria-label={t.sessions.loadingSessions}
-          >
-            <Skeleton className="h-[54px] w-full" />
-            <Skeleton className="h-[54px] w-[88%]" />
-            <Skeleton className="h-[54px] w-[72%]" />
-          </div>
-        ) : error ? (
-          <div className="p-3 text-[11px] text-destructive">
-            <p>{error}</p>
-            <Button
-              className="mt-2"
-              onClick={() => void refresh(true)}
-              size="sm"
-              variant="outline"
-            >
-              {t.common.retry}
-            </Button>
-          </div>
-        ) : !selectedCwd ? (
-          <div className="p-4 text-center text-[11px] text-dim">
-            {t.sessions.selectProjectToViewSessions}
-          </div>
-        ) : tree.length ? (
-          <div className="py-1">
-            <SessionTree
-              nodes={tree}
-              onChanged={refresh}
-              onDeleted={onSessionDeleted}
-              onSelect={(session) => {
-                if (session.draft) onNewSession(session.id, session.cwd);
-                else onSelectSession(session);
-              }}
-              selectedSessionId={selectedSessionId}
-            />
-          </div>
-        ) : (
-          <div className="p-4 text-center text-[11px] text-dim">
-            {t.sessions.noSessions}
-          </div>
-        )}
-      </ScrollArea>
-
-      {selectedCwd ? (
-        <FileExplorer
-          cwd={selectedCwd}
-          key={selectedCwd}
-          onAtMention={onAtMention}
-          onOpenFile={onOpenFile}
-          refreshKey={explorerRefreshKey}
-        />
-      ) : null}
-
     </div>
   );
 }
