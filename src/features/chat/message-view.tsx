@@ -353,7 +353,6 @@ function AssistantTurnView({
     )
     .map((item) => item.block.text)
     .join("\n\n");
-  const usage = aggregateUsage(turn.messages);
 
   return (
     <div>
@@ -368,9 +367,6 @@ function AssistantTurnView({
         {identityMessage?.provider && identityMessage.model
           ? identityMessage.model
           : "Pi Agent"}
-        {turn.streaming && latestMessage ? (
-          <StreamingSpeed message={latestMessage} />
-        ) : null}
       </div>
 
       {process.length ? (
@@ -440,16 +436,7 @@ function AssistantTurnView({
 
       {!turn.streaming ? (
         <div className="mt-2 flex min-h-7 items-center gap-2 text-[10px] text-dim opacity-100 transition-opacity min-[641px]:opacity-0 min-[641px]:group-hover:opacity-100 min-[641px]:group-focus-within:opacity-100">
-          
-          {usage ? (
-            <span>
-              {t.chat.message.usageIn} {usage.input} /{" "}
-              {t.chat.message.usageOut} {usage.output} /{" "}
-              {t.chat.message.usageCache} {usage.cacheRead} / $
-              {usage.cost.toFixed(4)}
-            </span>
-          ) : null}
-
+          {/*  copy button */}
           {text ? (
             <SmallAction
               label={copied ? t.chat.message.copied : t.chat.message.copy}
@@ -641,22 +628,6 @@ function executionStepKey(step: AssistantTurnBlock, index: number) {
     : `${step.messageIndex}-${step.block.type}-${index}`;
 }
 
-function aggregateUsage(messages: AssistantMessage[]) {
-  const usage = messages.reduce(
-    (total, message) => {
-      if (!message.usage) return total;
-      total.input += message.usage.input;
-      total.output += message.usage.output;
-      total.cacheRead += message.usage.cacheRead;
-      total.cost += message.usage.cost.total;
-      total.present = true;
-      return total;
-    },
-    { input: 0, output: 0, cacheRead: 0, cost: 0, present: false },
-  );
-  return usage.present ? usage : null;
-}
-
 function failureSummary(
   code: AgentFailure["code"],
   fallback: string,
@@ -738,31 +709,6 @@ function CodeBlock({ code, language }: { code: string; language: string }) {
         {code}
       </SyntaxHighlighter>
     </div>
-  );
-}
-
-function StreamingSpeed({ message }: { message: AssistantMessage }) {
-  const { t } = useI18n();
-  const startedAt = useRef<number | null>(null);
-  const [elapsed, setElapsed] = useState(0.3);
-  useEffect(() => {
-    startedAt.current = Date.now();
-    const timer = window.setInterval(
-      () =>
-        setElapsed(
-          Math.max(0.3, (Date.now() - (startedAt.current ?? Date.now())) / 1000),
-        ),
-      300,
-    );
-    return () => window.clearInterval(timer);
-  }, []);
-  const chars = JSON.stringify(message.content).length;
-  const tokens = Math.ceil(chars / 4);
-  const speed = tokens / elapsed;
-  return (
-    <span className="ml-2 text-dim">
-      ~{tokens} {t.chat.message.tokens} / {speed.toFixed(1)} {t.chat.message.tokensPerSecond}
-    </span>
   );
 }
 

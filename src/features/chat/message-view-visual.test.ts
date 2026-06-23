@@ -60,4 +60,11 @@ describe("chat execution process visual contract", () => {
     expect(source).toContain("function CompactionSummaryView");
     expect(source).toContain("<CompactionSummaryView");
   });
+
+  it("keeps raw token usage and estimated generation speed out of messages", () => {
+    expect(source).not.toContain("aggregateUsage");
+    expect(source).not.toContain("StreamingSpeed");
+    expect(source).not.toContain("t.chat.message.usageIn");
+    expect(source).not.toContain("t.chat.message.tokensPerSecond");
+  });
 });
