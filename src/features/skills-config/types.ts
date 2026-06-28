@@ -26,7 +26,6 @@ export interface SkillDiagnostic {
 export interface SkillLoadResult {
   skills: SkillInfo[];
   diagnostics: SkillDiagnostic[];
-  homeDir: string;
 }
 
 export interface SkillSearchResult {
@@ -42,5 +41,4 @@ export interface SkillSearchResult {
 export interface InstallSkillResult {
   installed: true;
   skills: SkillInfo[];
-  output?: string;
 }

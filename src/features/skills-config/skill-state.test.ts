@@ -41,8 +41,8 @@ describe("skills config state", () => {
       },
     };
 
-    expect(groupSkills([global, pathSkill, base]).map((group) => group.label))
-      .toEqual(["Project", "Global", "Path"]);
+    expect(groupSkills([global, pathSkill, base]).map((group) => group.scope))
+      .toEqual(["project", "user", "temporary"]);
   });
 
   it("keeps selection after refresh and repairs a missing selection", () => {

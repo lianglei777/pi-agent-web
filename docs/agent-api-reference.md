@@ -1771,8 +1771,7 @@ GET /api/skills?cwd=C%3A%5Cworkspace%5Cproject
       "message": "Invalid frontmatter",
       "path": "C:\\...\\SKILL.md"
     }
-  ],
-  "homeDir": "C:\\Users\\example"
+  ]
 }
 ```
 
@@ -1903,8 +1902,7 @@ Global Scope 会追加：
       "name": "react-testing",
       "displayPath": ".agents\\skills\\react-testing\\SKILL.md"
     }
-  ],
-  "output": "..."
+  ]
 }
 ```
 

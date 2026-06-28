@@ -128,7 +128,18 @@ export function SkillsConfigDialog({
                 <ul className="mt-2 space-y-2 text-muted">
                   {skills.diagnostics.map((diagnostic, index) => (
                     <li key={`${diagnostic.message}-${index}`}>
-                      {diagnostic.message}
+                      <span
+                        className={`mr-1.5 font-medium ${
+                          diagnostic.severity === "warning"
+                            ? "text-warning"
+                            : diagnostic.severity === "error"
+                              ? "text-destructive"
+                              : "text-primary"
+                        }`}
+                      >
+                        {t.skills.diagnosticSeverity[diagnostic.severity]}
+                      </span>
+                      <span>{diagnostic.message}</span>
                       {diagnostic.path ? (
                         <span className="mt-0.5 block break-all font-ui-mono text-[11px] text-dim">
                           {diagnostic.path}
@@ -162,7 +173,14 @@ export function SkillsConfigDialog({
             {adding ? (
               <AddSkillPanel
                 cwd={cwd}
-                onInstalled={() => void skills.refresh()}
+                onInstalled={(result) => {
+                  const installedSkillId = result.skills[0]?.skillId;
+                  if (installedSkillId) {
+                    skills.setSelectedSkillId(installedSkillId);
+                  }
+                  setAdding(false);
+                  void skills.refresh();
+                }}
               />
             ) : skills.selectedSkill ? (
               <SkillDetail

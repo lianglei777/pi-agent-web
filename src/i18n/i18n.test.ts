@@ -32,6 +32,15 @@ describe("dictionaries", () => {
   it("keep zh and en keys in sync", () => {
     expect(flattenKeys(zh)).toEqual(flattenKeys(en));
   });
+
+  it("only promises the available add-skill path", () => {
+    expect(en.skills.noSkillsFoundDescription).toBe(
+      "Add a skill from the market.",
+    );
+    expect(zh.skills.noSkillsFoundDescription).toBe(
+      "从技能市场添加一个技能。",
+    );
+  });
 });
 
 function flattenKeys(value: unknown, prefix = ""): string[] {

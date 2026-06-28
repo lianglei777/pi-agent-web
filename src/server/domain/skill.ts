@@ -42,7 +42,6 @@ export interface InstallSkillInput {
 export interface InstallSkillResult {
   installed: true;
   skills: SkillInfo[];
-  output?: string;
 }
 
 export interface SetSkillInvocationInput {
@@ -55,5 +54,4 @@ export interface SetSkillInvocationInput {
 export interface SkillLoadResult {
   skills: SkillInfo[];
   diagnostics: SkillDiagnostic[];
-  homeDir: string;
 }

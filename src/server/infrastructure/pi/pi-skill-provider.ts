@@ -46,7 +46,6 @@ export class PiSkillProvider implements SkillProvider {
         message: diagnostic.message,
         path: diagnostic.path,
       })),
-      homeDir: os.homedir(),
     };
   }
 
@@ -112,7 +111,7 @@ export class PiSkillProvider implements SkillProvider {
       const npxCli = await resolveNpxCli();
       const args = buildInstallArgs(npxCli, input);
 
-      const result = await this.processes.run(process.execPath, args, {
+      await this.processes.run(process.execPath, args, {
         cwd,
         timeoutMs: 90_000,
         maxOutputBytes: MAX_COMMAND_OUTPUT,
@@ -153,7 +152,6 @@ export class PiSkillProvider implements SkillProvider {
         skills: verified.skills.filter((skill) =>
           installedIds.has(skill.skillId),
         ),
-        output: cleanAnsi(`${result.stdout}\n${result.stderr}`).trim(),
       };
     } catch (error) {
       if (error instanceof AppError) throw error;

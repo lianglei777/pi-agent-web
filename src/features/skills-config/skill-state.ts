@@ -2,7 +2,7 @@ import type { SkillInfo } from "./types";
 
 export interface SkillGroup {
   id: string;
-  label: string;
+  scope: SkillInfo["sourceInfo"]["scope"];
   detail: string;
   skills: SkillInfo[];
 }
@@ -13,7 +13,7 @@ export function groupSkills(skills: SkillInfo[]): SkillGroup[] {
     const id = groupId(skill);
     const group = groups.get(id) ?? {
       id,
-      label: groupLabel(skill),
+      scope: skill.sourceInfo.scope,
       detail: skill.sourceInfo.source,
       skills: [],
     };
@@ -47,12 +47,6 @@ function groupId(skill: SkillInfo): string {
   if (skill.sourceInfo.scope === "project") return "project";
   if (skill.sourceInfo.scope === "user") return "global";
   return `path:${skill.sourceInfo.source}`;
-}
-
-function groupLabel(skill: SkillInfo): string {
-  if (skill.sourceInfo.scope === "project") return "Project";
-  if (skill.sourceInfo.scope === "user") return "Global";
-  return "Path";
 }
 
 function groupRank(id: string): number {

@@ -8,7 +8,6 @@ describe("SkillService", () => {
     const load = vi.fn().mockResolvedValue({
       skills: [],
       diagnostics: [],
-      homeDir: "",
     });
     const provider = { load } as unknown as SkillProvider;
     const root = path.resolve("C:\\workspace");
@@ -29,7 +28,6 @@ describe("SkillService", () => {
     const setModelInvocationDisabled = vi.fn().mockResolvedValue({
       skills: [],
       diagnostics: [],
-      homeDir: "",
     });
     const root = path.resolve("C:\\workspace");
     const service = new SkillService(

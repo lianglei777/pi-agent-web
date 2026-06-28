@@ -9,7 +9,7 @@ describe("skills config API client", () => {
   it("sends secure toggle identity without a file path", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(
-        JSON.stringify({ skills: [], diagnostics: [], homeDir: "" }),
+        JSON.stringify({ skills: [], diagnostics: [] }),
         { status: 200 },
       ),
     );

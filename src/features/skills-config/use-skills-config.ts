@@ -9,7 +9,6 @@ import type { SkillLoadResult } from "./types";
 const EMPTY_RESULT: SkillLoadResult = {
   skills: [],
   diagnostics: [],
-  homeDir: "",
 };
 
 export function useSkillsConfig(cwd: string) {
@@ -32,6 +31,7 @@ export function useSkillsConfig(cwd: string) {
     requestRef.current?.abort();
     const controller = new AbortController();
     requestRef.current = controller;
+    setSavingSkillId(null);
     setLoading(true);
     setError(null);
     try {
@@ -65,6 +65,7 @@ export function useSkillsConfig(cwd: string) {
     requestRef.current?.abort();
     const controller = new AbortController();
     requestRef.current = controller;
+    setLoading(false);
     setSavingSkillId(selectedSkill.skillId);
     setError(null);
     try {

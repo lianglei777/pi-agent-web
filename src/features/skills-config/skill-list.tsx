@@ -1,4 +1,4 @@
-import { Check, CircleSlash2 } from "lucide-react";
+import { Bot, Terminal } from "lucide-react";
 import { useI18n } from "@/i18n/use-i18n";
 import { groupSkills } from "./skill-state";
 import type { SkillInfo } from "./types";
@@ -27,7 +27,7 @@ export function SkillList({
               className="text-[11px] font-semibold uppercase tracking-[0.12em] text-dim"
               id={`skill-group-${group.id}`}
             >
-              {group.label}
+              {groupLabel(group.scope, t)}
             </h3>
             <p className="truncate text-[11px] text-dim" title={group.detail}>
               {group.detail}
@@ -46,11 +46,24 @@ export function SkillList({
                 role="option"
                 type="button"
               >
-                <span className="mt-0.5 rounded-md border border-line bg-panel p-1">
+                <span
+                  aria-label={
+                    skill.disableModelInvocation
+                      ? t.skills.manualInvocationOnly
+                      : t.skills.modelInvocationAllowed
+                  }
+                  className="mt-1 shrink-0"
+                  role="img"
+                  title={
+                    skill.disableModelInvocation
+                      ? t.skills.manualInvocationOnly
+                      : t.skills.modelInvocationAllowed
+                  }
+                >
                   {skill.disableModelInvocation ? (
-                    <CircleSlash2 className="size-3.5 text-dim" />
+                    <Terminal className="size-3.5 text-dim" />
                   ) : (
-                    <Check className="size-3.5 text-primary" />
+                    <Bot className="size-3.5 text-accent" />
                   )}
                 </span>
                 <span className="min-w-0 flex-1">
@@ -68,4 +81,13 @@ export function SkillList({
       ))}
     </div>
   );
+}
+
+function groupLabel(
+  scope: SkillInfo["sourceInfo"]["scope"],
+  t: ReturnType<typeof useI18n>["t"],
+): string {
+  if (scope === "project") return t.common.project;
+  if (scope === "user") return t.common.global;
+  return t.skills.path;
 }
