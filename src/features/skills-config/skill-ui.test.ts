@@ -14,8 +14,8 @@ const hookSource = readFileSync(
   fileURLToPath(new URL("./use-skills-config.ts", import.meta.url)),
   "utf8",
 );
-const dialogSource = readFileSync(
-  fileURLToPath(new URL("./skills-config-dialog.tsx", import.meta.url)),
+const pageSource = readFileSync(
+  fileURLToPath(new URL("./skills-page.tsx", import.meta.url)),
   "utf8",
 );
 
@@ -49,18 +49,18 @@ describe("skills config UI contract", () => {
   });
 
   it("selects the installed skill and returns to its details", () => {
-    expect(dialogSource).toContain("result.skills[0]?.skillId");
-    expect(dialogSource).toContain("skills.setSelectedSkillId");
-    expect(dialogSource).toContain("setAdding(false)");
-    expect(dialogSource).toContain("skills.refresh()");
+    expect(pageSource).toContain("result.skills[0]?.skillId");
+    expect(pageSource).toContain("skills.setSelectedSkillId");
+    expect(pageSource).toContain("setAdding(false)");
+    expect(pageSource).toContain("skills.refresh()");
   });
 
   it("labels every diagnostic severity with semantic color", () => {
-    expect(dialogSource).toContain(
+    expect(pageSource).toContain(
       "t.skills.diagnosticSeverity[diagnostic.severity]",
     );
-    expect(dialogSource).toContain('"text-warning"');
-    expect(dialogSource).toContain('"text-destructive"');
-    expect(dialogSource).toContain('"text-primary"');
+    expect(pageSource).toContain('"text-warning"');
+    expect(pageSource).toContain('"text-destructive"');
+    expect(pageSource).toContain('"text-primary"');
   });
 });

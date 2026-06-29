@@ -33,15 +33,12 @@ export type SessionSidebarProps = {
   selectedCwd: string | null;
   initialSessionId?: string | null;
   refreshKey?: number;
-  explorerRefreshKey?: number;
   draftSession?: { id: string; cwd: string; created: string } | null;
   onSelectSession: (session: SessionInfo, isRestore?: boolean) => void;
   onNewSession: (temporaryId: string, cwd: string) => void;
   onSessionDeleted: (session: SessionInfo) => void;
   onCwdChange: (cwd: string) => void;
   onInitialRestoreDone?: () => void;
-  onOpenFile?: (path: string, name: string) => void;
-  onAtMention?: (path: string) => void;
 };
 
 export function SessionSidebar({

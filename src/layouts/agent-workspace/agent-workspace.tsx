@@ -8,31 +8,27 @@ import {
   type CSSProperties,
 } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { ResizeHandle } from "@/components/ui/resize-handle";
-import {
-  TooltipProvider,
-} from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { ChatCenter } from "@/features/chat/chat-center";
-import type {
-  ContextUsage,
-  SessionStats,
-  SessionTreeNode,
-} from "@/features/chat/agent-types";
-import {
-  FilePanel,
-  type OpenFile,
-} from "@/features/file-panel/file-panel";
-import { ModelsConfigDialog } from "@/features/models-config";
-import { SessionSidebar } from "@/features/session-sidebar/session-sidebar";
+import { FilePanel, type OpenFile } from "@/features/file-panel/file-panel";
+import { ModelProviderPage } from "@/features/models-config";
 import { loadSessions } from "@/features/session-sidebar/api";
-import { getSessionTitle } from "@/features/session-sidebar/session-utils";
-import type { SessionInfo } from "@/features/session-sidebar/types";
-import { SkillsConfigDialog } from "@/features/skills-config/skills-config-dialog";
-import { useI18n } from "@/i18n/use-i18n";
 import {
-  WorkspaceTopBar,
-  type TopPanel,
-} from "./workspace-top-bar";
+  getProjectName,
+  getSessionTitle,
+} from "@/features/session-sidebar/session-utils";
+import type { SessionInfo } from "@/features/session-sidebar/types";
+import { SkillsPage } from "@/features/skills-config/skills-page";
+import { useI18n } from "@/i18n/use-i18n";
 import {
   DEFAULT_FILE_PANEL_WIDTH,
   DEFAULT_SIDEBAR_WIDTH,
@@ -41,6 +37,12 @@ import {
   getSidebarWidthBounds,
   type PanelWidths,
 } from "./panel-sizing";
+import {
+  shouldConfirmWorkspaceNavigation,
+  type WorkspaceView,
+} from "./workspace-navigation";
+import { WorkspaceSidebar } from "./workspace-sidebar";
+import { WorkspaceTopBar } from "./workspace-top-bar";
 
 type DraftSession = {
   id: string;
@@ -48,21 +50,14 @@ type DraftSession = {
   created: string;
 };
 
-export function AgentWorkspace({
-  hasActiveSession = false,
-}: {
-  hasActiveSession?: boolean;
-}) {
+export function AgentWorkspace() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [filePanelOpen, setFilePanelOpen] = useState(false);
-  const [topPanel, setTopPanel] = useState<TopPanel>(null);
   const [dark, setDark] = useState(false);
-  const [modelsOpen, setModelsOpen] = useState(false);
-  const [skillsOpen, setSkillsOpen] = useState(false);
-  const [sessionStarted, setSessionStarted] = useState(hasActiveSession);
-  const [selectedSession, setSelectedSession] = useState<SessionInfo | null>(
-    null,
-  );
+  const [activeView, setActiveView] = useState<WorkspaceView>("chat");
+  const [modelProviderDirty, setModelProviderDirty] = useState(false);
+  const [confirmingDiscard, setConfirmingDiscard] = useState(false);
+  const [selectedSession, setSelectedSession] = useState<SessionInfo | null>(null);
   const [activeCwd, setActiveCwd] = useState<string | null>(null);
   const [newSessionCwd, setNewSessionCwd] = useState<string | null>(null);
   const [draftSession, setDraftSession] = useState<DraftSession | null>(null);
@@ -74,14 +69,6 @@ export function AgentWorkspace({
   >(undefined);
   const [sessionRefreshKey, setSessionRefreshKey] = useState(0);
   const [explorerRefreshKey, setExplorerRefreshKey] = useState(0);
-  const [branchTree, setBranchTree] = useState<SessionTreeNode[]>([]);
-  const [activeLeafId, setActiveLeafId] = useState<string | null>(null);
-  const [leafChange, setLeafChange] = useState<
-    ((leafId: string) => void) | null
-  >(null);
-  const [systemPrompt, setSystemPrompt] = useState<string | null>(null);
-  const [sessionStats, setSessionStats] = useState<SessionStats | null>(null);
-  const [contextUsage, setContextUsage] = useState<ContextUsage | null>(null);
   const [panelWidths, setPanelWidths] = useState<PanelWidths>({
     filePanel: DEFAULT_FILE_PANEL_WIDTH,
     sidebar: DEFAULT_SIDEBAR_WIDTH,
@@ -91,12 +78,13 @@ export function AgentWorkspace({
   >(null);
   const [workspaceWidth, setWorkspaceWidth] = useState(1280);
   const workspaceRef = useRef<HTMLDivElement>(null);
-  const sessionIsActive = hasActiveSession || sessionStarted;
+  const pendingNavigationRef = useRef<(() => void) | null>(null);
   const { t } = useI18n();
+  const showFilePanel = activeView === "chat" && filePanelOpen;
   const sidebarBounds = getSidebarWidthBounds(
     workspaceWidth,
     panelWidths.filePanel,
-    filePanelOpen,
+    showFilePanel,
   );
   const filePanelBounds = getFilePanelWidthBounds(
     workspaceWidth,
@@ -136,7 +124,7 @@ export function AgentWorkspace({
       setWorkspaceWidth(workspace.clientWidth);
       setPanelWidths((current) =>
         fitPanelWidths(workspace.clientWidth, current, {
-          filePanelOpen,
+          filePanelOpen: showFilePanel,
           sidebarOpen,
         }),
       );
@@ -145,7 +133,7 @@ export function AgentWorkspace({
     observer.observe(workspace);
 
     return () => observer.disconnect();
-  }, [filePanelOpen, sidebarOpen]);
+  }, [showFilePanel, sidebarOpen]);
 
   function toggleTheme() {
     const nextDark = !dark;
@@ -154,8 +142,29 @@ export function AgentWorkspace({
     window.localStorage.setItem("pi-theme", nextDark ? "dark" : "light");
   }
 
-  function toggleTopPanel(panel: Exclude<TopPanel, null>) {
-    setTopPanel((current) => (current === panel ? null : panel));
+  const requestNavigation = useCallback(
+    (action: () => void) => {
+      if (shouldConfirmWorkspaceNavigation(activeView, modelProviderDirty)) {
+        pendingNavigationRef.current = action;
+        setConfirmingDiscard(true);
+        return;
+      }
+      action();
+    },
+    [activeView, modelProviderDirty],
+  );
+
+  function cancelDiscard() {
+    pendingNavigationRef.current = null;
+    setConfirmingDiscard(false);
+  }
+
+  function confirmDiscard() {
+    const action = pendingNavigationRef.current;
+    pendingNavigationRef.current = null;
+    setModelProviderDirty(false);
+    setConfirmingDiscard(false);
+    action?.();
   }
 
   const updateSessionUrl = useCallback((sessionId: string | null) => {
@@ -166,99 +175,93 @@ export function AgentWorkspace({
   }, []);
 
   const resetChat = useCallback(() => {
-    setSessionStarted(false);
-    setTopPanel(null);
     setChatInstanceKey((current) => current + 1);
-    setBranchTree([]);
-    setActiveLeafId(null);
-    setLeafChange(null);
-    setSystemPrompt(null);
-    setSessionStats(null);
-    setContextUsage(null);
   }, []);
 
-  const handleCwdChange = useCallback((cwd: string) => {
-    setSkillsOpen(false);
-    setActiveCwd(cwd);
-    setOpenFile(null);
-    if (selectedSession?.cwd !== cwd) setSelectedSession(null);
-    setNewSessionCwd(cwd);
-    setDraftSession(null);
-    updateSessionUrl(null);
-    resetChat();
-  }, [resetChat, selectedSession, updateSessionUrl]);
+  const handleCwdChange = useCallback(
+    (cwd: string) => {
+      setActiveCwd(cwd);
+      setOpenFile(null);
+      if (selectedSession?.cwd !== cwd) setSelectedSession(null);
+      setNewSessionCwd(cwd);
+      setDraftSession(null);
+      setActiveView("chat");
+      updateSessionUrl(null);
+      resetChat();
+    },
+    [resetChat, selectedSession, updateSessionUrl],
+  );
 
-  const handleSelectSession = useCallback((session: SessionInfo, isRestore = false) => {
-    setActiveCwd(session.cwd);
-    setSelectedSession(session);
-    setNewSessionCwd(null);
-    setDraftSession(null);
-    setSessionStarted(true);
-    if (!isRestore) updateSessionUrl(session.id);
-    setChatInstanceKey((current) => current + 1);
-  }, [updateSessionUrl]);
+  const handleSelectSession = useCallback(
+    (session: SessionInfo, isRestore = false) => {
+      setActiveCwd(session.cwd);
+      setSelectedSession(session);
+      setNewSessionCwd(null);
+      setDraftSession(null);
+      setActiveView("chat");
+      if (!isRestore) updateSessionUrl(session.id);
+      setChatInstanceKey((current) => current + 1);
+    },
+    [updateSessionUrl],
+  );
 
-  const handleNewSession = useCallback((temporaryId: string, cwd: string) => {
-    resetChat();
-    setSelectedSession(null);
-    setNewSessionCwd(cwd);
-    setDraftSession({
-      id: temporaryId,
-      cwd,
-      created: new Date().toISOString(),
-    });
-    updateSessionUrl(null);
-  }, [resetChat, updateSessionUrl]);
+  const handleNewSession = useCallback(
+    (temporaryId: string, cwd: string) => {
+      resetChat();
+      setSelectedSession(null);
+      setNewSessionCwd(cwd);
+      setDraftSession({
+        id: temporaryId,
+        cwd,
+        created: new Date().toISOString(),
+      });
+      setActiveView("chat");
+      updateSessionUrl(null);
+    },
+    [resetChat, updateSessionUrl],
+  );
 
-  const handleSessionDeleted = useCallback((session: SessionInfo) => {
-    if (selectedSession?.id !== session.id) return;
-    setSelectedSession(null);
-    setNewSessionCwd(session.cwd);
-    setDraftSession({
-      id: crypto.randomUUID(),
-      cwd: session.cwd,
-      created: new Date().toISOString(),
-    });
-    updateSessionUrl(null);
-    resetChat();
-  }, [resetChat, selectedSession, updateSessionUrl]);
+  const handleSessionDeleted = useCallback(
+    (session: SessionInfo) => {
+      if (selectedSession?.id !== session.id) return;
+      setSelectedSession(null);
+      setNewSessionCwd(session.cwd);
+      setDraftSession({
+        id: crypto.randomUUID(),
+        cwd: session.cwd,
+        created: new Date().toISOString(),
+      });
+      updateSessionUrl(null);
+      resetChat();
+    },
+    [resetChat, selectedSession, updateSessionUrl],
+  );
 
-  const selectSessionById = useCallback(async (sessionId: string) => {
-    for (let attempt = 0; attempt < 4; attempt += 1) {
-      const sessions = await loadSessions();
-      const next = sessions.find((item) => item.id === sessionId);
-      if (next) {
-        handleSelectSession(next);
-        setSessionRefreshKey((current) => current + 1);
-        return;
+  const selectSessionById = useCallback(
+    async (sessionId: string) => {
+      for (let attempt = 0; attempt < 4; attempt += 1) {
+        const sessions = await loadSessions();
+        const next = sessions.find((item) => item.id === sessionId);
+        if (next) {
+          handleSelectSession(next);
+          setSessionRefreshKey((current) => current + 1);
+          return;
+        }
+        await new Promise((resolve) => window.setTimeout(resolve, 150));
       }
-      await new Promise((resolve) => window.setTimeout(resolve, 150));
-    }
-  }, [handleSelectSession]);
+    },
+    [handleSelectSession],
+  );
 
   const handleAgentEnd = useCallback(() => {
     setSessionRefreshKey((current) => current + 1);
     setExplorerRefreshKey((current) => current + 1);
   }, []);
 
-  const handleBranchDataChange = useCallback(
-    (
-      tree: SessionTreeNode[],
-      leafId: string | null,
-      changeLeaf: (leafId: string) => void,
-    ) => {
-      setBranchTree(tree);
-      setActiveLeafId(leafId);
-      setLeafChange(() => changeLeaf);
-    },
-    [],
-  );
-
   const handleSessionCreated = useCallback(
     (sessionId: string) => {
       setNewSessionCwd(null);
       setDraftSession(null);
-      setSessionStarted(true);
       void selectSessionById(sessionId);
     },
     [selectSessionById],
@@ -269,134 +272,133 @@ export function AgentWorkspace({
     [selectSessionById],
   );
 
+  const handleOpenFile = useCallback((path: string, name: string) => {
+    setOpenFile({ path, name });
+    setFilePanelOpen(true);
+  }, []);
+
+  const handleAtMention = useCallback((path: string) => {
+    window.dispatchEvent(
+      new CustomEvent("pi:mention-file", { detail: path }),
+    );
+  }, []);
+
   return (
     <TooltipProvider>
       <div
-        className="flex h-dvh w-screen overflow-hidden bg-canvas"
-        data-file-panel-open={filePanelOpen}
+        className="flex h-dvh min-w-[1024px] overflow-hidden bg-canvas"
+        data-file-panel-open={showFilePanel}
         data-sidebar-open={sidebarOpen}
         data-testid="agent-workspace"
         ref={workspaceRef}
       >
-
-        {/* Left sidebar */}
-        <>
-          {/* Mobile: semi-transparent overlay behind the sliding sidebar; tapping it closes the sidebar */}
-          <Button
-            aria-label={t.workspace.closeSidebar}
-            className={`fixed inset-0 z-199 hidden h-auto cursor-default rounded-none bg-black/40 p-0 hover:bg-black/40 max-[640px]:block ${sidebarOpen
-                ? "max-[640px]:visible max-[640px]:opacity-100"
-                : "max-[640px]:invisible max-[640px]:opacity-0"
-              }`}
-            onClick={() => setSidebarOpen(false)}
-            type="button"
-            variant="ghost"
-          />
-
-          {/* sidebar content  */}
-          <aside
-            className={`fixed inset-y-0 left-0 z-200 w-[min(280px,85vw)] flex-none overflow-hidden border-r border-line-subtle bg-panel shadow-[var(--shadow-floating)] transition-transform duration-[var(--motion-slow)] min-[641px]:relative min-[641px]:inset-auto min-[641px]:shadow-none min-[641px]:transition-[width,border-width] ${resizingPanel === "sidebar" ? "min-[641px]:duration-0" : "min-[641px]:duration-[var(--motion-standard)]"} ${sidebarOpen
-                ? "translate-x-0 min-[641px]:w-[var(--panel-width)] min-[641px]:border-r-0"
-                : "-translate-x-full min-[641px]:w-0 min-[641px]:translate-x-0 min-[641px]:border-r-0"
-              }`}
-            style={
-              sidebarOpen
-                ? {
-                    "--panel-width": `${panelWidths.sidebar}px`,
-                  } as CSSProperties
-                : undefined
-            }
-          >
-            <div className="flex h-full w-full flex-col max-[640px]:w-[min(280px,85vw)]">
-              <SessionSidebar
-                explorerRefreshKey={explorerRefreshKey}
-                initialSessionId={initialSessionId}
-                onAtMention={(path) =>
-                  window.dispatchEvent(
-                    new CustomEvent("pi:mention-file", { detail: path }),
-                  )
-                }
-                onCwdChange={handleCwdChange}
-                onInitialRestoreDone={() => updateSessionUrl(null)}
-                onNewSession={handleNewSession}
-                onOpenFile={(path, name) => {
-                  setOpenFile({ path, name });
-                  setFilePanelOpen(true);
-                }}
-                onSelectSession={handleSelectSession}
-                onSessionDeleted={handleSessionDeleted}
-                draftSession={draftSession}
-                selectedCwd={activeCwd}
-                selectedSessionId={
-                  selectedSession?.id ?? draftSession?.id ?? null
-                }
-                refreshKey={sessionRefreshKey}
-              />
-            </div>
-          </aside>
-          {sidebarOpen ? (
-            <ResizeHandle
-              ariaLabel={t.workspace.resizeSessionSidebar}
-              direction={1}
-              max={sidebarBounds.max}
-              min={sidebarBounds.min}
-              onResize={(sidebar) =>
-                setPanelWidths((current) => ({ ...current, sidebar }))
-              }
-              onResizeEnd={() => setResizingPanel(null)}
-              onResizeStart={() => setResizingPanel("sidebar")}
-              value={panelWidths.sidebar}
-            />
-          ) : null}
-        </>
-
-        {/* Center chat area */}
-        <section
-          className={`relative min-w-0 flex-1 flex-col bg-canvas ${
-            filePanelOpen ? "hidden min-[641px]:flex" : "flex"
-          }`}
+        <aside
+          className={`relative flex-none overflow-hidden bg-panel transition-[width,border-width] ${
+            resizingPanel === "sidebar"
+              ? "duration-0"
+              : "duration-[var(--motion-standard)]"
+          } ${sidebarOpen ? "w-[var(--panel-width)]" : "w-0"}`}
+          style={
+            sidebarOpen
+              ? ({ "--panel-width": `${panelWidths.sidebar}px` } as CSSProperties)
+              : undefined
+          }
         >
+          <div className="flex h-full w-[var(--panel-width)] flex-col">
+            <WorkspaceSidebar
+              activeView={activeView}
+              dark={dark}
+              onNewChat={() => {
+                if (!activeCwd) return;
+                requestNavigation(() =>
+                  handleNewSession(crypto.randomUUID(), activeCwd),
+                );
+              }}
+              onOpenModelProvider={() =>
+                requestNavigation(() => setActiveView("model-provider"))
+              }
+              onOpenSkills={() =>
+                requestNavigation(() => setActiveView("skills"))
+              }
+              onToggleTheme={toggleTheme}
+              sessionProps={{
+                draftSession,
+                initialSessionId,
+                onCwdChange: (cwd) =>
+                  requestNavigation(() => handleCwdChange(cwd)),
+                onInitialRestoreDone: () => updateSessionUrl(null),
+                onNewSession: (temporaryId, cwd) =>
+                  requestNavigation(() => handleNewSession(temporaryId, cwd)),
+                onSelectSession: (session, isRestore) =>
+                  requestNavigation(() =>
+                    handleSelectSession(session, isRestore),
+                  ),
+                onSessionDeleted: handleSessionDeleted,
+                refreshKey: sessionRefreshKey,
+                selectedCwd: activeCwd,
+                selectedSessionId:
+                  selectedSession?.id ?? draftSession?.id ?? null,
+              }}
+            />
+          </div>
+        </aside>
+        {sidebarOpen ? (
+          <ResizeHandle
+            ariaLabel={t.workspace.resizeSessionSidebar}
+            direction={1}
+            max={sidebarBounds.max}
+            min={sidebarBounds.min}
+            onResize={(sidebar) =>
+              setPanelWidths((current) => ({ ...current, sidebar }))
+            }
+            onResizeEnd={() => setResizingPanel(null)}
+            onResizeStart={() => setResizingPanel("sidebar")}
+            value={panelWidths.sidebar}
+          />
+        ) : null}
+
+        <section className="relative flex min-w-0 flex-1 flex-col bg-canvas">
           <WorkspaceTopBar
-            activeLeafId={activeLeafId}
-            branchTree={branchTree}
-            contextUsage={contextUsage}
-            dark={dark}
+            activeView={activeView}
             filePanelOpen={filePanelOpen}
-            hasActiveWorkspace={Boolean(activeCwd)}
-            onLeafChange={leafChange}
-            onOpenModels={() => setModelsOpen(true)}
-            onOpenSkills={() => setSkillsOpen(true)}
             onToggleFilePanel={() => setFilePanelOpen((open) => !open)}
             onToggleSidebar={() => setSidebarOpen((open) => !open)}
-            onToggleTheme={toggleTheme}
-            onToggleTopPanel={toggleTopPanel}
-            sessionIsActive={sessionIsActive}
+            projectName={activeCwd ? getProjectName(activeCwd) : null}
+            sessionTitle={
+              selectedSession ? getSessionTitle(selectedSession) : null
+            }
             sidebarOpen={sidebarOpen}
-            stats={sessionStats}
-            systemPrompt={systemPrompt}
-            topPanel={topPanel}
           />
 
-          <ChatCenter
-            key={chatInstanceKey}
-            modelsRevision={modelsRevision}
-            newSessionCwd={newSessionCwd}
-            onAgentEnd={handleAgentEnd}
-            onBranchDataChange={handleBranchDataChange}
-            onContextUsageChange={setContextUsage}
-            onSessionCreated={handleSessionCreated}
-            onSessionForked={handleSessionForked}
-            onSessionStatsChange={setSessionStats}
-            onSystemPromptChange={setSystemPrompt}
-            session={selectedSession}
-          />
+          <div
+            className={
+              activeView === "chat" ? "flex min-h-0 flex-1" : "hidden"
+            }
+          >
+            <ChatCenter
+              key={chatInstanceKey}
+              modelsRevision={modelsRevision}
+              newSessionCwd={newSessionCwd}
+              onAgentEnd={handleAgentEnd}
+              onSessionCreated={handleSessionCreated}
+              onSessionForked={handleSessionForked}
+              session={selectedSession}
+            />
+          </div>
+
+          {activeView === "model-provider" ? (
+            <ModelProviderPage
+              onDirtyChange={setModelProviderDirty}
+              onSaved={() => setModelsRevision((current) => current + 1)}
+            />
+          ) : null}
+          {activeView === "skills" && activeCwd ? (
+            <SkillsPage cwd={activeCwd} />
+          ) : null}
         </section>
 
-
-
-        {/* Right file panel */}
-        <>
-          {filePanelOpen ? (
+        {activeView === "chat" && filePanelOpen ? (
+          <>
             <ResizeHandle
               ariaLabel={t.workspace.resizeFilePanel}
               direction={-1}
@@ -409,44 +411,53 @@ export function AgentWorkspace({
               onResizeStart={() => setResizingPanel("filePanel")}
               value={panelWidths.filePanel}
             />
-          ) : null}
-
-          <aside
-            className={`flex-none overflow-hidden bg-panel transition-[width] ${resizingPanel === "filePanel" ? "duration-0" : "duration-[var(--motion-standard)]"} ${filePanelOpen
-              ? "w-full min-[641px]:w-[var(--panel-width)]"
-              : "hidden w-0 min-w-0 min-[641px]:block"
-              }`}
-            style={
-              filePanelOpen
-                ? {
-                    "--panel-width": `${panelWidths.filePanel}px`,
-                  } as CSSProperties
-                : undefined
-            }
-          >
-            <FilePanel
-              file={openFile}
-              onClose={() => setFilePanelOpen(false)}
-            />
-          </aside>
-
-
-        </>
-
-
-        {/* Model Config  dialog*/}
-        {modelsOpen ? (
-          <ModelsConfigDialog
-            onClose={() => setModelsOpen(false)}
-            onSaved={() => setModelsRevision((current) => current + 1)}
-          />
+            <aside
+              className={`flex-none overflow-hidden bg-panel ${
+                resizingPanel === "filePanel"
+                  ? "duration-0"
+                  : "duration-[var(--motion-standard)]"
+              } w-[var(--panel-width)]`}
+              style={
+                {
+                  "--panel-width": `${panelWidths.filePanel}px`,
+                } as CSSProperties
+              }
+            >
+              <FilePanel
+                cwd={activeCwd}
+                file={openFile}
+                onAtMention={handleAtMention}
+                onClose={() => setFilePanelOpen(false)}
+                onOpenFile={handleOpenFile}
+                refreshKey={explorerRefreshKey}
+              />
+            </aside>
+          </>
         ) : null}
-        {skillsOpen && activeCwd ? (
-          <SkillsConfigDialog
-            cwd={activeCwd}
-            onClose={() => setSkillsOpen(false)}
-          />
-        ) : null}
+
+        <Dialog
+          onOpenChange={(open) => {
+            if (!open) cancelDiscard();
+          }}
+          open={confirmingDiscard}
+        >
+          <DialogContent showCloseButton={false}>
+            <DialogHeader>
+              <DialogTitle>{t.models.discardChangesTitle}</DialogTitle>
+              <DialogDescription>
+                {t.models.discardChangesDescription}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button autoFocus onClick={cancelDiscard} variant="outline">
+                {t.models.continueEditing}
+              </Button>
+              <Button onClick={confirmDiscard} variant="destructive">
+                {t.models.discardChanges}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </TooltipProvider>
   );
