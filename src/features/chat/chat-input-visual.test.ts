@@ -45,3 +45,18 @@ describe("chat input visual contract", () => {
     expect(source).toContain("t.chat.input.compactUnavailableWhileRunning");
   });
 });
+
+describe("edit undo notice", () => {
+  it("renders an undo action inside an InlineStatus when undoable is set", () => {
+    expect(source).toContain("undoable");
+    expect(source).toContain("t.chat.message.editUndoNotice");
+    expect(source).toContain("t.chat.message.editUndoAction");
+    expect(source).toContain("undoEdit");
+  });
+
+  it("InlineStatus supports an optional action button", () => {
+    expect(source).toContain("action?:");
+    expect(source).toContain("action.label");
+    expect(source).toContain("action.onClick");
+  });
+});

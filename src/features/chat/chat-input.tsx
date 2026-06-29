@@ -64,6 +64,9 @@ export function ChatInput({
   setCompactResult,
   setCompactNotice,
   actionError,
+  undoable,
+  undoEdit,
+  dismissUndo,
   retryInfo,
   agentPhase,
   textareaRef,
@@ -102,6 +105,9 @@ export function ChatInput({
   setCompactResult: (value: boolean) => void;
   setCompactNotice: (value: string) => void;
   actionError: string;
+  undoable: { leafId: string } | null;
+  undoEdit: () => Promise<void>;
+  dismissUndo: () => void;
   retryInfo: {
     attempt: number;
     maxAttempts: number;
@@ -198,6 +204,20 @@ export function ChatInput({
             tone="info"
           >
             {compactNotice}
+          </InlineStatus>
+        ) : null}
+
+        {undoable ? (
+          <InlineStatus
+            action={{
+              label: t.chat.message.editUndoAction,
+              onClick: () => void undoEdit(),
+            }}
+            dismissLabel={t.chat.message.editUndoAction}
+            onDismiss={dismissUndo}
+            tone="info"
+          >
+            {t.chat.message.editUndoNotice}
           </InlineStatus>
         ) : null}
 
@@ -473,11 +493,13 @@ function InlineStatus({
   tone,
   onDismiss,
   dismissLabel,
+  action,
 }: {
   children: React.ReactNode;
   tone: "warning" | "error" | "success" | "info";
   onDismiss?: () => void;
   dismissLabel?: string;
+  action?: { label: string; onClick: () => void };
 }) {
   const toneClasses: Record<typeof tone, string> = {
     warning: "border-warning/40 bg-warning/8 text-warning",
@@ -491,6 +513,17 @@ function InlineStatus({
       className={`mb-2 flex items-center gap-2 rounded-lg border px-3 py-2 text-xs ${toneClasses[tone]}`}
     >
       <span className="min-w-0 flex-1">{children}</span>
+      {action ? (
+        <Button
+          className="h-6 shrink-0 text-xs"
+          onClick={action.onClick}
+          size="sm"
+          type="button"
+          variant="ghost"
+        >
+          {action.label}
+        </Button>
+      ) : null}
       {onDismiss ? (
         <Button
           aria-label={dismissLabel}
