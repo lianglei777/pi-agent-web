@@ -12,6 +12,7 @@ import { ImagePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/i18n/use-i18n";
 import { ChatInput } from "./chat-input";
+import { ConfirmActionDialog } from "./confirm-action-dialog";
 import { createChatMinimapEntries } from "./minimap/chat-minimap-adapter";
 import { ChatMinimap } from "./minimap/chat-minimap";
 import { MessageList } from "./message-view";
@@ -73,6 +74,12 @@ export function ChatCenter({
   >(null);
   const [composerNode, setComposerNode] = useState<HTMLDivElement | null>(null);
   const [composerHeight, setComposerHeight] = useState(0);
+  const [pendingEdit, setPendingEdit] = useState<
+    { targetId: string; text: string } | null
+  >(null);
+  const [pendingFork, setPendingFork] = useState<{ entryId: string } | null>(
+    null,
+  );
   const dragCounter = useRef(0);
   const messageElementsRef = useRef<Map<string, HTMLElement>>(new Map());
 
@@ -205,9 +212,9 @@ export function ChatCenter({
                   lastUserRef={controller.lastUserRef}
                   messages={controller.messages}
                   onEdit={(targetId, text) =>
-                    void controller.editFromHere(targetId, text)
+                    setPendingEdit({ targetId, text })
                   }
-                  onFork={(entryId) => void controller.fork(entryId)}
+                  onFork={(entryId) => setPendingFork({ entryId })}
                   highlightedMessageId={highlightedMessageId}
                   onMessageElement={handleMessageElement}
                   running={controller.running}
@@ -233,6 +240,36 @@ export function ChatCenter({
           {/* Error indicators */}
           {/* Chat input */}
           <ChatInput {...controller} rootRef={setComposerNode} />
+
+          <ConfirmActionDialog
+            cancelLabel={t.chat.message.cancel}
+            confirmLabel={t.chat.message.editConfirmAction}
+            description={t.chat.message.editConfirmDesc}
+            onConfirm={() => {
+              if (!pendingEdit) return;
+              const { targetId, text } = pendingEdit;
+              setPendingEdit(null);
+              void controller.editFromHere(targetId, text);
+            }}
+            onDismiss={() => setPendingEdit(null)}
+            open={pendingEdit !== null}
+            title={t.chat.message.editConfirmTitle}
+            tone="danger"
+          />
+          <ConfirmActionDialog
+            cancelLabel={t.chat.message.cancel}
+            confirmLabel={t.chat.message.forkConfirmAction}
+            description={t.chat.message.forkConfirmDesc}
+            onConfirm={() => {
+              if (!pendingFork) return;
+              const { entryId } = pendingFork;
+              setPendingFork(null);
+              void controller.fork(entryId);
+            }}
+            onDismiss={() => setPendingFork(null)}
+            open={pendingFork !== null}
+            title={t.chat.message.forkConfirmTitle}
+          />
         </>
       )}
     </main>
