@@ -117,6 +117,7 @@ export function useChatController(options: ChatControllerOptions) {
   const [toolPreset, setToolPreset] =
     useState<keyof typeof TOOL_PRESETS>("default");
   const [forkingEntryId, setForkingEntryId] = useState<string | null>(null);
+  const [undoable, setUndoable] = useState<{ leafId: string } | null>(null);
   const [stream, dispatchStream] = useReducer(streamReducer, {
     isStreaming: false,
     streamingMessage: null,
@@ -452,6 +453,13 @@ export function useChatController(options: ChatControllerOptions) {
     const timer = window.setTimeout(() => setCompactNotice(""), 6000);
     return () => window.clearTimeout(timer);
   }, [compactNotice]);
+
+  // 编辑撤销提示自动消失(对齐 compact 反馈的超时)
+  useEffect(() => {
+    if (!undoable) return;
+    const timer = window.setTimeout(() => setUndoable(null), 8000);
+    return () => window.clearTimeout(timer);
+  }, [undoable]);
 
   const changeLeaf = useCallback(
     async (leafId: string) => {
@@ -832,8 +840,17 @@ export function useChatController(options: ChatControllerOptions) {
     targetId: string,
     text: string,
   ) {
+    const prev = activeLeafId;
     await changeLeaf(targetId);
+    if (prev && prev !== targetId) setUndoable({ leafId: prev });
     insertIfEmpty(text);
+  }
+
+  async function undoEdit() {
+    if (!undoable) return;
+    const { leafId } = undoable;
+    setUndoable(null);
+    await changeLeaf(leafId);
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
@@ -883,6 +900,12 @@ export function useChatController(options: ChatControllerOptions) {
     thinkingMode,
     toolPreset,
     forkingEntryId,
+    undoable,
+    undoEdit,
+    dismissUndo: () => setUndoable(null),
+    tree,
+    activeLeafId,
+    changeLeaf,
     textareaRef,
     scrollerRef,
     contentRef,
