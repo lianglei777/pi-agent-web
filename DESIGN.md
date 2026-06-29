@@ -56,7 +56,15 @@ motion:
 
 ## Direction
 
-The interface is a focused developer tool, not a marketing surface. Preserve its dense three-panel workspace and established workflows. The light theme is Adaptive Workbench: cool neutral surfaces with a restrained pine-green focus color. The dark theme is Deep Focus: charcoal surfaces with a mint focus color. The themes share semantic roles but are tuned independently rather than mechanically inverted.
+The interface is a focused desktop developer tool, not a marketing surface. Preserve its project-centered navigation and established workflows without requiring every panel to remain visible. The light theme is Adaptive Workbench: cool neutral surfaces with a restrained pine-green focus color. The dark theme is Deep Focus: charcoal surfaces with a mint focus color. The themes share semantic roles but are tuned independently rather than mechanically inverted.
+
+## Workspace architecture
+
+- Left navigation owns New chat, Model Provider, Skills, projects, sessions, theme, and locale.
+- The central workspace switches views while Chat remains mounted.
+- The right File Workspace is user-opened, resizable, and hidden on configuration views without losing state.
+- The minimum supported viewport width is 1024px; there is no mobile-specific layout.
+- Keep the existing light/dark semantic palette and use accent only for focus, selection, primary action, and live state.
 
 ## Token architecture
 
@@ -142,7 +150,7 @@ Neutral first. Accent color is reserved for primary actions, focus, selection, a
 - Prefer semantic tokens and shared primitives.
 - Keep focus visible, keyboard paths intact, and labels accessible.
 - Use semantic colors only for state.
-- Verify desktop, medium, and mobile widths in both languages.
+- Verify 1024px, 1440px, and 1920px desktop widths in both languages and themes.
 
 ## Do not
 

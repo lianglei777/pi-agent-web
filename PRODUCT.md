@@ -6,11 +6,11 @@ product
 
 ## Users
 
-Solo developers running Pi Agent locally to write, edit, and review code alongside an AI assistant. They are in a focused, screen-heavy workflow — often with an editor, terminal, and browser open at the same time — and need a reliable surface for managing agent sessions, inspecting files, and reviewing generated changes.
+Solo developers running Pi Agent locally through a desktop Web workspace to write, edit, and review code alongside an AI assistant. They are in a focused, screen-heavy workflow — often with an editor, terminal, and browser open at the same time — and need a reliable surface for managing projects and sessions, inspecting files when needed, and reviewing generated changes.
 
 ## Product Purpose
 
-Po Agent Web is the local web interface for the Pi coding agent. It turns agent sessions into a navigable, inspectable workspace: start a session, watch the agent's reasoning and tool calls, browse and open files, switch models and skills, and resume or fork past sessions. The interface exists to keep the developer in control, not to entertain them.
+Po Agent Web is the local desktop Web interface for the Pi coding agent. It turns projects and agent sessions into a navigable, inspectable workspace: start a session, watch the agent's reasoning and tool calls, optionally open a file workspace, configure model providers and project skills, and resume or fork past sessions. The interface exists to keep the developer in control, not to entertain them.
 
 ## Brand Personality
 
@@ -30,12 +30,12 @@ Focused productivity tools: Linear, Vercel dashboard, Notion. The relevant quali
 
 ## Design Principles
 
-1. **Information density is a feature.** The workspace should show sessions, chat, files, and context without feeling cramped, because the user is here to get work done.
+1. **Information density is a feature.** Project and session navigation stay visible, while Chat, configuration, and the optional File Workspace reveal only the context needed for the current task.
 2. **Quiet surfaces, active states.** At rest the UI is neutral and flat; focus, hover, and selection provide the only accent.
 3. **The agent is a tool, not a character.** No personality avatars, no confetti, no cheerleading copy.
 4. **Respect system conventions.** Honor `prefers-color-scheme`, support reduced motion, and keep keyboard paths obvious.
 5. **Monochrome first.** Color is used sparingly for status, errors, and selection. The palette should feel like a well-tuned code editor, not a brand campaign.
-6. **Stable workflows over novelty.** Preserve the workspace layout, information architecture, and established operation paths unless a correctness issue requires change.
+6. **Stable workflows over novelty.** Preserve Chat state and established operation paths while central workspace views change; configuration navigation must not interrupt a running conversation.
 7. **Explicit destructive actions.** Important deletion, credential removal, and disconnect operations require confirmation with concrete action language.
 8. **Dialogs close deliberately.** Dialogs remain open on backdrop clicks and Escape; users leave through visible close, cancel, save, or confirmation actions.
 

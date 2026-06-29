@@ -60,6 +60,9 @@ export function SessionSidebar({
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(
     new Set(),
   );
+  const [collapsedSelectedCwd, setCollapsedSelectedCwd] = useState<
+    string | null
+  >(null);
   const restoreAttempted = useRef(false);
   const feedbackTimer = useRef<number | null>(null);
   const { t } = useI18n();
@@ -101,16 +104,6 @@ export function SessionSidebar({
       }
     };
   }, []);
-
-  useEffect(() => {
-    if (!selectedCwd) return;
-    setExpandedProjects((current) => {
-      if (current.has(selectedCwd)) return current;
-      const next = new Set(current);
-      next.add(selectedCwd);
-      return next;
-    });
-  }, [selectedCwd]);
 
   const recentCwds = useMemo(() => getRecentCwds(sessions), [sessions]);
   const navigableSessions = useMemo(() => {
@@ -190,10 +183,15 @@ export function SessionSidebar({
     onCwdChange(cwd);
     setExpandedProjects((current) => {
       const next = new Set(current);
-      if (cwd === selectedCwd && next.has(cwd)) next.delete(cwd);
+      const selectedAndExpanded =
+        cwd === selectedCwd && collapsedSelectedCwd !== cwd;
+      if (selectedAndExpanded) next.delete(cwd);
       else next.add(cwd);
       return next;
     });
+    setCollapsedSelectedCwd(
+      cwd === selectedCwd && collapsedSelectedCwd !== cwd ? cwd : null,
+    );
   }
 
   return (
@@ -246,8 +244,10 @@ export function SessionSidebar({
         ) : displayedGroups.length ? (
           <div className="space-y-0.5 py-1">
             {displayedGroups.map((group) => {
-              const expanded = expandedProjects.has(group.cwd);
               const selected = group.cwd === selectedCwd;
+              const expanded =
+                expandedProjects.has(group.cwd) ||
+                (selected && collapsedSelectedCwd !== group.cwd);
               return (
                 <div key={group.cwd}>
                   <Button
