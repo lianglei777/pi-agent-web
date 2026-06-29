@@ -9,15 +9,26 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useI18n } from "@/i18n/use-i18n";
+import { loadFile } from "./api";
+import { FileTree } from "./file-tree";
+import type { OpenFile } from "./types";
 
-export type OpenFile = { path: string; name: string };
+export type { OpenFile } from "./types";
 
 export function FilePanel({
+  cwd,
   file,
+  onAtMention,
   onClose,
+  onOpenFile,
+  refreshKey = 0,
 }: {
+  cwd?: string | null;
   file: OpenFile | null;
+  onAtMention?: (path: string) => void;
   onClose: () => void;
+  onOpenFile?: (path: string, name: string) => void;
+  refreshKey?: number;
 }) {
   const { t } = useI18n();
 
@@ -48,14 +59,27 @@ export function FilePanel({
           </TooltipContent>
         </Tooltip>
       </div>
-      {file ? <LoadedFile file={file} key={file.path} /> : <EmptyFile />}
+      <div className="flex min-h-0 flex-1">
+        <div className="flex min-w-0 flex-1 flex-col">
+          {file ? <LoadedFile file={file} key={file.path} /> : <EmptyFile />}
+        </div>
+        {cwd && onOpenFile ? (
+          <aside className="flex w-[210px] shrink-0 border-l border-line-subtle">
+            <FileTree
+              cwd={cwd}
+              onAtMention={onAtMention}
+              onOpenFile={onOpenFile}
+              refreshKey={refreshKey}
+            />
+          </aside>
+        ) : null}
+      </div>
     </div>
   );
 }
 
 function EmptyFile() {
   const { t } = useI18n();
-
   return (
     <div className="grid flex-1 place-items-center p-6">
       <div className="text-center text-muted">
@@ -77,30 +101,19 @@ function LoadedFile({ file }: { file: OpenFile }) {
 
   useEffect(() => {
     const controller = new AbortController();
-    const params = new URLSearchParams({ path: file.path, type: "read" });
-    fetch(`/api/files/_?${params}`, { signal: controller.signal })
-      .then(async (response) => {
-        const data = (await response.json()) as {
-          content?: string;
-          error?: { message?: string };
-        };
-        if (!response.ok) {
-          throw new Error(
-            data.error?.message ?? `${t.files.requestFailed} (${response.status})`,
-          );
-        }
-        setResult({ content: data.content ?? "", error: "" });
-      })
+    loadFile(file.path, controller.signal)
+      .then((data) => setResult({ content: data.content ?? "", error: "" }))
       .catch((cause: unknown) => {
         if ((cause as { name?: string }).name !== "AbortError") {
           setResult({
             content: "",
-            error: cause instanceof Error ? cause.message : t.files.unableToOpenFile,
+            error:
+              cause instanceof Error ? cause.message : t.files.unableToOpenFile,
           });
         }
       });
     return () => controller.abort();
-  }, [file, t.files.requestFailed, t.files.unableToOpenFile]);
+  }, [file, t.files.unableToOpenFile]);
 
   if (!result) {
     return <div className="p-4 text-xs text-dim">{t.files.loading}</div>;

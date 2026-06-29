@@ -14,24 +14,22 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useI18n } from "@/i18n/use-i18n";
 import { loadDirectory } from "./api";
-import { joinPath, relativePath } from "./session-utils";
+import { joinPath, relativePath } from "./path";
 import type { FileEntry } from "./types";
 
-export function FileExplorer({
-  cwd,
-  refreshKey,
-  open,
-  onOpenChange,
-  onOpenFile,
-  onAtMention,
-}: {
+export type FileTreeProps = {
   cwd: string;
-  refreshKey: number;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onOpenFile?: (path: string, name: string) => void;
   onAtMention?: (path: string) => void;
-}) {
+  onOpenFile: (path: string, name: string) => void;
+  refreshKey?: number;
+};
+
+export function FileTree({
+  cwd,
+  onAtMention,
+  onOpenFile,
+  refreshKey = 0,
+}: FileTreeProps) {
   const [entriesByPath, setEntriesByPath] = useState<Record<string, FileEntry[]>>(
     {},
   );
@@ -87,25 +85,9 @@ export function FileExplorer({
   }
 
   return (
-    <section className={`flex min-h-0 flex-col ${open ? "flex-1" : "flex-none"}`}>
-      <div
-        className={`flex h-8 flex-none items-center bg-panel px-2 ${
-          open ? "" : "border-t border-line-strong"
-        }`}
-      >
-        <Button
-          aria-expanded={open}
-          className="min-w-0 flex-1 justify-start px-1.5 text-[11px] font-medium text-muted"
-          onClick={() => onOpenChange(!open)}
-          size="sm"
-          type="button"
-          variant="ghost"
-        >
-          <ChevronDown
-            className={`size-3 transition-transform duration-[var(--motion-standard)] ${open ? "" : "-rotate-90"}`}
-          />
-          {t.files.explorer}
-        </Button>
+    <section className="flex min-h-0 flex-1 flex-col bg-panel">
+      <div className="flex h-9 flex-none items-center border-b border-line-subtle px-2 text-[11px] font-medium text-muted">
+        <span className="flex-1">{t.files.explorer}</span>
         <Button
           aria-label={t.files.refreshFiles}
           className="size-7"
@@ -117,39 +99,37 @@ export function FileExplorer({
           <RefreshCw className="size-3.5" />
         </Button>
       </div>
-      {open ? (
-        <ScrollArea className="min-h-20 flex-1">
-          {error ? (
-            <div className="p-3 text-[11px] text-destructive">
-              <p>{error}</p>
-              <Button
-                className="mt-2"
-                onClick={() => void load(cwd)}
-                size="sm"
-                variant="outline"
-              >
-                {t.common.retry}
-              </Button>
-            </div>
-          ) : (
-            <FileNodes
-              cwd={cwd}
-              entries={entriesByPath[cwd] ?? []}
-              entriesByPath={entriesByPath}
-              expanded={expanded}
-              loading={loading}
-              onAtMention={onAtMention}
-              onOpenFile={onOpenFile}
-              onToggle={toggleDirectory}
-              text={{
-                empty: t.files.empty,
-                loading: t.files.loading,
-                mention: t.files.mention,
-              }}
-            />
-          )}
-        </ScrollArea>
-      ) : null}
+      <ScrollArea className="min-h-0 flex-1">
+        {error ? (
+          <div className="p-3 text-[11px] text-destructive">
+            <p>{error}</p>
+            <Button
+              className="mt-2"
+              onClick={() => void load(cwd)}
+              size="sm"
+              variant="outline"
+            >
+              {t.common.retry}
+            </Button>
+          </div>
+        ) : (
+          <FileNodes
+            cwd={cwd}
+            entries={entriesByPath[cwd] ?? []}
+            entriesByPath={entriesByPath}
+            expanded={expanded}
+            loading={loading}
+            onAtMention={onAtMention}
+            onOpenFile={onOpenFile}
+            onToggle={toggleDirectory}
+            text={{
+              empty: t.files.empty,
+              loading: t.files.loading,
+              mention: t.files.mention,
+            }}
+          />
+        )}
+      </ScrollArea>
     </section>
   );
 }
@@ -171,19 +151,16 @@ function FileNodes({
   entriesByPath: Record<string, FileEntry[]>;
   expanded: Set<string>;
   loading: Set<string>;
-  text: {
-    empty: string;
-    loading: string;
-    mention: string;
-  };
+  text: { empty: string; loading: string; mention: string };
   onToggle: (path: string) => Promise<void>;
-  onOpenFile?: (path: string, name: string) => void;
+  onOpenFile: (path: string, name: string) => void;
   onAtMention?: (path: string) => void;
   depth?: number;
 }) {
   if (!entries.length) {
     return <div className="px-4 py-2 text-[10px] text-dim">{text.empty}</div>;
   }
+
   return entries.map((entry) => {
     const path = entry.path || joinPath(cwd, entry.name);
     const isExpanded = expanded.has(path);
@@ -199,9 +176,7 @@ function FileNodes({
         <div
           className="group flex h-6 cursor-pointer items-center rounded-sm px-1 text-[11px] hover:bg-hover focus-within:bg-selected focus-within:text-primary"
           onClick={() =>
-            entry.isDir
-              ? void onToggle(path)
-              : onOpenFile?.(path, entry.name)
+            entry.isDir ? void onToggle(path) : onOpenFile(path, entry.name)
           }
           style={{ paddingLeft: `${6 + depth * 14}px` }}
           title={path}
@@ -249,10 +224,10 @@ function FileNodes({
               entriesByPath={entriesByPath}
               expanded={expanded}
               loading={loading}
-              text={text}
               onAtMention={onAtMention}
               onOpenFile={onOpenFile}
               onToggle={onToggle}
+              text={text}
             />
           )
         ) : null}

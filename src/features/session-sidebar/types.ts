@@ -11,14 +11,6 @@ export interface SessionInfo {
   draft?: boolean;
 }
 
-export interface FileEntry {
-  name: string;
-  path: string;
-  isDir: boolean;
-  size: number;
-  modified: string;
-}
-
 export interface SessionTreeNode {
   session: SessionInfo;
   children: SessionTreeNode[];

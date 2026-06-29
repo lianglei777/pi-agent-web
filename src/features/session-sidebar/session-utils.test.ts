@@ -4,8 +4,6 @@ import {
   getProjectName,
   getRecentCwds,
   groupSessionsByCwd,
-  joinPath,
-  relativePath,
   shortenCwd,
 } from "./session-utils";
 import type { SessionInfo } from "./types";
@@ -90,13 +88,9 @@ describe("session sidebar utilities", () => {
     expect(getProjectName("/work/po-agent-web/")).toBe("po-agent-web");
   });
 
-  it("formats Windows and POSIX paths", () => {
+  it("shortens a project path relative to home", () => {
     expect(shortenCwd("C:\\Users\\me\\work\\app", "C:\\Users\\me")).toBe(
       "~/.../work/app",
-    );
-    expect(joinPath("/work/app", "src")).toBe("/work/app/src");
-    expect(relativePath("C:\\work\\app", "C:\\work\\app\\src\\x.ts")).toBe(
-      "src/x.ts",
     );
   });
 });

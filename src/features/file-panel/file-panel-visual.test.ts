@@ -16,4 +16,15 @@ describe("file panel visual contract", () => {
     expect(source).not.toContain("Active Files");
     expect(source).not.toContain("Card");
   });
+
+  it("places the preview before the file tree without editor features", () => {
+    expect(source).toContain("<FileTree");
+    expect(source).toContain("cwd");
+    expect(source.indexOf("<LoadedFile")).toBeLessThan(
+      source.indexOf("<FileTree"),
+    );
+    expect(source).not.toContain("Tabs");
+    expect(source).not.toContain("Editor");
+    expect(source).not.toContain("Search");
+  });
 });

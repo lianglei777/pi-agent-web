@@ -1,4 +1,4 @@
-import type { FileEntry, SessionInfo } from "./types";
+import type { SessionInfo } from "./types";
 
 type ApiError = { error?: { message?: string } };
 
@@ -39,9 +39,4 @@ export function deleteSession(id: string) {
     `/api/sessions/${encodeURIComponent(id)}`,
     { method: "DELETE" },
   );
-}
-
-export function loadDirectory(path: string) {
-  const params = new URLSearchParams({ path, type: "list" });
-  return requestJson<FileEntry[]>(`/api/files/_?${params}`);
 }
