@@ -22,11 +22,13 @@ export function BranchHistory({
   activeLeafId,
   running,
   onChangeLeaf,
+  compact = false,
 }: {
   tree: SessionTreeNode[];
   activeLeafId: string | null;
   running: boolean;
   onChangeLeaf: (leafId: string) => void;
+  compact?: boolean;
 }) {
   const { t } = useI18n();
   const leaves = collectLeaves(tree);
@@ -39,7 +41,7 @@ export function BranchHistory({
           className="h-7 gap-1.5 px-2 text-[11px]"
           size="sm"
           type="button"
-          variant="ghost"
+          variant="outline"
           disabled={running}
         >
           <GitBranch className="size-3.5" />
@@ -67,20 +69,24 @@ export function BranchHistory({
     </DropdownMenu>
   );
 
+  const content = running ? (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="inline-flex">{menu}</span>
+      </TooltipTrigger>
+      <TooltipContent side="bottom">
+        {t.chat.message.branchNavigationUnavailableWhileRunning}
+      </TooltipContent>
+    </Tooltip>
+  ) : (
+    menu
+  );
+
+  if (compact) return content;
+
   return (
     <div className="flex items-center justify-end border-b border-line-subtle px-4 py-1.5">
-      {running ? (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span className="inline-flex">{menu}</span>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">
-            {t.chat.message.branchNavigationUnavailableWhileRunning}
-          </TooltipContent>
-        </Tooltip>
-      ) : (
-        menu
-      )}
+      {content}
     </div>
   );
 }

@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { ResizeHandle } from "@/components/ui/resize-handle";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ChatCenter } from "@/features/chat/chat-center";
+import { ChatCenter, type BranchState } from "@/features/chat/chat-center";
 import { FilePanel, type OpenFile } from "@/features/file-panel/file-panel";
 import { ModelProviderPage } from "@/features/models-config";
 import { loadSessions } from "@/features/session-sidebar/api";
@@ -62,6 +62,7 @@ export function AgentWorkspace() {
   const [newSessionCwd, setNewSessionCwd] = useState<string | null>(null);
   const [draftSession, setDraftSession] = useState<DraftSession | null>(null);
   const [chatInstanceKey, setChatInstanceKey] = useState(0);
+  const [branchState, setBranchState] = useState<BranchState | null>(null);
   const [modelsRevision, setModelsRevision] = useState(0);
   const [openFile, setOpenFile] = useState<OpenFile | null>(null);
   const [initialSessionId, setInitialSessionId] = useState<
@@ -370,13 +371,22 @@ export function AgentWorkspace() {
         <section className="relative flex min-w-0 flex-1 flex-col bg-canvas">
           <WorkspaceTopBar
             activeView={activeView}
+            branchActiveLeafId={branchState?.activeLeafId}
+            branchRunning={branchState?.running}
+            branchTree={branchState?.tree}
             filePanelOpen={filePanelOpen}
+            onBranchChangeLeaf={
+              branchState
+                ? (leafId) => void branchState.changeLeaf(leafId)
+                : undefined
+            }
             onToggleFilePanel={() => setFilePanelOpen((open) => !open)}
             onToggleSidebar={() => setSidebarOpen((open) => !open)}
             projectName={activeCwd ? getProjectName(activeCwd) : null}
             sessionTitle={
               selectedSession ? getSessionTitle(selectedSession) : null
             }
+            showBranchHistory={activeView === "chat"}
             sidebarOpen={sidebarOpen}
           />
 
@@ -390,6 +400,7 @@ export function AgentWorkspace() {
               modelsRevision={modelsRevision}
               newSessionCwd={newSessionCwd}
               onAgentEnd={handleAgentEnd}
+              onBranchState={setBranchState}
               onSessionCreated={handleSessionCreated}
               onSessionForked={handleSessionForked}
               session={selectedSession}

@@ -10,6 +10,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useI18n } from "@/i18n/use-i18n";
+import type { SessionTreeNode } from "@/features/chat/agent-types";
+import { BranchHistory } from "@/features/chat/branch-history";
 import type { WorkspaceView } from "./workspace-navigation";
 
 type WorkspaceTopBarProps = {
@@ -20,6 +22,11 @@ type WorkspaceTopBarProps = {
   projectName: string | null;
   sessionTitle: string | null;
   sidebarOpen: boolean;
+  showBranchHistory?: boolean;
+  branchTree?: SessionTreeNode[];
+  branchActiveLeafId?: string | null;
+  branchRunning?: boolean;
+  onBranchChangeLeaf?: (leafId: string) => void;
 };
 
 export function WorkspaceTopBar({
@@ -30,6 +37,11 @@ export function WorkspaceTopBar({
   projectName,
   sessionTitle,
   sidebarOpen,
+  showBranchHistory,
+  branchTree,
+  branchActiveLeafId,
+  branchRunning,
+  onBranchChangeLeaf,
 }: WorkspaceTopBarProps) {
   const { t } = useI18n();
   const title =
@@ -50,12 +62,22 @@ export function WorkspaceTopBar({
 
       <div className="min-w-0 flex-1 px-3">
         <div className="truncate text-xs font-medium text-primary">{title}</div>
-        {projectName ? (
-          <div className="truncate font-ui-mono text-[10px] text-dim">
-            {projectName}
-          </div>
-        ) : null}
       </div>
+
+      {/* 分支历史按钮 */}
+      {showBranchHistory &&
+      branchTree &&
+      onBranchChangeLeaf ? (
+        <div className="mr-1">
+          <BranchHistory
+            activeLeafId={branchActiveLeafId ?? null}
+            compact
+            onChangeLeaf={onBranchChangeLeaf}
+            running={branchRunning ?? false}
+            tree={branchTree}
+          />
+        </div>
+      ) : null}
 
       {activeView === "chat" && projectName && !filePanelOpen ? (
         <TopBarIconButton

@@ -11,16 +11,22 @@ import {
 import { ImagePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/i18n/use-i18n";
-import { BranchHistory } from "./branch-history";
 import { ChatInput } from "./chat-input";
 import { createChatMinimapEntries } from "./minimap/chat-minimap-adapter";
 import { ChatMinimap } from "./minimap/chat-minimap";
 import { MessageList } from "./message-view";
-import type { ContextUsage, SessionStats } from "./agent-types";
+import type { ContextUsage, SessionStats, SessionTreeNode } from "./agent-types";
 import {
   type ChatSession,
   useChatController,
 } from "./use-chat-controller";
+
+export type BranchState = {
+  tree: SessionTreeNode[];
+  activeLeafId: string | null;
+  running: boolean;
+  changeLeaf: (leafId: string) => Promise<boolean>;
+};
 
 export function ChatCenter({
   session,
@@ -32,6 +38,7 @@ export function ChatCenter({
   onSystemPromptChange,
   onSessionStatsChange,
   onContextUsageChange,
+  onBranchState,
 }: {
   session: ChatSession | null;
   newSessionCwd: string | null;
@@ -42,6 +49,7 @@ export function ChatCenter({
   onSystemPromptChange?: (prompt: string | null) => void;
   onSessionStatsChange?: (stats: SessionStats | null) => void;
   onContextUsageChange?: (usage: ContextUsage | null) => void;
+  onBranchState?: (state: BranchState | null) => void;
 }) {
   const controller = useChatController({
     session,
@@ -91,6 +99,23 @@ export function ChatCenter({
     },
     [],
   );
+
+  // 将分支状态传递给 WorkspaceTopBar
+  useEffect(() => {
+    onBranchState?.({
+      tree: controller.tree,
+      activeLeafId: controller.activeLeafId,
+      running: controller.running,
+      changeLeaf: (leafId) => controller.changeLeaf(leafId),
+    });
+    return () => onBranchState?.(null);
+  }, [
+    controller.tree,
+    controller.activeLeafId,
+    controller.running,
+    controller.changeLeaf,
+    onBranchState,
+  ]);
 
   useEffect(() => {
     if (!composerNode) return;
@@ -162,12 +187,6 @@ export function ChatCenter({
       ) : (
         <>
           <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
-            <BranchHistory
-              activeLeafId={controller.activeLeafId}
-              onChangeLeaf={(leafId) => void controller.changeLeaf(leafId)}
-              running={controller.running}
-              tree={controller.tree}
-            />
             <div className="relative flex min-h-0 flex-1 overflow-hidden">
             <div
               className="min-w-0 flex-1 overflow-y-auto overscroll-contain [scrollbar-width:none]"

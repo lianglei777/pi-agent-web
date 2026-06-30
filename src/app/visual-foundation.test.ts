@@ -74,7 +74,7 @@ describe("visual foundation contract", () => {
 
   test("applies the visual foundation to the chat sample", () => {
     expect(chatCenter).toContain("text-display");
-    expect(topBar).toContain("font-ui-mono");
+    expect(topBar).toContain("truncate text-xs font-medium text-primary");
     expect(chatInput).not.toContain("rounded-[20px]");
     expect(chatInput).not.toContain("linear-gradient");
     expect(chatInput).toContain("rounded-lg");
