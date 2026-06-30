@@ -6,6 +6,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useI18n } from "@/i18n/use-i18n";
+import { sourceLabel } from "./skill-state";
 import type { SkillInfo } from "./types";
 
 export function SkillDetail({
@@ -85,7 +86,10 @@ export function SkillDetail({
             </Tooltip>
           </div>
           <dl className="grid gap-4 p-4 text-sm sm:grid-cols-2">
-            <Detail label={t.skills.source} value={skill.sourceInfo.source} />
+            <Detail
+              label={t.skills.source}
+              value={sourceLabel(skill.sourceInfo.source, skill.sourceInfo.origin, t.skills)}
+            />
             <Detail label={t.skills.scope} value={scopeLabel(skill, t)} />
             <Detail label={t.skills.path} value={skill.displayPath} wide />
           </dl>

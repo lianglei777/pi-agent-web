@@ -1,6 +1,6 @@
 import { Bot, Terminal } from "lucide-react";
 import { useI18n } from "@/i18n/use-i18n";
-import { groupSkills } from "./skill-state";
+import { groupSkills, sourceLabel } from "./skill-state";
 import type { SkillInfo } from "./types";
 
 export function SkillList({
@@ -29,9 +29,6 @@ export function SkillList({
             >
               {groupLabel(group.scope, t)}
             </h3>
-            <p className="truncate text-[11px] text-dim" title={group.detail}>
-              {group.detail}
-            </p>
           </div>
           {group.skills.map((skill) => {
             const selected = skill.skillId === selectedSkillId;
