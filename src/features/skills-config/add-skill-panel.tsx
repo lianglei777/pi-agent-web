@@ -3,10 +3,12 @@
 import {
   CheckCircle2,
   Download,
+  ExternalLink,
   LoaderCircle,
   Search,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/i18n/use-i18n";
 import { installSkill, searchSkills } from "./api";
@@ -160,38 +162,70 @@ export function AddSkillPanel({
           ) : null}
           {results.map((skill) => (
             <article
-              className="flex items-start gap-3 border-b border-line-subtle bg-panel p-4 last:border-b-0"
+              className="border-b border-line-subtle bg-panel p-4 last:border-b-0"
               key={skill.id}
             >
-              <div className="min-w-0 flex-1">
-                <h3 className="font-medium">{skill.name}</h3>
-                <p className="mt-0.5 text-xs text-muted">{skill.source}</p>
-                {skill.description ? (
-                  <p className="mt-2 text-sm leading-5 text-muted">
-                    {skill.description}
-                  </p>
-                ) : null}
-                {skill.installs !== undefined ? (
-                  <p className="mt-2 text-xs text-dim">
-                    {skill.installs.toLocaleString()} {t.skills.installs}
-                  </p>
-                ) : null}
+              {/* 标题行：技能名称 + source 标签 + 详情链接 */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex min-w-0 items-center gap-1.5">
+                  <h3 className="truncate text-sm font-medium">{skill.name}</h3>
+                  {skill.url ? (
+                    <a
+                      href={skill.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex shrink-0 text-dim transition-colors hover:text-muted"
+                      aria-label={`${t.skills.viewDetails} ${skill.name}`}
+                    >
+                      <ExternalLink className="size-3" />
+                    </a>
+                  ) : null}
+                </div>
+                <Badge
+                  className="shrink-0 font-ui-mono text-dim"
+                  variant="outline"
+                >
+                  {skill.source}
+                </Badge>
               </div>
-              <Button
-                aria-label={`${t.skills.install} ${skill.name}`}
-                disabled={installing !== null}
-                onClick={() => void handleInstall(skill)}
-                size="sm"
-                type="button"
-                variant="outline"
+              {/* 描述行：两行截断，空描述时回退到占位文案 */}
+              <p
+                className={`mt-1.5 line-clamp-2 text-[13px] leading-5 ${
+                  skill.description ? "text-muted" : "italic text-dim"
+                }`}
               >
-                {installing === skill.id ? (
-                  <LoaderCircle className="animate-spin" />
-                ) : (
-                  <Download />
-                )}
-                {t.skills.install}
-              </Button>
+                {skill.description || t.skills.noDescription}
+              </p>
+              {/* 元数据 + 操作行：包引用、安装量、安装按钮 */}
+              <div className="mt-2.5 flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-2 text-[11px] text-dim">
+                  <code className="rounded border border-line-subtle bg-subtle px-1.5 py-0.5 font-ui-mono text-[11px]">
+                    {skill.packageSpec}
+                  </code>
+                  {skill.installs !== undefined ? (
+                    <span className="inline-flex shrink-0 items-center gap-1">
+                      <Download className="size-3" />
+                      {skill.installs.toLocaleString()} {t.skills.installs}
+                    </span>
+                  ) : null}
+                </div>
+                <Button
+                  aria-label={`${t.skills.install} ${skill.name}`}
+                  className="shrink-0"
+                  disabled={installing !== null}
+                  onClick={() => void handleInstall(skill)}
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                >
+                  {installing === skill.id ? (
+                    <LoaderCircle className="animate-spin" />
+                  ) : (
+                    <Download />
+                  )}
+                  {t.skills.install}
+                </Button>
+              </div>
             </article>
           ))}
         </div>

@@ -22,7 +22,8 @@ describe("chat input visual contract", () => {
   it("keeps primary and secondary controls in separate rows", () => {
     expect(source).toContain("border-t border-line-subtle bg-subtle");
     expect(source).toContain("t.chat.input.thinking");
-    expect(source).toContain("t.chat.input.tools");
+    expect(source).not.toContain("t.chat.input.tools");
+    expect(source).not.toContain("changeTools");
     expect(source).toContain("t.chat.input.queue");
     expect(source).toContain("t.chat.input.steer");
     expect(source).toContain("t.chat.input.stopAgent");

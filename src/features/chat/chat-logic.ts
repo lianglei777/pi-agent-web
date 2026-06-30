@@ -23,7 +23,6 @@ export function streamReducer(
   }
   return { isStreaming: false, streamingMessage: null };
 }
-
 export function normalizeAssistant(
   message: Partial<AssistantMessage>,
 ): Partial<AssistantMessage> {
@@ -154,20 +153,4 @@ export function createUserContent(text: string, images: Array<{
       },
     })),
   ];
-}
-
-export const TOOL_PRESETS = {
-  none: [],
-  default: ["read", "bash", "edit", "write"],
-  full: ["bash", "read", "edit", "write", "grep", "find", "ls"],
-} as const;
-
-export function presetFromTools(tools: string[]) {
-  const sorted = [...tools].sort().join(",");
-  for (const [preset, names] of Object.entries(TOOL_PRESETS)) {
-    if ([...names].sort().join(",") === sorted) {
-      return preset as keyof typeof TOOL_PRESETS;
-    }
-  }
-  return "full" as const;
 }

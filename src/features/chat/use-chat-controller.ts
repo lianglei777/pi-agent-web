@@ -31,11 +31,9 @@ import {
 } from "./chat-controller-state";
 import {
   phaseLabel,
-  presetFromTools,
   createUserContent,
   sessionStats,
   streamReducer,
-  TOOL_PRESETS,
 } from "./chat-logic";
 import { useI18n } from "@/i18n/use-i18n";
 import type {
@@ -108,8 +106,6 @@ export function useChatController(options: ChatControllerOptions) {
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [modelKey, setModelKey] = useState("");
   const [thinkingLevel, setThinkingLevel] = useState<ThinkingLevel>("auto");
-  const [toolPreset, setToolPreset] =
-    useState<keyof typeof TOOL_PRESETS>("default");
   const [forkingEntryId, setForkingEntryId] = useState<string | null>(null);
   const [undoable, setUndoable] = useState<{ leafId: string } | null>(null);
   const [stream, dispatchStream] = useReducer(streamReducer, {
@@ -404,14 +400,6 @@ export function useChatController(options: ChatControllerOptions) {
           runningRef.current = true;
           dispatchStream({ type: "start" });
           connectSse(session.id);
-          try {
-            const tools = await sendCommand<{ active: string[] }>(session.id, {
-              type: "get_tools",
-            });
-            setToolPreset(presetFromTools(tools.active));
-          } catch {
-            // Tool state does not block session recovery.
-          }
         }
       } catch (cause) {
         setError(cause instanceof Error ? cause.message : "Unable to load session");
@@ -632,7 +620,6 @@ export function useChatController(options: ChatControllerOptions) {
           modelId: selected?.id,
           thinkingLevel:
             thinkingLevel === "auto" ? undefined : thinkingLevel,
-          toolNames: [...TOOL_PRESETS[toolPreset]],
         });
         sessionIdRef.current = created.sessionId;
         await new Promise<void>((resolve, reject) => {
@@ -764,21 +751,6 @@ export function useChatController(options: ChatControllerOptions) {
     }
   }
 
-  async function changeTools(preset: keyof typeof TOOL_PRESETS) {
-    setToolPreset(preset);
-    const id = sessionIdRef.current;
-    if (!isNew && id) {
-      try {
-        await sendCommand(id, {
-          type: "set_tools",
-          toolNames: [...TOOL_PRESETS[preset]],
-        });
-      } catch (cause) {
-        setActionError(cause instanceof Error ? cause.message : "Tool change failed");
-      }
-    }
-  }
-
   async function compact() {
     const id = sessionIdRef.current;
     if (!id) return;
@@ -895,7 +867,6 @@ export function useChatController(options: ChatControllerOptions) {
     canAttachImages,
     thinkingLevel,
     thinkingMode,
-    toolPreset,
     forkingEntryId,
     undoable,
     undoEdit,
@@ -923,7 +894,6 @@ export function useChatController(options: ChatControllerOptions) {
     stop,
     changeModel,
     changeThinkingMode,
-    changeTools,
     compact,
     fork,
     editFromHere,

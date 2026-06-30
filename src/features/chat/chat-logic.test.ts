@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   createUserContent,
   phaseLabel,
-  presetFromTools,
   reduceAgentEvent,
   sessionStats,
   shouldRecoverRuntime,
@@ -66,14 +65,13 @@ describe("chat state logic", () => {
     ).toBe(false);
   });
 
-  it("builds pure-image user content and derives tool presets", () => {
+  it("builds pure-image user content", () => {
     expect(createUserContent("", [{ data: "abc", mimeType: "image/png" }])).toEqual([
       {
         type: "image",
         source: { type: "base64", mediaType: "image/png", data: "abc" },
       },
     ]);
-    expect(presetFromTools(["write", "read", "bash", "edit"])).toBe("default");
   });
 
   it("accumulates assistant usage", () => {

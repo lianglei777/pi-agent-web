@@ -15,7 +15,6 @@ import {
   Paperclip,
   Send,
   Square,
-  Wrench,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -40,9 +39,6 @@ import {
   resolveThinkingLevelForMode,
   type ThinkingMode,
 } from "./chat-controller-state";
-import { TOOL_PRESETS } from "./chat-logic";
-
-type ToolPreset = keyof typeof TOOL_PRESETS;
 
 export function ChatInput({
   draft,
@@ -55,7 +51,6 @@ export function ChatInput({
   currentModel,
   canAttachImages,
   thinkingMode,
-  toolPreset,
   isCompacting,
   compactError,
   compactResult,
@@ -79,7 +74,6 @@ export function ChatInput({
   stop,
   changeModel,
   changeThinkingMode,
-  changeTools,
   compact,
   handleKeyDown,
   handlePaste,
@@ -96,7 +90,6 @@ export function ChatInput({
   currentModel?: ModelInfo;
   canAttachImages: boolean;
   thinkingMode: ThinkingMode;
-  toolPreset: ToolPreset;
   isCompacting: boolean;
   compactError: string;
   compactResult: boolean;
@@ -124,7 +117,6 @@ export function ChatInput({
   stop: () => Promise<void>;
   changeModel: (value: string) => Promise<void>;
   changeThinkingMode: (value: ThinkingMode) => Promise<void>;
-  changeTools: (value: ToolPreset) => Promise<void>;
   compact: () => Promise<void>;
   handleKeyDown: KeyboardEventHandler<HTMLTextAreaElement>;
   handlePaste: ClipboardEventHandler<HTMLTextAreaElement>;
@@ -435,21 +427,6 @@ export function ChatInput({
                 }
                 options={thinkingOptions}
                 value={thinkingMode}
-              />
-
-              {/* tools */}
-              <CompactSelect
-                icon={<Wrench />}
-                label={t.chat.input.tools}
-                onValueChange={(value) =>
-                  void changeTools(value as ToolPreset)
-                }
-                options={[
-                  { label: "off", value: "none" },
-                  { label: "default", value: "default" },
-                  { label: "full", value: "full" },
-                ]}
-                value={toolPreset}
               />
 
               {/* compact */}

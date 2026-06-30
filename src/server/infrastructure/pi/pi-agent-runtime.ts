@@ -18,6 +18,16 @@ import type {
 } from "@/server/ports/agent-runtime";
 import { mapPiMessage } from "./message-mapper";
 
+const FULL_BUILTIN_TOOLS = [
+  "bash",
+  "read",
+  "edit",
+  "write",
+  "grep",
+  "find",
+  "ls",
+];
+
 export class PiAgentRuntimeFactory implements AgentRuntimeFactory {
   async create(input: CreateRuntimeInput): Promise<AgentRuntime> {
     const manager = input.sessionFile
@@ -29,7 +39,7 @@ export class PiAgentRuntimeFactory implements AgentRuntimeFactory {
     const { session } = await createAgentSession({
       cwd: input.cwd,
       sessionManager: manager,
-      tools: input.toolNames,
+      tools: input.toolNames ?? FULL_BUILTIN_TOOLS,
       noTools: input.toolNames?.length === 0 ? "all" : undefined,
     });
     return new PiAgentRuntime(session);

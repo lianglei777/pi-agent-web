@@ -634,6 +634,7 @@ interface CreateAgentRequest {
 
 - `cwd` 必需且不能为空。
 - 只有同时提供 `provider` 和 `modelId` 才会设置模型。
+- 未提供 `toolNames` 时启用全部内置工具：`bash`、`read`、`edit`、`write`、`grep`、`find`、`ls`。
 - `toolNames: []` 表示禁用所有工具。
 - 此接口不会启动 Prompt。客户端必须先建立 SSE，再通过统一 command endpoint 发送首条 `prompt`。
 
