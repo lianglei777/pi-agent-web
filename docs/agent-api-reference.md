@@ -106,7 +106,26 @@ Content-Type: text/event-stream; charset=utf-8
 | `GET` | `/api/home` | 获取当前用户 Home 目录 |
 | `GET` | `/api/default-cwd` | 获取服务端默认工作目录 |
 
-### 2.2 Sessions
+### 2.2 Projects
+
+| Method | Path | 用途 |
+| --- | --- | --- |
+| `GET` | `/api/projects` | 获取持久化项目列表。 |
+| `POST` | `/api/projects` | 校验并添加项目目录。 |
+| `DELETE` | `/api/projects?path=...` | 仅从项目列表移除项目。 |
+| `GET` | `/api/projects/browse?path=...` | 浏览本机目录。 |
+
+`POST /api/projects` 请求体：
+
+```json
+{ "path": "C:\\work\\project" }
+```
+
+`GET /api/projects/browse` 返回当前位置、父目录、平台根位置、面包屑和直接子目录。目录浏览不会返回文件内容。
+
+`DELETE /api/projects` 只删除项目注册表元数据，不会删除目录、项目文件或 Session。
+
+### 2.3 Sessions
 
 | Method | Path | 用途 |
 | --- | --- | --- |
@@ -116,7 +135,7 @@ Content-Type: text/event-stream; charset=utf-8
 | `DELETE` | `/api/sessions/:id` | 删除 Session，并重挂直接子 Session |
 | `GET` | `/api/sessions/:id/context` | 获取当前或指定 Leaf 的上下文 |
 
-### 2.3 Agent
+### 2.4 Agent
 
 | Method | Path | 用途 |
 | --- | --- | --- |
@@ -125,7 +144,7 @@ Content-Type: text/event-stream; charset=utf-8
 | `POST` | `/api/agent/:id` | 执行统一 Agent Command |
 | `GET` | `/api/agent/:id/events` | 订阅 Agent SSE 事件 |
 
-### 2.4 Models
+### 2.5 Models
 
 | Method | Path | 用途 |
 | --- | --- | --- |
@@ -136,7 +155,7 @@ Content-Type: text/event-stream; charset=utf-8
 | `POST` | `/api/models-config/discover` | 根据 Provider 草稿发现并补齐模型建议 |
 | `POST` | `/api/models-config/test` | 隔离测试模型配置 |
 
-### 2.5 Auth
+### 2.6 Auth
 
 | Method | Path | 用途 |
 | --- | --- | --- |
@@ -149,7 +168,7 @@ Content-Type: text/event-stream; charset=utf-8
 | `POST` | `/api/auth/login/:provider` | 回传 OAuth 人工输入 |
 | `POST` | `/api/auth/logout/:provider` | 退出 Provider 登录 |
 
-### 2.6 Files
+### 2.7 Files
 
 | Method | Path | 用途 |
 | --- | --- | --- |
@@ -159,7 +178,7 @@ Content-Type: text/event-stream; charset=utf-8
 | `GET` | `/api/files/[...path]?type=binary` | `raw` 的别名 |
 | `GET` | `/api/files/[...path]?type=watch` | 订阅文件变化 SSE |
 
-### 2.7 Skills
+### 2.8 Skills
 
 | Method | Path | 用途 |
 | --- | --- | --- |

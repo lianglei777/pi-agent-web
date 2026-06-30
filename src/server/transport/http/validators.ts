@@ -155,6 +155,11 @@ export function parseModelsConfig(value: unknown): Record<string, unknown> {
   }
 }
 
+export function parseProjectPath(value: unknown) {
+  const object = asObject(value);
+  return { path: requiredString(object, "path").trim() };
+}
+
 export function parseSkillInstall(value: unknown): InstallSkillInput {
   const object = asObject(value);
   const scope = requiredString(object, "scope");

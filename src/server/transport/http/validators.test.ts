@@ -3,6 +3,7 @@ import {
   parseAgentCommand,
   parseCreateAgent,
   parseModelsConfig,
+  parseProjectPath,
   parseSkillInstall,
 } from "./validators";
 
@@ -79,5 +80,14 @@ describe("agent HTTP validation", () => {
         providers: { custom: { api: "future-api" } },
       }),
     ).toThrow("Unsupported API protocol: future-api");
+  });
+
+  it("validates project path bodies", () => {
+    expect(parseProjectPath({ path: " /work/app " })).toEqual({
+      path: "/work/app",
+    });
+    expect(() => parseProjectPath({ path: "" })).toThrow(
+      "path must be a non-empty string",
+    );
   });
 });
