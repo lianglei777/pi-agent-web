@@ -6,6 +6,10 @@ const sessionTreeSource = readFileSync(
   fileURLToPath(new URL("./session-tree.tsx", import.meta.url)),
   "utf8",
 );
+const sessionSidebarSource = readFileSync(
+  fileURLToPath(new URL("./session-sidebar.tsx", import.meta.url)),
+  "utf8",
+);
 
 describe("session tree destructive actions", () => {
   it("uses the shared dialog instead of replacing the session row", () => {
@@ -17,13 +21,18 @@ describe("session tree destructive actions", () => {
   });
 
   it("keeps row actions stable at narrow sidebar widths", () => {
+    // 操作按钮使用绝对定位叠加在文本之上，确保窄 sidebar 也能完整显示
     expect(sessionTreeSource).toContain(
-      "flex flex-none items-center opacity-0 pointer-events-none",
+      "absolute right-1 top-1/2 flex -translate-y-1/2 items-center",
     );
+    expect(sessionTreeSource).toContain("opacity-0 pointer-events-none");
     expect(sessionTreeSource).toContain("group-hover:opacity-100");
     expect(sessionTreeSource).toContain("group-focus-within:opacity-100");
     expect(sessionTreeSource).not.toContain(
       "hidden items-center group-hover:flex",
+    );
+    expect(sessionSidebarSource).toContain(
+      'viewportClassName="[&>div]:block!"',
     );
   });
 

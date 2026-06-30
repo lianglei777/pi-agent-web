@@ -256,7 +256,10 @@ export function SessionSidebar({
         </p>
       ) : null}
 
-      <ScrollArea className="min-h-0 flex-1">
+      <ScrollArea
+        className="min-h-0 flex-1"
+        viewportClassName="[&>div]:block!"
+      >
         {loading ? (
           <div
             aria-label={t.sessions.loadingSessions}
@@ -308,7 +311,6 @@ export function SessionSidebar({
                       <DropdownMenuTrigger asChild>
                         <Button
                           aria-label={t.sessions.removeProject}
-                          className="opacity-0 focus:opacity-100 group-hover:opacity-100"
                           size="icon-sm"
                           type="button"
                           variant="ghost"

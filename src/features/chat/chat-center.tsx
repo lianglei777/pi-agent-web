@@ -272,7 +272,7 @@ function Welcome({
 
   return (
     <section className="grid min-h-[calc(100dvh-280px)] place-items-center px-3 py-12">
-      <div className="w-full max-w-xl text-center">
+      {/* <div className="w-full max-w-xl text-center">
         <div className="font-ui-mono text-xs font-semibold tracking-wide text-muted">
           Po Agent Web
         </div>
@@ -295,7 +295,7 @@ function Welcome({
             </Button>
           ))}
         </div>
-      </div>
+      </div> */}
     </section>
   );
 }

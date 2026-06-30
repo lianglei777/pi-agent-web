@@ -192,7 +192,7 @@ function SessionRow({
   return (
     <>
       <div
-        className={`group relative mx-1 flex h-[44px] cursor-pointer items-center rounded-md border pr-1 transition-colors duration-[var(--motion-fast)] focus-within:border-line-strong focus-within:bg-selected ${
+        className={`group relative mx-1 flex h-[44px] min-w-0 cursor-pointer items-center rounded-md border pr-1 transition-colors duration-[var(--motion-fast)] focus-within:border-line-strong focus-within:bg-selected ${
           selected
             ? "border-line-strong bg-selected"
             : hasChildren && !collapsed
@@ -234,7 +234,7 @@ function SessionRow({
         ) : (
           <span className="w-6 flex-none" />
         )}
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 pr-14">
           <div
             className={`truncate text-xs ${selected ? "font-semibold text-primary" : "font-medium text-primary"}`}
           >
@@ -250,7 +250,7 @@ function SessionRow({
           ) : null}
         </div>
         {isDraft ? null : (
-          <div className="flex flex-none items-center opacity-0 pointer-events-none transition-opacity duration-[var(--motion-fast)] group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto">
+          <div className="absolute right-1 top-1/2 flex -translate-y-1/2 items-center gap-px rounded-md bg-panel/85 pl-1 opacity-0 pointer-events-none shadow-sm backdrop-blur-sm transition-opacity duration-[var(--motion-fast)] group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto">
             <Button
               aria-label={`${t.sessions.rename} ${title}`}
               className="size-7 hover:text-accent"
