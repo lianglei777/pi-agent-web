@@ -366,7 +366,7 @@ export const en = {
     removeSkill: "Remove skill",
     remove: "Remove",
     removeConfirmTitle: "Remove skill?",
-    removeConfirmDescription: "Remove \u201C{name}\u201D from this project? This deletes the skill files and updates the lock file. This action cannot be undone.",
+    removeConfirmDescription: "Remove \u201C{name}\u201D? This deletes the skill files and updates the lock file. This action cannot be undone.",
     removeConfirmAction: "Remove",
     removed: "Removed",
   },

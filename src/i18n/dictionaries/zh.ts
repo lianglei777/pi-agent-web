@@ -366,7 +366,7 @@ export const zh = {
     removeSkill: "移除技能",
     remove: "移除",
     removeConfirmTitle: "移除技能？",
-    removeConfirmDescription: "从该项目移除“{name}”？这将删除技能文件并更新锁文件。此操作无法撤销。",
+    removeConfirmDescription: "移除“{name}”？这将删除技能文件并更新锁文件。此操作无法撤销。",
     removeConfirmAction: "移除",
     removed: "已移除",
   },

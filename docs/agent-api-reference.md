@@ -1956,7 +1956,7 @@ CLI：
 node <npm>/bin/npx-cli.js --yes skills remove <name> -y --agent pi
 ```
 
-仅支持 project scope 的技能。服务端会先加载技能列表确认 skillId 存在且为 project scope，然后执行 CLI 删除文件、清理符号链接、更新 lock 文件。命令成功后重新运行 `DefaultResourceLoader` 验证技能已不存在；返回移除后的完整技能列表。
+仅支持 project 和 user（全局）scope 的技能，不支持 temporary scope。服务端会先加载技能列表确认 skillId 存在且 scope 可移除，然后执行 CLI（user scope 追加 `-g`）删除文件、清理符号链接、更新 lock 文件。CLI 仅管理 lock 文件中记录的技能，对于手动放置的技能（`source: "auto"`），CLI 报成功但不删文件，服务端会回退到直接删除技能目录。命令成功后重新运行 `DefaultResourceLoader` 验证技能已不存在；返回移除后的完整技能列表。
 
 错误：
 

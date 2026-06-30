@@ -189,10 +189,10 @@ export class PiSkillProvider implements SkillProvider {
           404,
         );
       }
-      if (skill.sourceInfo.scope !== "project") {
+      if (skill.sourceInfo.scope === "temporary") {
         throw new AppError(
           "VALIDATION_ERROR",
-          "Only project-scoped skills can be removed.",
+          "Temporary skills cannot be removed from this page.",
           403,
         );
       }
@@ -204,8 +204,10 @@ export class PiSkillProvider implements SkillProvider {
         );
       }
 
+      const removeScope =
+        skill.sourceInfo.scope === "user" ? "global" : "project";
       const npxCli = await resolveNpxCli();
-      const args = buildRemoveArgs(npxCli, skill.name);
+      const args = buildRemoveArgs(npxCli, skill.name, removeScope);
 
       await this.processes.run(process.execPath, args, {
         cwd,
@@ -214,10 +216,29 @@ export class PiSkillProvider implements SkillProvider {
         env: { FORCE_COLOR: "0", NO_COLOR: "1" },
       });
 
-      const after = await this.load(cwd);
-      const stillExists = after.skills.some(
+      let after = await this.load(cwd);
+      let stillExists = after.skills.some(
         (candidate) => candidate.skillId === input.skillId,
       );
+      // CLI 仅管理 lock 文件中记录的 skill；手动放置的 skill（source: "auto"）
+      // 不在 lock 中，CLI 报成功但不删文件，回退到直接删除 skill 目录。
+      if (stillExists && skill.canModify) {
+        const skillDir = path.resolve(skill.baseDir);
+        const skillsRoot =
+          removeScope === "global"
+            ? path.resolve(os.homedir(), ".agents", "skills")
+            : path.resolve(cwd, ".agents", "skills");
+        const relative = path.relative(skillsRoot, skillDir);
+        if (relative && !relative.startsWith("..") && !path.isAbsolute(relative)) {
+          await this.withFileLock(skill.filePath, () =>
+            fs.rm(skillDir, { recursive: true, force: true }),
+          );
+        }
+        after = await this.load(cwd);
+        stillExists = after.skills.some(
+          (candidate) => candidate.skillId === input.skillId,
+        );
+      }
       if (stillExists) {
         throw new AppError(
           "SKILL_REMOVE_FAILED",
@@ -563,8 +584,12 @@ export function buildInstallArgs(
   return args;
 }
 
-export function buildRemoveArgs(npxCli: string, skillName: string): string[] {
-  return [
+export function buildRemoveArgs(
+  npxCli: string,
+  skillName: string,
+  scope: "project" | "global",
+): string[] {
+  const args = [
     npxCli,
     "--yes",
     "skills",
@@ -574,6 +599,8 @@ export function buildRemoveArgs(npxCli: string, skillName: string): string[] {
     "--agent",
     "pi",
   ];
+  if (scope === "global") args.push("-g");
+  return args;
 }
 
 async function resolveNpxCli(): Promise<string> {

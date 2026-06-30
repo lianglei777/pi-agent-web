@@ -98,7 +98,8 @@ export function SkillDetail({
           {t.skills.changesNotice}
         </p>
 
-        {skill.sourceInfo.scope === "project" ? (
+        {skill.sourceInfo.scope === "project" ||
+        skill.sourceInfo.scope === "user" ? (
           <div className="mt-4 flex justify-end">
             <Button
               aria-label={t.skills.removeSkill}

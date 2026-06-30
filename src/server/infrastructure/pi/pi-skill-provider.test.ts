@@ -85,7 +85,7 @@ describe("PiSkillProvider helpers", () => {
 
   it("builds remove commands as argument arrays", () => {
     expect(
-      buildRemoveArgs("C:\\npm\\npx-cli.js", "react-testing"),
+      buildRemoveArgs("C:\\npm\\npx-cli.js", "react-testing", "project"),
     ).toEqual([
       "C:\\npm\\npx-cli.js",
       "--yes",
@@ -95,6 +95,19 @@ describe("PiSkillProvider helpers", () => {
       "-y",
       "--agent",
       "pi",
+    ]);
+    expect(
+      buildRemoveArgs("C:\\npm\\npx-cli.js", "react-testing", "global"),
+    ).toEqual([
+      "C:\\npm\\npx-cli.js",
+      "--yes",
+      "skills",
+      "remove",
+      "react-testing",
+      "-y",
+      "--agent",
+      "pi",
+      "-g",
     ]);
   });
 
