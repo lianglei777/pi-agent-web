@@ -46,7 +46,10 @@ describe("session sidebar utilities", () => {
 
   it("keeps registered projects without Sessions and filters unregistered Sessions", () => {
     const groups = groupSessionsByProject(
-      [{ path: "C:\\work\\alpha" }, { path: "C:\\work\\empty" }],
+      [
+        { path: "C:\\work\\alpha", aliases: ["C:\\work\\alpha"] },
+        { path: "C:\\work\\empty", aliases: ["C:\\work\\empty"] },
+      ],
       [
         session("alpha", "2026-01-03", undefined, "C:\\work\\alpha"),
         session("hidden", "2026-01-04", undefined, "C:\\work\\removed"),
@@ -59,6 +62,20 @@ describe("session sidebar utilities", () => {
     ]);
     expect(groups[0]?.nodes[0]?.session.id).toBe("alpha");
     expect(groups[1]?.nodes).toEqual([]);
+  });
+
+  it("groups historical Session path aliases under the canonical project", () => {
+    const groups = groupSessionsByProject(
+      [
+        {
+          path: "C:\\work\\alpha",
+          aliases: ["C:\\work\\alpha", "C:\\WORK\\ALPHA"],
+        },
+      ],
+      [session("legacy", "2026-01-03", undefined, "C:\\WORK\\ALPHA")],
+    );
+
+    expect(groups[0]?.nodes[0]?.session.id).toBe("legacy");
   });
 
   it("uses the final path segment as the project name", () => {

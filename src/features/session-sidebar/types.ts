@@ -16,7 +16,7 @@ export interface SessionTreeNode {
   children: SessionTreeNode[];
 }
 
-export type Project = { path: string };
+export type Project = { path: string; aliases: string[] };
 
 export type ProjectBrowseResult = {
   current: string;

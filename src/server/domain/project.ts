@@ -1,5 +1,6 @@
 export interface Project {
   path: string;
+  aliases: string[];
 }
 
 export interface ProjectDirectory {

@@ -73,7 +73,12 @@ describe("ProjectService", () => {
       input.roots,
     );
 
-    expect(await service.list()).toEqual([{ path: path.resolve("legacy") }]);
+    expect(await service.list()).toEqual([
+      {
+        path: path.resolve("legacy"),
+        aliases: [path.resolve("legacy")],
+      },
+    ]);
     expect(input.projects.replace).toHaveBeenCalledOnce();
   });
 
@@ -88,10 +93,43 @@ describe("ProjectService", () => {
 
     await expect(service.add("project-b")).resolves.toEqual({
       path: path.resolve("project-b"),
+      aliases: [path.resolve("project-b")],
     });
     expect(input.roots.addRoot).toHaveBeenCalledWith(
       path.resolve("project-b"),
     );
+  });
+
+  it("returns historical Session path aliases for canonical projects", async () => {
+    const input = setup();
+    vi.mocked(input.sessions.list).mockResolvedValue([
+      {
+        id: "legacy",
+        path: "legacy.jsonl",
+        cwd: "legacy-alias",
+        created: "2026-01-01",
+        modified: "2026-01-01",
+        messageCount: 1,
+        firstMessage: "legacy",
+      },
+    ]);
+    vi.mocked(input.directories.resolveDirectory).mockImplementation(
+      async (value) =>
+        value === "legacy-alias" ? path.resolve("project-a") : path.resolve(value),
+    );
+    const service = new ProjectService(
+      input.projects,
+      input.directories,
+      input.sessions,
+      input.roots,
+    );
+
+    expect(await service.list()).toEqual([
+      {
+        path: path.resolve("project-a"),
+        aliases: [path.resolve("project-a"), "legacy-alias"],
+      },
+    ]);
   });
 
   it("removes only registry state", async () => {

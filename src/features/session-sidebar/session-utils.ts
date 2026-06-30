@@ -16,7 +16,7 @@ export function groupSessionsByProject(
   return projects.map((project) => ({
     cwd: project.path,
     nodes: buildSessionTree(
-      sessions.filter((session) => session.cwd === project.path),
+      sessions.filter((session) => project.aliases.includes(session.cwd)),
     ),
   }));
 }

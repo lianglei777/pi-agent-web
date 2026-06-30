@@ -120,6 +120,12 @@ Content-Type: text/event-stream; charset=utf-8
 { "path": "C:\\work\\project" }
 ```
 
+项目响应包含规范 `path` 和用于关联历史 Session 路径写法的 `aliases`：
+
+```json
+{ "path": "C:\\work\\project", "aliases": ["C:\\work\\project"] }
+```
+
 `GET /api/projects/browse` 返回当前位置、父目录、平台根位置、面包屑和直接子目录。目录浏览不会返回文件内容。
 
 `DELETE /api/projects` 只删除项目注册表元数据，不会删除目录、项目文件或 Session。

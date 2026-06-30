@@ -17,7 +17,24 @@ export class ProjectService {
     await this.initialize();
     const projects = await this.projects.list();
     projects.forEach((value) => this.roots.addRoot(value));
-    return projects.map((value) => ({ path: value }));
+    const aliases = new Map(
+      projects.map((value) => [value, new Set([value])] as const),
+    );
+    const sessionPaths = [
+      ...new Set((await this.sessions.list()).map((session) => session.cwd)),
+    ];
+    for (const sessionPath of sessionPaths) {
+      try {
+        const resolved = await this.directories.resolveDirectory(sessionPath);
+        aliases.get(resolved)?.add(sessionPath);
+      } catch {
+        // 不可访问的历史目录不影响已注册项目。
+      }
+    }
+    return projects.map((value) => ({
+      path: value,
+      aliases: [...(aliases.get(value) ?? [value])],
+    }));
   }
 
   async add(value: string) {
@@ -25,7 +42,7 @@ export class ProjectService {
     const resolved = await this.directories.resolveDirectory(value);
     await this.projects.add(resolved);
     this.roots.addRoot(resolved);
-    return { path: resolved };
+    return { path: resolved, aliases: [resolved] };
   }
 
   async remove(value: string) {
