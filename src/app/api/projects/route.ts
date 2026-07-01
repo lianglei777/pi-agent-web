@@ -1,3 +1,8 @@
+import type {
+  AddProjectResponse,
+  ListProjectsResponse,
+  RemoveProjectResponse,
+} from "@/contracts/projects";
 import { container } from "@/server/composition/container";
 import { AppError } from "@/server/domain/app-error";
 import {
@@ -10,18 +15,20 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export function GET() {
-  return handleRoute(() => container.projectService.list());
+  return handleRoute<ListProjectsResponse>(() =>
+    container.projectService.list(),
+  );
 }
 
 export function POST(request: Request) {
-  return handleRoute(async () => {
+  return handleRoute<AddProjectResponse>(async () => {
     const { path } = parseProjectPath(await readJson(request));
     return container.projectService.add(path);
   });
 }
 
 export function DELETE(request: Request) {
-  return handleRoute(() => {
+  return handleRoute<RemoveProjectResponse>(() => {
     const value = new URL(request.url).searchParams.get("path")?.trim();
     if (!value) {
       throw new AppError("VALIDATION_ERROR", "path is required", 400);

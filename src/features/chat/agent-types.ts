@@ -4,6 +4,7 @@ import type {
   ThinkingLevel,
   UserMessage as ApiUserMessage,
 } from "@/contracts/agent";
+import type { SessionDetailResponse } from "@/contracts/sessions";
 
 export type {
   AgentCommand,
@@ -22,6 +23,7 @@ export type {
   ToolCallContent,
   ToolResultMessage,
 } from "@/contracts/agent";
+export type { SessionTreeNode } from "@/contracts/sessions";
 
 export type UserMessage = ApiUserMessage & {
   clientId?: string;
@@ -32,34 +34,8 @@ export type AgentMessage =
   | Exclude<ApiAgentMessage, ApiUserMessage>
   | UserMessage;
 
-export type SessionTreeNode = {
-  entry: {
-    id: string;
-    parentId: string | null;
-    type: string;
-    timestamp: string;
-    message?: AgentMessage;
-    [key: string]: unknown;
-  };
-  children: SessionTreeNode[];
-  label?: string;
-};
-
 export type RuntimeState = AgentRuntimeState;
-
-export type SessionDetail = {
-  sessionId: string;
-  filePath: string;
-  tree: SessionTreeNode[];
-  leafId: string | null;
-  context: {
-    messages: AgentMessage[];
-    entryIds: string[];
-    thinkingLevel: ThinkingLevel;
-    model: { provider: string; modelId: string } | null;
-  };
-  agentState?: { running: boolean; state?: AgentRuntimeState };
-};
+export type SessionDetail = SessionDetailResponse;
 
 export type ModelInfo = {
   id: string;

@@ -1,3 +1,8 @@
+import type {
+  DeleteSessionResponse,
+  RenameSessionResponse,
+  SessionDetailResponse,
+} from "@/contracts/sessions";
 import { AppError } from "@/server/domain/app-error";
 import { container } from "@/server/composition/container";
 import {
@@ -14,7 +19,7 @@ export const runtime = "nodejs";
 type Context = { params: Promise<{ id: string }> };
 
 export async function GET(request: Request, context: Context) {
-  return handleRoute(async () => {
+  return handleRoute<SessionDetailResponse>(async () => {
     const { id } = await context.params;
     const includeRuntimeState =
       new URL(request.url).searchParams.get("includeState") === "true";
@@ -42,7 +47,7 @@ export async function GET(request: Request, context: Context) {
 }
 
 export async function PATCH(request: Request, context: Context) {
-  return handleRoute(async () => {
+  return handleRoute<RenameSessionResponse>(async () => {
     const { id } = await context.params;
     const body = asObject(await readJson(request));
     await container.sessionService.rename(id, requiredString(body, "name"));
@@ -51,7 +56,7 @@ export async function PATCH(request: Request, context: Context) {
 }
 
 export async function DELETE(_request: Request, context: Context) {
-  return handleRoute(async () => {
+  return handleRoute<DeleteSessionResponse>(async () => {
     const { id } = await context.params;
     await container.sessionService.delete(id);
     return { success: true };

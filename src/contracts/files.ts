@@ -1,0 +1,24 @@
+export interface FileEntry {
+  name: string;
+  path: string;
+  isDir: boolean;
+  size: number;
+  modified: string;
+}
+
+export interface FileChangeEvent {
+  type: "change" | "rename";
+  path: string;
+}
+
+export type ListFilesResponse = FileEntry[];
+
+export interface ReadTextFileResponse {
+  content: string;
+  language: string;
+  size: number;
+}
+
+export type FileWatchEvent =
+  | { type: "connected"; path: string }
+  | FileChangeEvent;

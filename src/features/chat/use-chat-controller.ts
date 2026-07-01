@@ -43,7 +43,6 @@ import type {
   ContextUsage,
   ImageInput,
   ModelInfo,
-  RuntimeState,
   SessionStats,
   SessionTreeNode,
   ThinkingLevel,

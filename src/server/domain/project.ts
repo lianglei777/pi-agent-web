@@ -1,17 +1,5 @@
-export interface Project {
-  path: string;
-  aliases: string[];
-}
-
-export interface ProjectDirectory {
-  name: string;
-  path: string;
-}
-
-export interface ProjectBrowseResult {
-  current: string;
-  parent: string | null;
-  roots: string[];
-  breadcrumbs: ProjectDirectory[];
-  directories: ProjectDirectory[];
-}
+export type {
+  Project,
+  ProjectBrowseResult,
+  ProjectDirectory,
+} from "@/contracts/projects";

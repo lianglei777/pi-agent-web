@@ -5,6 +5,10 @@ import type {
   AgentRuntimeState,
 } from "./agent";
 import type { SuccessResponse } from "./common";
+import type { FileEntry, ListFilesResponse } from "./files";
+import type { ListProjectsResponse, Project } from "./projects";
+import type { ListSessionsResponse, SessionInfo } from "./sessions";
+import type { HomeResponse } from "./system";
 
 describe("shared API contracts", () => {
   it("covers Agent command and state drift", () => {
@@ -21,5 +25,12 @@ describe("shared API contracts", () => {
     expectTypeOf<AgentRuntimeState>().toHaveProperty("autoRetryEnabled");
     expectTypeOf<AgentCommandResult<{ type: "get_state" }>>().toEqualTypeOf<AgentRuntimeState>();
     expectTypeOf<AgentCommandResult<{ type: "abort" }>>().toEqualTypeOf<SuccessResponse>();
+  });
+
+  it("covers workspace API responses", () => {
+    expectTypeOf<HomeResponse>().toEqualTypeOf<{ home: string }>();
+    expectTypeOf<ListProjectsResponse>().toEqualTypeOf<Project[]>();
+    expectTypeOf<ListSessionsResponse>().toEqualTypeOf<SessionInfo[]>();
+    expectTypeOf<ListFilesResponse>().toEqualTypeOf<FileEntry[]>();
   });
 });

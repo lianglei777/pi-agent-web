@@ -12,6 +12,7 @@ import type {
   TestModelInput,
 } from "@/server/domain/model";
 import { sanitizeModelsConfig } from "@/contracts/model-compat";
+import type { AddProjectRequest } from "@/contracts/projects";
 
 type JsonObject = Record<string, unknown>;
 
@@ -155,7 +156,7 @@ export function parseModelsConfig(value: unknown): Record<string, unknown> {
   }
 }
 
-export function parseProjectPath(value: unknown) {
+export function parseProjectPath(value: unknown): AddProjectRequest {
   const object = asObject(value);
   return { path: requiredString(object, "path").trim() };
 }

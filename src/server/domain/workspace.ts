@@ -1,10 +1,4 @@
-export interface FileEntry {
-  name: string;
-  path: string;
-  isDir: boolean;
-  size: number;
-  modified: string;
-}
+export type { FileChangeEvent, FileEntry } from "@/contracts/files";
 
 export interface ByteRange {
   start: number;
@@ -17,9 +11,3 @@ export interface BinaryFile {
   contentType: string;
   createStream(range?: ByteRange): ReadableStream<Uint8Array>;
 }
-
-export interface FileChangeEvent {
-  type: "change" | "rename";
-  path: string;
-}
-

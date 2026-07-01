@@ -1,6 +1,10 @@
+import type {
+  FileWatchEvent,
+  ListFilesResponse,
+  ReadTextFileResponse,
+} from "@/contracts/files";
 import { container } from "@/server/composition/container";
 import { AppError } from "@/server/domain/app-error";
-import type { FileChangeEvent } from "@/server/domain/workspace";
 import {
   errorResponse,
   handleRoute,
@@ -18,10 +22,7 @@ export async function GET(request: Request, context: Context) {
   const targetPath = await requestedPath(url, context);
 
   if (type === "watch") {
-    return createSseResponse<
-      | { type: "connected"; path: string }
-      | FileChangeEvent
-    >({
+    return createSseResponse<FileWatchEvent>({
       request,
       eventName: "file",
       initial: { type: "connected", path: targetPath },
@@ -52,9 +53,13 @@ export async function GET(request: Request, context: Context) {
     }
   }
   if (type === "read") {
-    return handleRoute(() => container.fileService.readText(targetPath));
+    return handleRoute<ReadTextFileResponse>(() =>
+      container.fileService.readText(targetPath),
+    );
   }
-  return handleRoute(() => container.fileService.list(targetPath));
+  return handleRoute<ListFilesResponse>(() =>
+    container.fileService.list(targetPath),
+  );
 }
 
 async function requestedPath(url: URL, context: Context): Promise<string> {

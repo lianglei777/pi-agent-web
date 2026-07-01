@@ -1,12 +1,6 @@
-export interface FileEntry {
-  name: string;
-  path: string;
-  isDir: boolean;
-  size: number;
-  modified: string;
-}
+export type { FileEntry } from "@/contracts/files";
 
-export type OpenFile = {
+export interface OpenFile {
   name: string;
   path: string;
-};
+}

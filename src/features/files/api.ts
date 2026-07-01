@@ -1,24 +1,29 @@
-import type { FileEntry } from "./types";
-
-type ApiError = { error?: { message?: string } };
+import type {
+  ListFilesResponse,
+  ReadTextFileResponse,
+} from "@/contracts/files";
+import type { ApiErrorResponse } from "@/contracts/common";
 
 async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, init);
-  const data = (await response.json()) as T & ApiError;
+  const data = (await response.json()) as T | ApiErrorResponse;
   if (!response.ok) {
-    throw new Error(data.error?.message ?? `Request failed (${response.status})`);
+    const failure = data as ApiErrorResponse;
+    throw new Error(
+      failure.error?.message ?? `Request failed (${response.status})`,
+    );
   }
-  return data;
+  return data as T;
 }
 
 export function loadDirectory(path: string, signal?: AbortSignal) {
   const params = new URLSearchParams({ path, type: "list" });
-  return requestJson<FileEntry[]>(`/api/files/_?${params}`, { signal });
+  return requestJson<ListFilesResponse>(`/api/files/_?${params}`, { signal });
 }
 
 export function loadFile(path: string, signal?: AbortSignal) {
   const params = new URLSearchParams({ path, type: "read" });
-  return requestJson<{ content?: string }>(`/api/files/_?${params}`, {
+  return requestJson<ReadTextFileResponse>(`/api/files/_?${params}`, {
     signal,
   });
 }
