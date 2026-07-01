@@ -26,6 +26,24 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   {
+    files: ["src/contracts/**/*.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              regex:
+                "^(?:@/(?:server|features|layouts)(?:/|$)|next(?:/|$)|react(?:/|$)|node:|@earendil-works/)",
+              message:
+                "Shared API contracts must not depend on application, framework, runtime, or vendor modules.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ["src/server/domain/**/*.ts"],
     rules: {
       "no-restricted-imports": [

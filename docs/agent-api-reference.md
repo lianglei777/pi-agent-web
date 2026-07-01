@@ -383,7 +383,7 @@ interface BashExecutionMessage {
 }
 ```
 
-## 4. Utility API
+## 4. Utility and Project API
 
 ### 4.1 获取 Home 目录
 
@@ -396,6 +396,59 @@ GET /api/home
 ```json
 {
   "home": "C:\\Users\\example"
+}
+```
+
+### 4.2 管理项目
+
+列出项目：
+
+```http
+GET /api/projects
+```
+
+响应为项目数组，每项包含规范路径及历史 Session 路径别名：
+
+```json
+[
+  {
+    "path": "C:\\workspace\\project",
+    "aliases": ["C:\\workspace\\project"]
+  }
+]
+```
+
+添加项目：
+
+```http
+POST /api/projects
+Content-Type: application/json
+```
+
+```json
+{ "path": "C:\\workspace\\project" }
+```
+
+响应为新增的项目对象。移除项目使用 `DELETE /api/projects?path=...`，成功响应为 `{ "success": true }`，不会删除目录、文件或 Session。
+
+浏览目录：
+
+```http
+GET /api/projects/browse?path=C%3A%5Cworkspace
+```
+
+```json
+{
+  "current": "C:\\workspace",
+  "parent": "C:\\",
+  "roots": ["C:\\"],
+  "breadcrumbs": [
+    { "name": "C:\\", "path": "C:\\" },
+    { "name": "workspace", "path": "C:\\workspace" }
+  ],
+  "directories": [
+    { "name": "project", "path": "C:\\workspace\\project" }
+  ]
 }
 ```
 
@@ -943,6 +996,7 @@ data: {"type":"connected","sessionId":"019e..."}
 
 ```ts
 type AgentEvent =
+  | { type: "error"; message: string }
   | { type: "agent_start" }
   | { type: "agent_end" }
   | { type: "agent_error"; error: AgentFailure }
@@ -1741,6 +1795,8 @@ file
 ```
 
 客户端断开时自动关闭 Node 文件 Watcher。
+
+订阅失败时还可能发送 `{ "type": "error", "message": "..." }`，随后关闭流。
 
 ## 10. Skill API
 

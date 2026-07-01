@@ -26,16 +26,25 @@ transport ------> application ------> ports <------ infrastructure
 实际依赖原则：
 
 ```text
-domain <- ports <- application
+contracts <- domain <- ports <- application
 domain/application <- transport
 domain/ports <- infrastructure
 application/infrastructure <- composition
 composition/transport/domain <- app/api
+contracts <- features/layouts
 ```
 
 `composition` 不是业务层，它是唯一负责把接口和具体实现组装起来的生产入口。
 
 ## 层级职责
+
+### Shared Contracts
+
+位置：`src/contracts`
+
+定义浏览器与服务端共同理解的 HTTP 请求、JSON 响应和 SSE 事件，是 domain 与前端都可以依赖的纯 TypeScript 底层。合同不得依赖 `src/server`、feature、layout、React、Next.js、Node.js 或供应商 SDK。
+
+只有线上可序列化结构进入 contracts。服务端端口、运行时对象、文件流和应用内部输入继续位于 server；表单草稿、加载状态和展示模型继续位于对应 feature。公开合同字段不得在 domain 或 feature 中重复定义。
 
 ### Domain
 
@@ -117,6 +126,7 @@ Route Handler 应保持很薄，通常只做：
 
 ```text
 src/app          Next.js 页面、布局和 Route Handler
+src/contracts    前后端共享的 HTTP 与 SSE 合同
 src/components/ui 无业务语义的通用 UI primitive
 src/features     按业务能力组织的组件、hook、类型和常量
 src/layouts      应用级页面骨架和 feature 组合
@@ -125,7 +135,7 @@ src/lib          浏览器与共享 UI 工具
 
 - 页面和布局默认使用 Server Component。
 - 只有需要交互或浏览器 API 的最小边界使用 `"use client"`。
-- 前端不得 import `src/server`。浏览器通过 `/api` 合同与后端交互。
+- 前端不得 import `src/server`。浏览器通过 `src/contracts` 描述的 `/api` 合同与后端交互。
 - 通用 UI primitive 放在 `src/components/ui`，不得依赖 feature 或 layout。
 - 业务组件放在 `src/features/<feature>`。feature 不得依赖 layout，也不直接
   依赖其他 feature。
