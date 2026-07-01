@@ -1,77 +1,36 @@
-export type ThinkingLevel =
-  | "auto"
-  | "off"
-  | "minimal"
-  | "low"
-  | "medium"
-  | "high"
-  | "xhigh";
+import type {
+  AgentMessage as ApiAgentMessage,
+  AgentRuntimeState,
+  ThinkingLevel,
+  UserMessage as ApiUserMessage,
+} from "@/contracts/agent";
 
-export type TextContent = { type: "text"; text: string };
-export type ImageContent = {
-  type: "image";
-  source: {
-    type: "base64" | "url";
-    mediaType?: string;
-    data?: string;
-    url?: string;
-  };
-};
-export type ThinkingContent = { type: "thinking"; thinking: string };
-export type ToolCallContent = {
-  type: "toolCall";
-  toolCallId: string;
-  toolName: string;
-  input: Record<string, unknown>;
-};
-export type TokenUsage = {
-  input: number;
-  output: number;
-  cacheRead: number;
-  cacheWrite: number;
-  cost: { total: number };
-};
-export type UserMessage = {
-  role: "user";
-  content: string | Array<TextContent | ImageContent>;
-  timestamp?: number;
+export type {
+  AgentCommand,
+  AgentEvent,
+  AgentFailure,
+  AgentRuntimeState,
+  AssistantMessage,
+  CompactionSummaryMessage,
+  ContextUsage,
+  ImageContent,
+  ImageInput,
+  TextContent,
+  ThinkingContent,
+  ThinkingLevel,
+  TokenUsage,
+  ToolCallContent,
+  ToolResultMessage,
+} from "@/contracts/agent";
+
+export type UserMessage = ApiUserMessage & {
   clientId?: string;
   status?: "pending" | "failed";
 };
-export type AssistantMessage = {
-  role: "assistant";
-  content: Array<TextContent | ImageContent | ThinkingContent | ToolCallContent>;
-  provider: string;
-  model: string;
-  stopReason?: string;
-  timestamp?: number;
-  usage?: TokenUsage;
-  errorMessage?: string;
-  failure?: AgentFailure;
-};
-export type ToolResultMessage = {
-  role: "toolResult";
-  toolCallId: string;
-  toolName?: string;
-  content: Array<TextContent | ImageContent>;
-  isError?: boolean;
-  timestamp?: number;
-};
-export type CompactionSummaryMessage = {
-  role: "compactionSummary";
-  summary: string;
-  tokensBefore: number;
-  timestamp?: number;
-};
+
 export type AgentMessage =
-  | UserMessage
-  | AssistantMessage
-  | ToolResultMessage
-  | CompactionSummaryMessage
-  | {
-      role: "custom" | "branchSummary" | "bashExecution";
-      [key: string]: unknown;
-    };
+  | Exclude<ApiAgentMessage, ApiUserMessage>
+  | UserMessage;
 
 export type SessionTreeNode = {
   entry: {
@@ -86,22 +45,7 @@ export type SessionTreeNode = {
   label?: string;
 };
 
-export type ContextUsage = {
-  percent: number | null;
-  contextWindow: number;
-  tokens: number | null;
-};
-
-export type RuntimeState = {
-  sessionId: string;
-  isStreaming: boolean;
-  isCompacting: boolean;
-  compactionAvailable: boolean;
-  model?: { id: string; provider: string };
-  contextUsage: ContextUsage | null;
-  systemPrompt: string;
-  thinkingLevel: ThinkingLevel;
-};
+export type RuntimeState = AgentRuntimeState;
 
 export type SessionDetail = {
   sessionId: string;
@@ -114,7 +58,7 @@ export type SessionDetail = {
     thinkingLevel: ThinkingLevel;
     model: { provider: string; modelId: string } | null;
   };
-  agentState?: { running: boolean; state?: RuntimeState };
+  agentState?: { running: boolean; state?: AgentRuntimeState };
 };
 
 export type ModelInfo = {
@@ -127,59 +71,10 @@ export type ModelInfo = {
   thinkingLevelMap?: Record<string, string | null>;
 };
 
-export type AgentFailure = {
-  code:
-    | "MODEL_REQUEST_FAILED"
-    | "MODEL_AUTH_FAILED"
-    | "MODEL_RATE_LIMITED"
-    | "MODEL_PROTOCOL_ERROR"
-    | "MODEL_TIMEOUT"
-    | "MODEL_UNAVAILABLE"
-    | "UNKNOWN_AGENT_ERROR";
-  message: string;
-  technicalMessage?: string;
-  provider?: string;
-  model?: string;
-  retryable: boolean;
-};
-
-export type AgentEvent =
-  | { type: "connected"; sessionId: string }
-  | { type: "agent_start" | "agent_end" }
-  | { type: "agent_error"; error: AgentFailure }
-  | {
-      type: "message_start" | "message_update";
-      message: Partial<AssistantMessage>;
-    }
-  | { type: "message_end"; message: AgentMessage }
-  | { type: "tool_execution_start"; toolCallId: string; toolName: string }
-  | { type: "tool_execution_end"; toolCallId: string; isError?: boolean }
-  | {
-      type: "retry_start" | "auto_retry_start";
-      attempt: number;
-      maxAttempts: number;
-      errorMessage?: string;
-    }
-  | { type: "retry_end" | "auto_retry_end" }
-  | { type: "compaction_start" | "auto_compaction_start" }
-  | {
-      type: "compaction_end" | "auto_compaction_end";
-      aborted?: boolean;
-      errorMessage?: string;
-    };
-
-export type AgentCommand =
-  | { type: "prompt" | "steer" | "follow_up"; message: string; images?: ImageInput[] }
-  | { type: "abort" | "get_state" | "get_tools" | "abort_compaction" }
-  | { type: "set_model"; provider: string; modelId: string }
-  | { type: "fork"; entryId: string }
-  | { type: "navigate_tree"; targetId: string }
-  | { type: "set_thinking_level"; level: ThinkingLevel }
-  | { type: "compact"; customInstructions?: string }
-  | { type: "set_tools"; toolNames: string[] };
-
-export type ImageInput = { type: "image"; data: string; mimeType: string };
-export type AttachedImage = ImageInput & {
+export type AttachedImage = {
+  type: "image";
+  data: string;
+  mimeType: string;
   id: string;
   name: string;
   previewUrl: string;

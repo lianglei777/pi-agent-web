@@ -1,12 +1,15 @@
 import type {
   AgentCommand,
+  AgentCommandResult,
+  AgentRuntimeResponse,
+  CreateAgentRequest,
+  CreateAgentResponse,
+} from "@/contracts/agent";
+import type { ApiErrorResponse } from "@/contracts/common";
+import type {
   ModelInfo,
-  RuntimeState,
   SessionDetail,
-  ThinkingLevel,
 } from "./agent-types";
-
-type ApiError = { error?: { code?: string; message?: string } };
 
 /** 携带后端错误码的请求异常，便于前端按 code 分支处理 */
 export class ApiRequestError extends Error {
@@ -20,14 +23,15 @@ export class ApiRequestError extends Error {
 
 async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, init);
-  const data = (await response.json()) as T & ApiError;
+  const data = (await response.json()) as T | ApiErrorResponse;
   if (!response.ok) {
+    const failure = data as ApiErrorResponse;
     throw new ApiRequestError(
-      data.error?.message ?? `Request failed (${response.status})`,
-      data.error?.code,
+      failure.error?.message ?? `Request failed (${response.status})`,
+      failure.error?.code,
     );
   }
-  return data;
+  return data as T;
 }
 
 export function loadSession(id: string) {
@@ -50,33 +54,30 @@ export function loadModels() {
   }>("/api/models");
 }
 
-export function createAgent(input: {
-  cwd: string;
-  provider?: string;
-  modelId?: string;
-  thinkingLevel?: ThinkingLevel;
-  toolNames?: string[];
-}) {
-  return requestJson<{ sessionId: string }>("/api/agent/new", {
+export function createAgent(input: CreateAgentRequest) {
+  return requestJson<CreateAgentResponse>("/api/agent/new", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
   });
 }
 
-export function sendCommand<T = { success: true }>(
+export function sendCommand<C extends AgentCommand>(
   id: string,
-  command: AgentCommand,
+  command: C,
 ) {
-  return requestJson<T>(`/api/agent/${encodeURIComponent(id)}`, {
+  return requestJson<AgentCommandResult<C>>(
+    `/api/agent/${encodeURIComponent(id)}`,
+    {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(command),
-  });
+    },
+  );
 }
 
 export function loadRuntime(id: string) {
-  return requestJson<{ running: boolean; state?: RuntimeState }>(
+  return requestJson<AgentRuntimeResponse>(
     `/api/agent/${encodeURIComponent(id)}`,
   );
 }

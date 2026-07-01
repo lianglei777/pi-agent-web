@@ -28,14 +28,8 @@ export function leafSummary(node: SessionTreeNode): string {
       ? content
       : Array.isArray(content)
         ? content
-            .filter(
-              (block): block is { type: "text"; text: string } =>
-                typeof block === "object" &&
-                block !== null &&
-                block.type === "text" &&
-                typeof block.text === "string",
-            )
-            .map((block) => block.text)
+            .map((block) => (block.type === "text" ? block.text : ""))
+            .filter(Boolean)
             .join(" ")
         : "";
   return (text.split(/\r?\n/, 1)[0] ?? "").slice(0, 60) || fallback;

@@ -278,20 +278,16 @@ export function useChatController(options: ChatControllerOptions) {
           );
           break;
         case "retry_start":
-        case "auto_retry_start":
           setRetryInfo(event);
           break;
         case "retry_end":
-        case "auto_retry_end":
           setRetryInfo(null);
           break;
         case "compaction_start":
-        case "auto_compaction_start":
           setIsCompacting(true);
           setCompactError("");
           break;
         case "compaction_end":
-        case "auto_compaction_end":
           setIsCompacting(false);
           if (event.errorMessage) setCompactError(event.errorMessage);
           else if (!event.aborted) {
@@ -389,7 +385,7 @@ export function useChatController(options: ChatControllerOptions) {
         const detail = await loadSession(session.id);
         applyDetail(detail);
         if (!detail.agentState?.state) {
-          const runtimeState = await sendCommand<RuntimeState>(session.id, {
+          const runtimeState = await sendCommand(session.id, {
             type: "get_state",
           });
           syncRuntimeState(runtimeState);
@@ -794,7 +790,7 @@ export function useChatController(options: ChatControllerOptions) {
     if (!id) return;
     setForkingEntryId(entryId);
     try {
-      const result = await sendCommand<{ sessionId: string }>(id, {
+      const result = await sendCommand(id, {
         type: "fork",
         entryId,
       });

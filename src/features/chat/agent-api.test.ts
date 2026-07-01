@@ -38,6 +38,8 @@ describe("agent API adapter", () => {
     { type: "navigate_tree", targetId: "leaf" },
     { type: "compact" },
     { type: "abort_compaction" },
+    { type: "set_auto_compaction", enabled: true },
+    { type: "set_auto_retry", enabled: false },
   ] as const)("passes through $type commands", async (command) => {
     const fetchMock = vi.fn(
       async (_input: string | URL | Request, _init?: RequestInit) =>
