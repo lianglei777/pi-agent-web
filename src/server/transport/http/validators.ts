@@ -6,7 +6,7 @@ import {
   type ThinkingLevel,
 } from "@/contracts/agent";
 import { AppError } from "@/server/domain/app-error";
-import type { InstallSkillInput, RemoveSkillInput } from "@/server/domain/skill";
+import type { InstallSkillInput } from "@/server/domain/skill";
 import type {
   ModelDiscoveryRequest,
   ModelTestRequest,
@@ -14,6 +14,10 @@ import type {
 } from "@/contracts/models";
 import { sanitizeModelsConfig } from "@/contracts/model-compat";
 import type { AddProjectRequest } from "@/contracts/projects";
+import type {
+  InstallSkillRequest,
+  RemoveSkillRequest,
+} from "@/contracts/skills";
 
 type JsonObject = Record<string, unknown>;
 
@@ -168,16 +172,20 @@ export function parseSkillInstall(value: unknown): InstallSkillInput {
   if (scope !== "global" && scope !== "project") {
     invalid("scope must be global or project");
   }
-  return {
-    packageSpec:
-      optionalString(object, "package") ??
-      requiredString(object, "source"),
+  const request: InstallSkillRequest = {
+    package:
+      optionalString(object, "package") ?? requiredString(object, "source"),
     scope,
     cwd: optionalString(object, "cwd"),
   };
+  return {
+    packageSpec: request.package,
+    scope: request.scope,
+    cwd: request.cwd,
+  };
 }
 
-export function parseSkillRemove(value: unknown): RemoveSkillInput {
+export function parseSkillRemove(value: unknown): RemoveSkillRequest {
   const object = asObject(value);
   return {
     skillId: requiredString(object, "skillId"),

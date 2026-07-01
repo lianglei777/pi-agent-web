@@ -1,3 +1,8 @@
+import type {
+  RemoveSkillResponse,
+  SetSkillInvocationRequest,
+  SkillLoadResponse,
+} from "@/contracts/skills";
 import { container } from "@/server/composition/container";
 import {
   handleRoute,
@@ -14,26 +19,27 @@ import {
 export const runtime = "nodejs";
 
 export async function GET(request: Request) {
-  return handleRoute(() => {
+  return handleRoute<SkillLoadResponse>(() => {
     const cwd = new URL(request.url).searchParams.get("cwd") ?? "";
     return container.skillService.load(cwd);
   });
 }
 
 export async function PATCH(request: Request) {
-  return handleRoute(async () => {
+  return handleRoute<SkillLoadResponse>(async () => {
     const body = asObject(await readJson(request));
-    return container.skillService.setModelInvocationDisabled({
+    const input: SetSkillInvocationRequest = {
       cwd: requiredString(body, "cwd"),
       skillId: requiredString(body, "skillId"),
       disabled: requiredBoolean(body, "disabled"),
       expectedVersion: optionalString(body, "expectedVersion"),
-    });
+    };
+    return container.skillService.setModelInvocationDisabled(input);
   });
 }
 
 export async function DELETE(request: Request) {
-  return handleRoute(async () =>
+  return handleRoute<RemoveSkillResponse>(async () =>
     container.skillService.remove(
       parseSkillRemove(await readJson(request)),
     ),

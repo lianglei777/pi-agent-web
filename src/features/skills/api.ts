@@ -1,13 +1,20 @@
+import type { ApiErrorResponse } from "@/contracts/common";
 import type {
-  InstallSkillResult,
-  SkillLoadResult,
+  InstallSkillRequest,
+  InstallSkillResponse,
+  RemoveSkillRequest,
+  RemoveSkillResponse,
+  SearchSkillsRequest,
+  SearchSkillsResponse,
+  SetSkillInvocationRequest,
+  SkillLoadResponse,
   SkillSearchResult,
-} from "./types";
+} from "@/contracts/skills";
 
 export async function loadSkills(
   cwd: string,
   signal?: AbortSignal,
-): Promise<SkillLoadResult> {
+): Promise<SkillLoadResponse> {
   return requestJson(
     `/api/skills?cwd=${encodeURIComponent(cwd)}`,
     { signal },
@@ -15,14 +22,9 @@ export async function loadSkills(
 }
 
 export async function setSkillModelInvocation(
-  input: {
-    cwd: string;
-    skillId: string;
-    disabled: boolean;
-    expectedVersion: string;
-  },
+  input: SetSkillInvocationRequest,
   signal?: AbortSignal,
-): Promise<SkillLoadResult> {
+): Promise<SkillLoadResponse> {
   return requestJson("/api/skills", {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -35,12 +37,13 @@ export async function searchSkills(
   query: string,
   signal?: AbortSignal,
 ): Promise<SkillSearchResult[]> {
-  const response = await requestJson<{ results: SkillSearchResult[] }>(
+  const body: SearchSkillsRequest = { query, limit: 30 };
+  const response = await requestJson<SearchSkillsResponse>(
     "/api/skills/search",
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query, limit: 30 }),
+      body: JSON.stringify(body),
       signal,
     },
   );
@@ -48,13 +51,9 @@ export async function searchSkills(
 }
 
 export async function installSkill(
-  input: {
-    package: string;
-    scope: "global" | "project";
-    cwd: string;
-  },
+  input: InstallSkillRequest,
   signal?: AbortSignal,
-): Promise<InstallSkillResult> {
+): Promise<InstallSkillResponse> {
   return requestJson("/api/skills/install", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -64,9 +63,9 @@ export async function installSkill(
 }
 
 export async function removeSkill(
-  input: { skillId: string; cwd: string },
+  input: RemoveSkillRequest,
   signal?: AbortSignal,
-): Promise<SkillLoadResult> {
+): Promise<RemoveSkillResponse> {
   return requestJson("/api/skills", {
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
@@ -81,11 +80,13 @@ async function requestJson<T>(
 ): Promise<T> {
   const response = await fetch(input, init);
   const payload = (await response.json().catch(() => null)) as
-    | { error?: { message?: string } }
+    | T
+    | ApiErrorResponse
     | null;
   if (!response.ok) {
+    const failure = payload as ApiErrorResponse | null;
     throw new Error(
-      payload?.error?.message ?? `Request failed with ${response.status}`,
+      failure?.error?.message ?? `Request failed with ${response.status}`,
     );
   }
   return payload as T;

@@ -16,6 +16,12 @@ import type {
 import type { ListProjectsResponse, Project } from "./projects";
 import type { ListSessionsResponse, SessionInfo } from "./sessions";
 import type { HomeResponse } from "./system";
+import type {
+  InstallSkillRequest,
+  RemoveSkillRequest,
+  SearchSkillsRequest,
+  SetSkillInvocationRequest,
+} from "./skills";
 
 describe("shared API contracts", () => {
   it("covers Agent command and state drift", () => {
@@ -52,5 +58,12 @@ describe("shared API contracts", () => {
     expectTypeOf<
       Extract<OAuthServerEvent, { type: "complete" }>
     >().toEqualTypeOf<{ type: "complete" }>();
+  });
+
+  it("covers skill request bodies", () => {
+    expectTypeOf<InstallSkillRequest>().toHaveProperty("package");
+    expectTypeOf<RemoveSkillRequest>().toHaveProperty("skillId");
+    expectTypeOf<SearchSkillsRequest>().toHaveProperty("query");
+    expectTypeOf<SetSkillInvocationRequest>().toHaveProperty("disabled");
   });
 });

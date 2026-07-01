@@ -1,37 +1,15 @@
-export interface SkillInfo {
-  skillId: string;
-  name: string;
-  description: string;
-  filePath: string;
-  displayPath: string;
-  baseDir: string;
-  sourceInfo: {
-    path: string;
-    source: string;
-    scope: "user" | "project" | "temporary";
-    origin: "package" | "top-level";
-    baseDir?: string;
-  };
-  canModify: boolean;
-  disableModelInvocation: boolean;
-  version: string;
-}
+import type {
+  InstallSkillResponse,
+  RemoveSkillRequest,
+  SetSkillInvocationRequest,
+  SkillLoadResponse,
+} from "@/contracts/skills";
 
-export interface SkillDiagnostic {
-  severity: "warning" | "error" | "collision";
-  message: string;
-  path?: string;
-}
-
-export interface SkillSearchResult {
-  id: string;
-  name: string;
-  description: string;
-  source: string;
-  packageSpec: string;
-  installs?: number;
-  url?: string;
-}
+export type {
+  SkillDiagnostic,
+  SkillInfo,
+  SkillSearchResult,
+} from "@/contracts/skills";
 
 export interface InstallSkillInput {
   packageSpec: string;
@@ -39,24 +17,7 @@ export interface InstallSkillInput {
   cwd?: string;
 }
 
-export interface RemoveSkillInput {
-  skillId: string;
-  cwd: string;
-}
-
-export interface InstallSkillResult {
-  installed: true;
-  skills: SkillInfo[];
-}
-
-export interface SetSkillInvocationInput {
-  cwd: string;
-  skillId: string;
-  disabled: boolean;
-  expectedVersion?: string;
-}
-
-export interface SkillLoadResult {
-  skills: SkillInfo[];
-  diagnostics: SkillDiagnostic[];
-}
+export type RemoveSkillInput = RemoveSkillRequest;
+export type InstallSkillResult = InstallSkillResponse;
+export type SetSkillInvocationInput = SetSkillInvocationRequest;
+export type SkillLoadResult = SkillLoadResponse;
