@@ -20,5 +20,7 @@ export interface ReadTextFileResponse {
 }
 
 export type FileWatchEvent =
+  | SseErrorEvent
   | { type: "connected"; path: string }
   | FileChangeEvent;
+import type { SseErrorEvent } from "./common";

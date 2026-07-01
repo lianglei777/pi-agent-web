@@ -1,4 +1,4 @@
-import type { SuccessResponse } from "./common";
+import type { SseErrorEvent, SuccessResponse } from "./common";
 
 export interface OAuthProviderInfo {
   id: string;
@@ -24,6 +24,7 @@ export interface ConfiguredApiKeyProviderInfo extends ApiKeyProviderInfo {
 }
 
 export type OAuthServerEvent =
+  | SseErrorEvent
   | { type: "auth"; url: string; instructions?: string }
   | {
       type: "device_code";
@@ -46,7 +47,6 @@ export type OAuthServerEvent =
       options: Array<{ id: string; label: string }>;
     }
   | { type: "progress"; message: string }
-  | { type: "error"; message: string }
   | { type: "complete" };
 
 export type OAuthProvidersResponse = OAuthProviderInfo[];

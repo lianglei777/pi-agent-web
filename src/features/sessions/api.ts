@@ -1,9 +1,10 @@
-import type { ApiErrorResponse, SuccessResponse } from "@/contracts/common";
+import type { ApiErrorResponse } from "@/contracts/common";
 import type {
   AddProjectRequest,
   AddProjectResponse,
   BrowseProjectsResponse,
   ListProjectsResponse,
+  RemoveProjectResponse,
 } from "@/contracts/projects";
 import type {
   DeleteSessionResponse,
@@ -47,7 +48,7 @@ export function addProject(path: string) {
 }
 
 export function removeProject(path: string) {
-  return requestJson<SuccessResponse>(
+  return requestJson<RemoveProjectResponse>(
     `/api/projects?path=${encodeURIComponent(path)}`,
     { method: "DELETE" },
   );

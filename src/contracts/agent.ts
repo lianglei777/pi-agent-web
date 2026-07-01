@@ -1,4 +1,4 @@
-import type { SuccessResponse } from "./common";
+import type { SseErrorEvent, SuccessResponse } from "./common";
 
 export const THINKING_LEVELS = [
   "auto",
@@ -172,6 +172,7 @@ export type AgentMessage =
   | BashExecutionMessage;
 
 export type AgentEvent =
+  | SseErrorEvent
   | { type: "connected"; sessionId: string }
   | { type: "agent_start" }
   | { type: "agent_end" }

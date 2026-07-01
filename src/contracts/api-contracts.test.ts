@@ -5,7 +5,11 @@ import type {
   AgentRuntimeState,
 } from "./agent";
 import type { SuccessResponse } from "./common";
-import type { FileEntry, ListFilesResponse } from "./files";
+import type {
+  FileEntry,
+  FileWatchEvent,
+  ListFilesResponse,
+} from "./files";
 import type { ApiKeyStatusResponse, OAuthServerEvent } from "./auth";
 import type {
   ModelDiscoveryResponse,
@@ -38,6 +42,9 @@ describe("shared API contracts", () => {
     expectTypeOf<AgentRuntimeState>().toHaveProperty("autoRetryEnabled");
     expectTypeOf<AgentCommandResult<{ type: "get_state" }>>().toEqualTypeOf<AgentRuntimeState>();
     expectTypeOf<AgentCommandResult<{ type: "abort" }>>().toEqualTypeOf<SuccessResponse>();
+    expectTypeOf<
+      Extract<import("./agent").AgentEvent, { type: "error" }>
+    >().toEqualTypeOf<{ type: "error"; message: string }>();
   });
 
   it("covers workspace API responses", () => {
@@ -45,6 +52,9 @@ describe("shared API contracts", () => {
     expectTypeOf<ListProjectsResponse>().toEqualTypeOf<Project[]>();
     expectTypeOf<ListSessionsResponse>().toEqualTypeOf<SessionInfo[]>();
     expectTypeOf<ListFilesResponse>().toEqualTypeOf<FileEntry[]>();
+    expectTypeOf<
+      Extract<FileWatchEvent, { type: "error" }>
+    >().toEqualTypeOf<{ type: "error"; message: string }>();
   });
 
   it("covers model and auth API responses", () => {

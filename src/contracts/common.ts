@@ -10,3 +10,8 @@ export interface ApiErrorResponse {
     details?: unknown;
   };
 }
+
+export interface SseErrorEvent {
+  type: "error";
+  message: string;
+}

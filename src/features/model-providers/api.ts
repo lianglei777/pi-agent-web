@@ -7,8 +7,10 @@ import type {
 import type {
   ApiKeyStatusResponse,
   LogoutOAuthResponse,
+  OAuthInputRequest,
   OAuthInputResponse,
   RemoveApiKeyResponse,
+  SaveApiKeyRequest,
   SaveApiKeyResponse,
 } from "@/contracts/auth";
 import type { ApiErrorResponse } from "@/contracts/common";
@@ -117,12 +119,13 @@ export function testModelConfig(input: {
 }
 
 export function saveApiKey(providerId: string, apiKey: string) {
+  const body: SaveApiKeyRequest = { apiKey };
   return requestJson<SaveApiKeyResponse>(
     `/api/auth/api-key/${encodeURIComponent(providerId)}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ apiKey }),
+      body: JSON.stringify(body),
     },
   );
 }
@@ -139,12 +142,13 @@ export function submitOAuthInput(
   token: string,
   value: string,
 ) {
+  const body: OAuthInputRequest = { token, value };
   return requestJson<OAuthInputResponse>(
     `/api/auth/login/${encodeURIComponent(providerId)}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token, value }),
+      body: JSON.stringify(body),
     },
   );
 }
